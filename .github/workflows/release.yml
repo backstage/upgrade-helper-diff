@@ -1,0 +1,76 @@
+name: Create new release diffs
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version of Backstage to release. If missing, the latest version will be used"
+        required: false
+        default: ""
+jobs:
+  release:
+    name: Create release branch
+    runs-on: ubuntu-latest
+    env:
+      BACKSTAGE_APP_NAME: backstagediffapp
+    outputs:
+      backstage_version: ${{ steps.set-outputs.outputs.backstage_version }}
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        with:
+          ref: "release-base"
+      - name: Set @backstage/create-app version
+        run: echo "CREATE_APP_VERSION=${INPUT_VERSION:-$(npm view @backstage/create-app version)}" >> $GITHUB_ENV
+      - name: Run @backstage/create-app
+        run: printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${CREATE_APP_VERSION} --skip-install
+      - name: Check current directory
+        run: pwd
+      - name: Move all the files into the root directory
+        run: cp -ar $(pwd)/$BACKSTAGE_APP_NAME/. $(pwd)
+      - name: Setup git bot user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Add release
+        run: |
+          git checkout -b release/${CREATE_APP_VERSION}
+          git add .
+          git reset $BACKSTAGE_APP_NAME
+          git commit -m "Release ${CREATE_APP_VERSION}"
+          git push origin release/${CREATE_APP_VERSION}
+      - id: set-outputs
+        name: Set outputs
+        run: echo "::set-output name=backstage_version::$(echo $CREATE_APP_VERSION)"
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+  diff:
+    name: Create new diffs
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Check out diffs branch
+        uses: actions/checkout@v2
+        with:
+          ref: "master"
+          fetch-depth: 0
+      - name: Create new diffs
+        run: |
+          for version in $(jq -r 'keys |.[]' < releases.json); do
+            echo "Creating diffs between version $version and $NEW_VERSION"
+            git diff -U1 origin/release/$version..origin/release/$NEW_VERSION > diffs/$version..$NEW_VERSION.diff
+          done
+          jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
+          mv _releases.json releases.json
+        env:
+          NEW_VERSION: ${{needs.release.outputs.backstage_version}}
+      - name: Setup git bot user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Push the changes
+        run: |
+          git add .
+          git commit -m "Add release ${NEW_VERSION}"
+          git push
+        env:
+          NEW_VERSION: ${{needs.release.outputs.backstage_version}}
