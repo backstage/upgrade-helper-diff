@@ -1,0 +1,381 @@
+diff --git a/app-config.production.yaml b/app-config.production.yaml
+new file mode 100644
+index 0000000..92f4574
+--- /dev/null
++++ b/app-config.production.yaml
+@@ -0,0 +1,8 @@
++app:
++  # Should be the same as backend.baseUrl when using the `app-backend` plugin
++  baseUrl: http://localhost:7000
++
++backend:
++  baseUrl: http://localhost:7000
++  listen:
++    port: 7000
+diff --git a/package.json b/package.json
+index db8ca15..a9c5f76 100644
+--- a/package.json
++++ b/package.json
+@@ -10,2 +10,3 @@
+     "build": "lerna run build",
++    "build-image": "yarn workspace backend build-image",
+     "tsc": "tsc",
+@@ -28,3 +29,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.2.0",
++    "@backstage/cli": "^0.4.1",
+     "@spotify/prettier-config": "^7.0.0",
+@@ -33,5 +34,2 @@
+   },
+-  "resolutions": {
+-    "esbuild": "0.6.3"
+-  },
+   "prettier": "@spotify/prettier-config",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 5a3a236..0510bd2 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -8,18 +8,17 @@
+     "@material-ui/icons": "^4.9.1",
+-    "@backstage/cli": "^0.2.0",
+-    "@backstage/core": "^0.3.0",
+-    "@backstage/plugin-api-docs": "^0.2.1",
+-    "@backstage/plugin-catalog": "^0.2.1",
+-    "@backstage/plugin-register-component": "^0.2.1",
+-    "@backstage/plugin-scaffolder": "^0.3.0",
+-    "@backstage/plugin-techdocs": "^0.2.1",
+-    "@backstage/catalog-model": "^0.2.0",
+-    "@backstage/plugin-circleci": "^0.2.1",
+-    "@backstage/plugin-explore": "^0.2.1",
+-    "@backstage/plugin-lighthouse": "^0.2.1",
+-    "@backstage/plugin-tech-radar": "^0.3.0",
+-    "@backstage/plugin-github-actions": "^0.2.1",
+-    "@backstage/plugin-user-settings": "^0.2.1",
+-    "@backstage/test-utils": "^0.1.2",
+-    "@backstage/theme": "^0.2.1",
++    "@backstage/cli": "^0.4.1",
++    "@backstage/core": "^0.4.0",
++    "@backstage/plugin-api-docs": "^0.4.0",
++    "@backstage/plugin-catalog": "^0.2.6",
++    "@backstage/plugin-register-component": "^0.2.4",
++    "@backstage/plugin-scaffolder": "^0.3.3",
++    "@backstage/plugin-techdocs": "^0.4.0",
++    "@backstage/catalog-model": "^0.5.0",
++    "@backstage/plugin-circleci": "^0.2.4",
++    "@backstage/plugin-lighthouse": "^0.2.5",
++    "@backstage/plugin-tech-radar": "^0.3.1",
++    "@backstage/plugin-github-actions": "^0.2.4",
++    "@backstage/plugin-user-settings": "^0.2.3",
++    "@backstage/test-utils": "^0.1.5",
++    "@backstage/theme": "^0.2.2",
+     "history": "^5.0.0",
+@@ -64,3 +63,6 @@
+     ]
+-  }
++  },
++  "files": [
++    "dist"
++  ]
+ }
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index 9449ac6..4f5c4ed 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -1,2 +1,2 @@
+-import React, { FC } from 'react';
++import React from 'react';
+ import {
+@@ -34,3 +34,3 @@ const catalogRouteRef = createRouteRef({
+ 
+-const App: FC<{}> = () => (
++const App = () => (
+   <AppProvider>
+diff --git a/packages/app/src/LogoFull.tsx b/packages/app/src/LogoFull.tsx
+index d2b1bf1..2fb7674 100644
+--- a/packages/app/src/LogoFull.tsx
++++ b/packages/app/src/LogoFull.tsx
+@@ -16,3 +16,3 @@
+ 
+-import React, { FC } from 'react';
++import React from 'react';
+ import { makeStyles } from '@material-ui/core';
+@@ -28,3 +28,3 @@ const useStyles = makeStyles({
+ });
+-const LogoFull: FC<{}> = () => {
++const LogoFull = () => {
+   const classes = useStyles();
+diff --git a/packages/app/src/LogoIcon.tsx b/packages/app/src/LogoIcon.tsx
+index d70be3d..507e47d 100644
+--- a/packages/app/src/LogoIcon.tsx
++++ b/packages/app/src/LogoIcon.tsx
+@@ -16,3 +16,3 @@
+ 
+-import React, { FC } from 'react';
++import React from 'react';
+ import { makeStyles } from '@material-ui/core';
+@@ -29,3 +29,3 @@ const useStyles = makeStyles({
+ 
+-const LogoIcon: FC<{}> = () => {
++const LogoIcon = () => {
+   const classes = useStyles();
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 7d65b32..b5e384f 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -15,22 +15,25 @@
+  */
++import { ApiEntity, Entity } from '@backstage/catalog-model';
++import { WarningPanel } from '@backstage/core';
+ import {
+-  Router as GitHubActionsRouter,
+-  isPluginApplicableToEntity as isGitHubActionsAvailable,
+-} from '@backstage/plugin-github-actions';
++  ApiDefinitionCard,
++  ConsumedApisCard, 
++  ConsumingComponentsCard, 
++  ProvidedApisCard, 
++  ProvidingComponentsCard
++} from '@backstage/plugin-api-docs';
++import {
++  AboutCard, EntityPageLayout,
++  useEntity
++} from '@backstage/plugin-catalog';
+ import {
+-  Router as CircleCIRouter,
+-  isPluginApplicableToEntity as isCircleCIAvailable,
++  isPluginApplicableToEntity as isCircleCIAvailable, Router as CircleCIRouter
+ } from '@backstage/plugin-circleci';
+-import { Router as ApiDocsRouter } from '@backstage/plugin-api-docs';
+-import { EmbeddedDocsRouter as DocsRouter } from '@backstage/plugin-techdocs';
+-
+-import React from 'react';
+ import {
+-  EntityPageLayout,
+-  useEntity,
+-  AboutCard,
+-} from '@backstage/plugin-catalog';
+-import { Entity } from '@backstage/catalog-model';
++  isPluginApplicableToEntity as isGitHubActionsAvailable, Router as GitHubActionsRouter
++} from '@backstage/plugin-github-actions';
++import { EmbeddedDocsRouter as DocsRouter } from '@backstage/plugin-techdocs';
+ import { Grid } from '@material-ui/core';
+-import { WarningPanel } from '@backstage/core';
++import React from 'react';
++
+ 
+@@ -62,2 +65,13 @@ const OverviewContent = ({ entity }: { entity: Entity }) => (
+ 
++const ComponentApisContent = ({ entity }: { entity: Entity }) => (
++  <Grid container spacing={3} alignItems="stretch">
++    <Grid item md={6}>
++      <ProvidedApisCard entity={entity} />
++    </Grid>
++    <Grid item md={6}>
++      <ConsumedApisCard entity={entity} />
++    </Grid>
++  </Grid>
++);
++
+ const ServiceEntityPage = ({ entity }: { entity: Entity }) => (
+@@ -77,3 +91,3 @@ const ServiceEntityPage = ({ entity }: { entity: Entity }) => (
+       title="API"
+-      element={<ApiDocsRouter entity={entity} />}
++      element={<ComponentApisContent entity={entity} />}
+     />
+@@ -122,4 +136,3 @@ const DefaultEntityPage = ({ entity }: { entity: Entity }) => (
+ 
+-export const EntityPage = () => {
+-  const { entity } = useEntity();
++export const ComponentEntityPage = ({ entity }: { entity: Entity }) => {
+   switch (entity?.spec?.type) {
+@@ -133 +146,53 @@ export const EntityPage = () => {
+ };
++
++const ApiOverviewContent = ({ entity }: { entity: Entity }) => (
++  <Grid container spacing={3}>
++    <Grid item md={6}>
++      <AboutCard entity={entity} />
++    </Grid>
++    <Grid container item md={12}>
++      <Grid item md={6}>
++        <ProvidingComponentsCard entity={entity} />
++      </Grid>
++      <Grid item md={6}>
++        <ConsumingComponentsCard entity={entity} />
++      </Grid>
++    </Grid>
++  </Grid>
++);
++
++const ApiDefinitionContent = ({ entity }: { entity: ApiEntity }) => (
++  <Grid container spacing={3}>
++    <Grid item xs={12}>
++      <ApiDefinitionCard apiEntity={entity} />
++    </Grid>
++  </Grid>
++);
++
++const ApiEntityPage = ({ entity }: { entity: Entity }) => (
++  <EntityPageLayout>
++    <EntityPageLayout.Content
++      path="/*"
++      title="Overview"
++      element={<ApiOverviewContent entity={entity} />}
++    />
++    <EntityPageLayout.Content
++      path="/definition/*"
++      title="Definition"
++      element={<ApiDefinitionContent entity={entity as ApiEntity} />}
++    />
++  </EntityPageLayout>
++);
++
++export const EntityPage = () => {
++  const { entity } = useEntity();
++
++  switch (entity?.kind?.toLowerCase()) {
++    case 'component':
++      return <ComponentEntityPage entity={entity} />;
++    case 'api':
++      return <ApiEntityPage entity={entity} />;
++    default:
++      return <DefaultEntityPage entity={entity} />;
++  }
++};
+diff --git a/packages/app/src/plugins.ts b/packages/app/src/plugins.ts
+index b719594..9eabff0 100644
+--- a/packages/app/src/plugins.ts
++++ b/packages/app/src/plugins.ts
+@@ -5,3 +5,2 @@ export { plugin as ScaffolderPlugin } from '@backstage/plugin-scaffolder';
+ export { plugin as TechDocsPlugin } from '@backstage/plugin-techdocs';
+-export { plugin as Explore } from '@backstage/plugin-explore';
+ export { plugin as Circleci } from '@backstage/plugin-circleci';
+diff --git a/packages/app/src/sidebar.tsx b/packages/app/src/sidebar.tsx
+index 9013476..db73e70 100644
+--- a/packages/app/src/sidebar.tsx
++++ b/packages/app/src/sidebar.tsx
+@@ -1,4 +1,5 @@
+-import React, { FC, useContext } from 'react';
++import React, { useContext } from 'react';
+ import HomeIcon from '@material-ui/icons/Home';
+ import LibraryBooks from '@material-ui/icons/LibraryBooks';
++import ExtensionIcon from '@material-ui/icons/Extension';
+ import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
+@@ -28,2 +29,3 @@ export const AppSidebar = () => (
+     <SidebarItem icon={HomeIcon} to="./" text="Home" />
++    <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
+     <SidebarItem icon={LibraryBooks} to="/docs" text="Docs" />
+@@ -57,3 +59,3 @@ const useSidebarLogoStyles = makeStyles({
+ 
+-const SidebarLogo: FC<{}> = () => {
++const SidebarLogo = () => {
+   const classes = useSidebarLogoStyles();
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 93929ce..5051471 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -9,3 +9,3 @@ ADD yarn.lock package.json skeleton.tar ./
+ 
+-RUN yarn install --frozen-lockfile --production
++RUN yarn install --frozen-lockfile --production --network-timeout 300000 && rm -rf "$(yarn cache dir)"
+ 
+@@ -15,2 +15,2 @@ COPY . .
+ 
+-CMD ["node", "packages/backend"]
++CMD ["node", "packages/backend", "--config", "app-config.yaml", "--config", "app-config.production.yaml"]
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index b2f24a8..dca5749 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -11,3 +11,3 @@
+     "build": "backstage-cli backend:build",
+-    "build-image": "backstage-cli backend:build-image --build --tag example-backend",
++    "build-image": "backstage-cli backend:build-image --build --tag backstage",
+     "start": "backstage-cli backend:dev",
+@@ -19,14 +19,15 @@
+   "dependencies": {
+-    "@backstage/backend-common": "^0.2.1",
+-    "@backstage/catalog-model": "^0.2.0",
+-    "@backstage/config": "^0.1.1",
+-    "@backstage/plugin-auth-backend": "^0.2.1",
+-    "@backstage/plugin-catalog-backend": "^0.2.0",
+-    "@backstage/plugin-proxy-backend": "^0.2.0",
+-    "@backstage/plugin-rollbar-backend": "^0.1.2",
+-    "@backstage/plugin-scaffolder-backend": "^0.3.0",
+-    "@backstage/plugin-techdocs-backend": "^0.2.0",
++    "app": "0.0.0",
++    "@backstage/backend-common": "^0.4.0",
++    "@backstage/catalog-model": "^0.5.0",
++    "@backstage/config": "^0.1.2",
++    "@backstage/plugin-app-backend": "^0.3.3",
++    "@backstage/plugin-auth-backend": "^0.2.6",
++    "@backstage/plugin-catalog-backend": "^0.4.0",
++    "@backstage/plugin-proxy-backend": "^0.2.3",
++    "@backstage/plugin-scaffolder-backend": "^0.3.4",
++    "@backstage/plugin-techdocs-backend": "^0.3.2",
+     "@octokit/rest": "^18.0.0",
+     "@gitbeaker/node": "^25.2.0",
+-    "dockerode": "^3.2.0",
++    "dockerode": "^3.2.1",
+     "express": "^4.17.1",
+@@ -38,4 +39,4 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.2.0",
+-    "@types/dockerode": "^2.5.32",
++    "@backstage/cli": "^0.4.1",
++    "@types/dockerode": "^3.2.1",
+     "@types/express": "^4.17.6",
+@@ -43,3 +44,6 @@
+     "@types/helmet": "^0.0.47"
+-  }
++  },
++  "files": [
++    "dist"
++  ]
+ }
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 51de1ad..80dc623 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -20,2 +20,3 @@ import {
+ import { Config } from '@backstage/config';
++import app from './plugins/app';
+ import auth from './plugins/auth';
+@@ -55,2 +56,3 @@ async function main() {
+   const techdocsEnv = useHotMemoize(module, () => createEnv('techdocs'));
++  const appEnv = useHotMemoize(module, () => createEnv('app'));
+ 
+@@ -66,3 +68,4 @@ async function main() {
+     .loadConfig(config)
+-    .addRouter('/api', apiRouter);
++    .addRouter('/api', apiRouter)
++    .addRouter('', await app(appEnv));
+ 
+diff --git a/packages/backend/src/plugins/app.ts b/packages/backend/src/plugins/app.ts
+new file mode 100644
+index 0000000..5131694
+--- /dev/null
++++ b/packages/backend/src/plugins/app.ts
+@@ -0,0 +1,13 @@
++import { createRouter } from '@backstage/plugin-app-backend';
++import { PluginEnvironment } from '../types';
++
++export default async function createPlugin({
++  logger,
++  config,
++}: PluginEnvironment) {
++  return await createRouter({
++    logger,
++    config,
++    appPackageName: 'app',
++  });
++}
+diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
+index 5506228..ac4d81a 100644
+--- a/packages/backend/src/plugins/techdocs.ts
++++ b/packages/backend/src/plugins/techdocs.ts
+@@ -30,3 +30,3 @@ export default async function createPlugin({
+ 
+-  const publisher = new LocalPublish(logger);
++  const publisher = new LocalPublish(logger, discovery);
+ 
