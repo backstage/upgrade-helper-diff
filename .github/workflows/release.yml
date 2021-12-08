@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BACKSTAGE_APP_NAME: backstagediffapp
+      INPUT_VERSION: ${{ github.event.inputs.version }}
     outputs:
       backstage_version: ${{ steps.set-outputs.outputs.backstage_version }}
     steps:
