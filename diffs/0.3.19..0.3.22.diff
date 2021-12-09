@@ -1,0 +1,170 @@
+diff --git a/package.json b/package.json
+index 80e8bb9..053d90d 100644
+--- a/package.json
++++ b/package.json
+@@ -35,3 +35,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.6.9",
++    "@backstage/cli": "^0.6.11",
+     "@spotify/prettier-config": "^7.0.0",
+diff --git a/packages/app/cypress/integration/app.js b/packages/app/cypress/integration/app.js
+index efcd5b8..43fb2e3 100644
+--- a/packages/app/cypress/integration/app.js
++++ b/packages/app/cypress/integration/app.js
+@@ -3,3 +3,3 @@ describe('App', () => {
+     cy.visit('/');
+-    cy.contains('My Company Service Catalog');
++    cy.contains('My Company Catalog');
+   });
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 74be4c4..f4539af 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -6,19 +6,19 @@
+   "dependencies": {
+-    "@backstage/catalog-model": "^0.7.7",
+-    "@backstage/cli": "^0.6.9",
+-    "@backstage/core": "^0.7.6",
+-    "@backstage/integration-react": "^0.1.1",
+-    "@backstage/plugin-api-docs": "^0.4.11",
+-    "@backstage/plugin-catalog": "^0.5.5",
+-    "@backstage/plugin-catalog-import": "^0.5.3",
+-    "@backstage/plugin-catalog-react": "^0.1.4",
+-    "@backstage/plugin-github-actions": "^0.4.3",
+-    "@backstage/plugin-org": "^0.3.12",
+-    "@backstage/plugin-scaffolder": "^0.9.1",
+-    "@backstage/plugin-search": "^0.3.4",
+-    "@backstage/plugin-tech-radar": "^0.3.9",
+-    "@backstage/plugin-techdocs": "^0.8.0",
+-    "@backstage/plugin-user-settings": "^0.2.9",
+-    "@backstage/test-utils": "^0.1.10",
+-    "@backstage/theme": "^0.2.6",
++    "@backstage/catalog-model": "^0.7.9",
++    "@backstage/cli": "^0.6.11",
++    "@backstage/core": "^0.7.9",
++    "@backstage/integration-react": "^0.1.2",
++    "@backstage/plugin-api-docs": "^0.4.13",
++    "@backstage/plugin-catalog": "^0.5.7",
++    "@backstage/plugin-catalog-import": "^0.5.6",
++    "@backstage/plugin-catalog-react": "^0.1.6",
++    "@backstage/plugin-github-actions": "^0.4.6",
++    "@backstage/plugin-org": "^0.3.13",
++    "@backstage/plugin-scaffolder": "^0.9.4",
++    "@backstage/plugin-search": "^0.3.6",
++    "@backstage/plugin-tech-radar": "^0.3.11",
++    "@backstage/plugin-techdocs": "^0.9.2",
++    "@backstage/plugin-user-settings": "^0.2.10",
++    "@backstage/test-utils": "^0.1.11",
++    "@backstage/theme": "^0.2.7",
+     "@material-ui/core": "^4.11.0",
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 40f16fa..77da3f6 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -20,14 +20,14 @@
+     "app": "0.0.0",
+-    "@backstage/backend-common": "^0.6.3",
+-    "@backstage/catalog-model": "^0.7.7",
+-    "@backstage/catalog-client": "^0.3.10",
+-    "@backstage/config": "^0.1.4",
+-    "@backstage/plugin-app-backend": "^0.3.11",
+-    "@backstage/plugin-auth-backend": "^0.3.8",
+-    "@backstage/plugin-catalog-backend": "^0.8.0",
+-    "@backstage/plugin-proxy-backend": "^0.2.6",
+-    "@backstage/plugin-scaffolder-backend": "^0.10.0",
+-    "@backstage/plugin-techdocs-backend": "^0.7.1",
++    "@backstage/backend-common": "^0.8.0",
++    "@backstage/catalog-model": "^0.7.9",
++    "@backstage/catalog-client": "^0.3.11",
++    "@backstage/config": "^0.1.5",
++    "@backstage/plugin-app-backend": "^0.3.13",
++    "@backstage/plugin-auth-backend": "^0.3.10",
++    "@backstage/plugin-catalog-backend": "^0.9.0",
++    "@backstage/plugin-proxy-backend": "^0.2.8",
++    "@backstage/plugin-scaffolder-backend": "^0.11.1",
++    "@backstage/plugin-techdocs-backend": "^0.8.1",
+     "@gitbeaker/node": "^28.0.2",
+-    "@octokit/rest": "^18.0.12",
++    "@octokit/rest": "^18.5.3",
+     "dockerode": "^3.2.1",
+@@ -40,3 +40,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.6.9",
++    "@backstage/cli": "^0.6.11",
+     "@types/dockerode": "^3.2.1",
+diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
+index a3416c5..333ffa1 100644
+--- a/packages/backend/src/plugins/scaffolder.ts
++++ b/packages/backend/src/plugins/scaffolder.ts
+@@ -1,2 +1,5 @@
+-import { SingleHostDiscovery } from '@backstage/backend-common';
++import {
++  DockerContainerRunner,
++  SingleHostDiscovery,
++} from '@backstage/backend-common';
+ import { CatalogClient } from '@backstage/catalog-client';
+@@ -8,3 +11,3 @@ import {
+   Publishers,
+-  Templaters
++  Templaters,
+ } from '@backstage/plugin-scaffolder-backend';
+@@ -20,4 +23,7 @@ export default async function createPlugin({
+ }: PluginEnvironment): Promise<Router> {
+-  const cookiecutterTemplater = new CookieCutter();
+-  const craTemplater = new CreateReactAppTemplater();
++  const dockerClient = new Docker();
++  const containerRunner = new DockerContainerRunner({ dockerClient });
++
++  const cookiecutterTemplater = new CookieCutter({ containerRunner });
++  const craTemplater = new CreateReactAppTemplater({ containerRunner });
+   const templaters = new Templaters();
+@@ -30,4 +36,2 @@ export default async function createPlugin({
+ 
+-  const dockerClient = new Docker();
+-
+   const discovery = SingleHostDiscovery.fromConfig(config);
+@@ -41,6 +45,5 @@ export default async function createPlugin({
+     config,
+-    dockerClient,
+     database,
+     catalogClient,
+-    reader
++    reader,
+   });
+diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
+index 231a7e7..906d86d 100644
+--- a/packages/backend/src/plugins/techdocs.ts
++++ b/packages/backend/src/plugins/techdocs.ts
+@@ -1,7 +1,7 @@
++import { DockerContainerRunner } from '@backstage/backend-common';
+ import {
+   createRouter,
+-
+-  Generators, Preparers,
+-
+-  Publisher
++  Generators,
++  Preparers,
++  Publisher,
+ } from '@backstage/plugin-techdocs-backend';
+@@ -23,2 +23,6 @@ export default async function createPlugin({
+ 
++  // Docker client (conditionally) used by the generators, based on techdocs.generators config.
++  const dockerClient = new Docker();
++  const containerRunner = new DockerContainerRunner({ dockerClient });
++
+   // Generators are used for generating documentation sites.
+@@ -26,2 +30,3 @@ export default async function createPlugin({
+     logger,
++    containerRunner,
+   });
+@@ -39,5 +44,2 @@ export default async function createPlugin({
+ 
+-  // Docker client (conditionally) used by the generators, based on techdocs.generators config.
+-  const dockerClient = new Docker();
+-
+   return await createRouter({
+@@ -46,3 +48,2 @@ export default async function createPlugin({
+     publisher,
+-    dockerClient,
+     logger,
