@@ -12,19 +12,28 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BACKSTAGE_APP_NAME: backstagediffapp
-      INPUT_VERSION: ${{ github.event.inputs.version }}
+      RELEASE_VERSION: ${{ github.event.inputs.version }}
     outputs:
       backstage_version: ${{ steps.set-outputs.outputs.backstage_version }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+
+      # First check out master and run the script that figures out which version of create-app we should use
       - name: Check out repository code
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Get @backstage/create-app version
+        id: get-create-app-version
+        run: node lookup-create-app-version.js
+
+      - name: Check out release base
         uses: actions/checkout@v2
         with:
           ref: "release-base"
-      - name: Set @backstage/create-app version
-        run: echo "CREATE_APP_VERSION=${INPUT_VERSION:-$(npm view @backstage/create-app version)}" >> $GITHUB_ENV
       - name: Run @backstage/create-app
-        run: printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${CREATE_APP_VERSION} --skip-install
+        run: printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${{ steps.get-create-app-version.outputs.version }} --skip-install
       - name: Check current directory
         run: pwd
       - name: Move all the files into the root directory
@@ -35,14 +44,14 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Add release
         run: |
-          git checkout -b release/${CREATE_APP_VERSION}
+          git checkout -b release/${RELEASE_VERSION}
           git add .
           git reset $BACKSTAGE_APP_NAME
-          git commit -m "Release ${CREATE_APP_VERSION}"
-          git push origin release/${CREATE_APP_VERSION}
+          git commit -m "Release ${RELEASE_VERSION}"
+          git push origin release/${RELEASE_VERSION}
       - id: set-outputs
         name: Set outputs
-        run: echo "::set-output name=backstage_version::$(echo $CREATE_APP_VERSION)"
+        run: echo "::set-output name=backstage_version::$(echo $RELEASE_VERSION)"
       - run: echo "🍏 This job's status is ${{ job.status }}."
   diff:
     name: Create new diffs
