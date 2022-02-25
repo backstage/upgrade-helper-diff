@@ -1,0 +1,619 @@
+diff --git a/app-config.yaml b/app-config.yaml
+index 2999615..d45e354 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -9,3 +9,4 @@ backend:
+   # Used for enabling authentication, secret is shared by all backend plugins
+-  # See backend-to-backend-auth.md in the docs for information on the format
++  # See https://backstage.io/docs/tutorials/backend-to-backend-auth for
++  # information on the format
+   # auth:
+@@ -61,7 +62,8 @@ auth:
+ scaffolder:
+-  github:
+-    token: ${GITHUB_TOKEN}
+-    visibility: public # or 'internal' or 'private'
++  # see https://backstage.io/docs/features/software-templates/configuration for software template options
+ 
+ catalog:
++  import:
++    entityFilename: catalog-info.yaml
++    pullRequestBranchName: backstage-integration
+   rules:
+diff --git a/backstage.json b/backstage.json
+index 1062ff8..bc89f03 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "0.4.6"
++  "version": "0.4.21"
+ }
+diff --git a/package.json b/package.json
+index 95de0a0..7818580 100644
+--- a/package.json
++++ b/package.json
+@@ -32,7 +32,8 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.10.0",
+-    "@spotify/prettier-config": "^11.0.0",
++    "@backstage/cli": "^0.14.1",
++    "@spotify/prettier-config": "^12.0.0",
+     "concurrently": "^6.0.0",
+     "lerna": "^4.0.0",
+-    "prettier": "^2.3.2"
++    "prettier": "^2.3.2",
++    "typescript": "~4.5.4"
+   },
+@@ -40,3 +41,3 @@
+   "lint-staged": {
+-    "*.{js,jsx,ts,tsx}": [
++    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+       "eslint --fix",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 9f1021a..cfaf39c 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -6,22 +6,24 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^0.1.1",
+-    "@backstage/catalog-model": "^0.9.7",
+-    "@backstage/cli": "^0.10.0",
+-    "@backstage/core-app-api": "^0.1.24",
+-    "@backstage/core-components": "^0.7.6",
+-    "@backstage/core-plugin-api": "^0.2.2",
+-    "@backstage/integration-react": "^0.1.14",
+-    "@backstage/plugin-api-docs": "^0.6.16",
+-    "@backstage/plugin-catalog": "^0.7.3",
+-    "@backstage/plugin-catalog-import": "^0.7.4",
+-    "@backstage/plugin-catalog-react": "^0.6.4",
+-    "@backstage/plugin-github-actions": "^0.4.25",
+-    "@backstage/plugin-org": "^0.3.29",
+-    "@backstage/plugin-scaffolder": "^0.11.13",
+-    "@backstage/plugin-search": "^0.5.0",
+-    "@backstage/plugin-tech-radar": "^0.4.12",
+-    "@backstage/plugin-techdocs": "^0.12.8",
+-    "@backstage/plugin-user-settings": "^0.3.12",
+-    "@backstage/test-utils": "^0.1.23",
+-    "@backstage/theme": "^0.2.14",
++    "@backstage/app-defaults": "^0.1.9",
++    "@backstage/catalog-model": "^0.11.0",
++    "@backstage/cli": "^0.14.1",
++    "@backstage/core-app-api": "^0.5.4",
++    "@backstage/core-components": "^0.8.10",
++    "@backstage/core-plugin-api": "^0.7.0",
++    "@backstage/integration-react": "^0.1.23",
++    "@backstage/plugin-api-docs": "^0.8.0",
++    "@backstage/plugin-catalog": "^0.9.0",
++    "@backstage/plugin-catalog-common": "^0.1.4",
++    "@backstage/plugin-catalog-graph": "^0.2.12",
++    "@backstage/plugin-catalog-import": "^0.8.3",
++    "@backstage/plugin-catalog-react": "^0.7.0",
++    "@backstage/plugin-github-actions": "^0.5.0",
++    "@backstage/plugin-org": "^0.5.0",
++    "@backstage/plugin-permission-react": "^0.3.2",
++    "@backstage/plugin-scaffolder": "^0.13.0",
++    "@backstage/plugin-search": "^0.7.1",
++    "@backstage/plugin-tech-radar": "^0.5.7",
++    "@backstage/plugin-techdocs": "^0.14.0",
++    "@backstage/plugin-user-settings": "^0.3.21",
++    "@backstage/theme": "^0.2.15",
+     "@material-ui/core": "^4.12.2",
+@@ -29,4 +31,4 @@
+     "history": "^5.0.0",
+-    "react": "^16.13.1",
+-    "react-dom": "^16.13.1",
++    "react": "^17.0.2",
++    "react-dom": "^17.0.2",
+     "react-router": "6.0.0-beta.0",
+@@ -36,2 +38,3 @@
+   "devDependencies": {
++    "@backstage/test-utils": "^0.2.6",
+     "@testing-library/jest-dom": "^5.10.1",
+@@ -50,7 +53,7 @@
+     "build": "backstage-cli app:build",
+-    "test": "backstage-cli test",
+-    "lint": "backstage-cli lint",
+     "clean": "backstage-cli clean",
++    "test": "backstage-cli test",
+     "test:e2e": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:dev",
+     "test:e2e:ci": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:run",
++    "lint": "backstage-cli lint",
+     "cy:dev": "cypress open",
+diff --git a/packages/app/public/index.html b/packages/app/public/index.html
+index b93896c..a936c73 100644
+--- a/packages/app/public/index.html
++++ b/packages/app/public/index.html
+@@ -44,13 +44,7 @@
+     />
+-    <style>
+-      #root {
+-        min-height: 100%;
+-      }
+-    </style>
+-    <title><%= app.title %></title>
+-    <% if (app.googleAnalyticsTrackingId && typeof app.googleAnalyticsTrackingId
+-    === 'string') { %>
++    <title><%= config.getString('app.title') %></title>
++    <% if (config.has('app.googleAnalyticsTrackingId')) { %>
+     <script
+       async
+-      src="https://www.googletagmanager.com/gtag/js?id=<%= app.googleAnalyticsTrackingId %>"
++      src="https://www.googletagmanager.com/gtag/js?id=<%= config.getString('app.googleAnalyticsTrackingId') %>"
+     ></script>
+@@ -63,3 +57,6 @@
+ 
+-      gtag('config', '<%= app.googleAnalyticsTrackingId %>');
++      gtag(
++        'config',
++        '<%= config.getString("app.googleAnalyticsTrackingId") %>',
++      );
+     </script>
+@@ -67,3 +64,3 @@
+   </head>
+-  <body style="margin: 0">
++  <body>
+     <noscript>You need to enable JavaScript to run this app.</noscript>
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index 8a53583..9b65186 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -13,2 +13,3 @@ import {
+ import { ScaffolderPage, scaffolderPlugin } from '@backstage/plugin-scaffolder';
++import { orgPlugin } from '@backstage/plugin-org';
+ import { SearchPage } from '@backstage/plugin-search';
+@@ -30,2 +31,5 @@ import { createApp } from '@backstage/app-defaults';
+ import { FlatRoutes } from '@backstage/core-app-api';
++import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
++import { PermissionedRoute } from '@backstage/plugin-permission-react';
++import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common';
+ 
+@@ -39,3 +43,3 @@ const app = createApp({
+     bind(apiDocsPlugin.externalRoutes, {
+-      createComponent: scaffolderPlugin.routes.root,
++      registerApi: catalogImportPlugin.routes.importPage,
+     });
+@@ -44,2 +48,5 @@ const app = createApp({
+     });
++    bind(orgPlugin.externalRoutes, {
++      catalogIndex: catalogPlugin.routes.catalogIndex,
++    });
+   },
+@@ -73,3 +80,7 @@ const routes = (
+     />
+-    <Route path="/catalog-import" element={<CatalogImportPage />} />
++    <PermissionedRoute
++      path="/catalog-import"
++      permission={catalogEntityCreatePermission}
++      element={<CatalogImportPage />}
++    />
+     <Route path="/search" element={<SearchPage />}>
+@@ -78,2 +89,3 @@ const routes = (
+     <Route path="/settings" element={<UserSettingsPage />} />
++    <Route path="/catalog-graph" element={<CatalogGraphPage />} />
+   </FlatRoutes>
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+index b4fa04f..90738c4 100644
+--- a/packages/app/src/components/Root/Root.tsx
++++ b/packages/app/src/components/Root/Root.tsx
+@@ -26,17 +26,20 @@ import LogoIcon from './LogoIcon';
+ import { NavLink } from 'react-router-dom';
+-import { Settings as SidebarSettings } from '@backstage/plugin-user-settings';
+ import {
+-  SidebarSearchModal,
+-  SearchContextProvider,
+-} from '@backstage/plugin-search';
++  Settings as SidebarSettings,
++  UserSettingsSignInAvatar,
++} from '@backstage/plugin-user-settings';
++import { SidebarSearchModal } from '@backstage/plugin-search';
+ import {
+   Sidebar,
+-  SidebarPage,
+   sidebarConfig,
+   SidebarContext,
+-  SidebarItem,
+   SidebarDivider,
+-  SidebarSpace,
++  SidebarGroup,
++  SidebarItem,
++  SidebarPage,
+   SidebarScrollWrapper,
++  SidebarSpace,
+ } from '@backstage/core-components';
++import MenuIcon from '@material-ui/icons/Menu';
++import SearchIcon from '@material-ui/icons/Search';
+ 
+@@ -79,19 +82,27 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
+       <SidebarLogo />
+-      <SearchContextProvider>
++      <SidebarGroup label="Search" icon={<SearchIcon />} to="/search">
+         <SidebarSearchModal />
+-      </SearchContextProvider>
++      </SidebarGroup>
+       <SidebarDivider />
+-      {/* Global nav, not org-specific */}
+-      <SidebarItem icon={HomeIcon} to="catalog" text="Home" />
+-      <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
+-      <SidebarItem icon={LibraryBooks} to="docs" text="Docs" />
+-      <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
+-      {/* End global nav */}
+-      <SidebarDivider />
+-      <SidebarScrollWrapper>
+-        <SidebarItem icon={MapIcon} to="tech-radar" text="Tech Radar" />
+-      </SidebarScrollWrapper>
++      <SidebarGroup label="Menu" icon={<MenuIcon />}>
++        {/* Global nav, not org-specific */}
++        <SidebarItem icon={HomeIcon} to="catalog" text="Home" />
++        <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
++        <SidebarItem icon={LibraryBooks} to="docs" text="Docs" />
++        <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
++        {/* End global nav */}
++        <SidebarDivider />
++        <SidebarScrollWrapper>
++          <SidebarItem icon={MapIcon} to="tech-radar" text="Tech Radar" />
++        </SidebarScrollWrapper>
++      </SidebarGroup>
+       <SidebarSpace />
+       <SidebarDivider />
+-      <SidebarSettings />
++      <SidebarGroup
++        label="Settings"
++        icon={<UserSettingsSignInAvatar />}
++        to="/settings"
++      >
++        <SidebarSettings />
++      </SidebarGroup>
+     </Sidebar>
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index d3b4b78..84d0944 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -29,3 +29,2 @@ import {
+   EntityDependsOnResourcesCard,
+-  EntitySystemDiagramCard,
+   EntityHasComponentsCard,
+@@ -56,2 +55,16 @@ import { EntityTechdocsContent } from '@backstage/plugin-techdocs';
+ import { EmptyState } from '@backstage/core-components';
++import {
++  Direction,
++  EntityCatalogGraphCard,
++} from '@backstage/plugin-catalog-graph';
++import {
++  RELATION_API_CONSUMED_BY,
++  RELATION_API_PROVIDED_BY,
++  RELATION_CONSUMES_API,
++  RELATION_DEPENDENCY_OF,
++  RELATION_DEPENDS_ON,
++  RELATION_HAS_PART,
++  RELATION_PART_OF,
++  RELATION_PROVIDES_API,
++} from '@backstage/catalog-model';
+ 
+@@ -110,2 +123,6 @@ const overviewContent = (
+     </Grid>
++    <Grid item md={6} xs={12}>
++      <EntityCatalogGraphCard variant="gridItem" height={400} />
++    </Grid>
++
+     <Grid item md={4} xs={12}>
+@@ -225,2 +242,5 @@ const apiPage = (
+         </Grid>
++        <Grid item md={6} xs={12}>
++          <EntityCatalogGraphCard variant="gridItem" height={400} />
++        </Grid>
+         <Grid item md={4} xs={12}>
+@@ -292,2 +312,5 @@ const systemPage = (
+         </Grid>
++        <Grid item md={6} xs={12}>
++          <EntityCatalogGraphCard variant="gridItem" height={400} />
++        </Grid>
+         <Grid item md={6}>
+@@ -304,3 +327,19 @@ const systemPage = (
+     <EntityLayout.Route path="/diagram" title="Diagram">
+-      <EntitySystemDiagramCard />
++      <EntityCatalogGraphCard
++        variant="gridItem"
++        direction={Direction.TOP_BOTTOM}
++        title="System Diagram"
++        height={700}
++        relations={[
++          RELATION_PART_OF,
++          RELATION_HAS_PART,
++          RELATION_API_CONSUMED_BY,
++          RELATION_API_PROVIDED_BY,
++          RELATION_CONSUMES_API,
++          RELATION_PROVIDES_API,
++          RELATION_DEPENDENCY_OF,
++          RELATION_DEPENDS_ON,
++        ]}
++        unidirectional={false}
++      />
+     </EntityLayout.Route>
+@@ -317,2 +356,5 @@ const domainPage = (
+         </Grid>
++        <Grid item md={6} xs={12}>
++          <EntityCatalogGraphCard variant="gridItem" height={400} />
++        </Grid>
+         <Grid item md={6}>
+diff --git a/packages/app/src/components/search/SearchPage.tsx b/packages/app/src/components/search/SearchPage.tsx
+index 50ffbad..469a230 100644
+--- a/packages/app/src/components/search/SearchPage.tsx
++++ b/packages/app/src/components/search/SearchPage.tsx
+@@ -3,3 +3,7 @@ import { makeStyles, Theme, Grid, List, Paper } from '@material-ui/core';
+ 
+-import { CatalogResultListItem } from '@backstage/plugin-catalog';
++import { CatalogSearchResultListItem } from '@backstage/plugin-catalog';
++import {
++  catalogApiRef,
++  CATALOG_FILTER_EXISTS,
++} from '@backstage/plugin-catalog-react';
+ import { DocsResultListItem } from '@backstage/plugin-techdocs';
+@@ -12,4 +16,12 @@ import {
+   DefaultResultListItem,
++  useSearch,
+ } from '@backstage/plugin-search';
+-import { Content, Header, Page } from '@backstage/core-components';
++import {
++  CatalogIcon,
++  Content,
++  DocsIcon,
++  Header,
++  Page,
++} from '@backstage/core-components';
++import { useApi } from '@backstage/core-plugin-api';
+ 
+@@ -21,2 +33,3 @@ const useStyles = makeStyles((theme: Theme) => ({
+     padding: theme.spacing(2),
++    marginTop: theme.spacing(2),
+   },
+@@ -31,2 +44,4 @@ const SearchPage = () => {
+   const classes = useStyles();
++  const { types } = useSearch();
++  const catalogApi = useApi(catalogApiRef);
+ 
+@@ -39,3 +54,3 @@ const SearchPage = () => {
+             <Paper className={classes.bar}>
+-              <SearchBar debounceTime={100} />
++              <SearchBar />
+             </Paper>
+@@ -43,10 +58,43 @@ const SearchPage = () => {
+           <Grid item xs={3}>
++            <SearchType.Accordion
++              name="Result Type"
++              defaultValue="software-catalog"
++              types={[
++                {
++                  value: 'software-catalog',
++                  name: 'Software Catalog',
++                  icon: <CatalogIcon />,
++                },
++                {
++                  value: 'techdocs',
++                  name: 'Documentation',
++                  icon: <DocsIcon />,
++                },
++              ]}
++            />
+             <Paper className={classes.filters}>
+-              <SearchType
+-                values={['techdocs', 'software-catalog']}
+-                name="type"
+-                defaultValue="software-catalog"
+-              />
++              {types.includes('techdocs') && (
++                <SearchFilter.Select
++                  className={classes.filter}
++                  label="Entity"
++                  name="name"
++                  values={async () => {
++                    // Return a list of entities which are documented.
++                    const { items } = await catalogApi.getEntities({
++                      fields: ['metadata.name'],
++                      filter: {
++                        'metadata.annotations.backstage.io/techdocs-ref':
++                          CATALOG_FILTER_EXISTS,
++                      },
++                    });
++
++                    const names = items.map(entity => entity.metadata.name);
++                    names.sort();
++                    return names;
++                  }}
++                />
++              )}
+               <SearchFilter.Select
+                 className={classes.filter}
++                label="Kind"
+                 name="kind"
+@@ -56,2 +104,3 @@ const SearchPage = () => {
+                 className={classes.filter}
++                label="Lifecycle"
+                 name="lifecycle"
+@@ -69,3 +118,3 @@ const SearchPage = () => {
+                         return (
+-                          <CatalogResultListItem
++                          <CatalogSearchResultListItem
+                             key={document.location}
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 31231a3..dd35d4d 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -11,3 +11,3 @@
+ 
+-FROM node:14-buster-slim
++FROM node:16-bullseye-slim
+ 
+@@ -21,2 +21,8 @@ RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
+ 
++# install sqlite3 dependencies
++RUN apt-get update && \
++    apt-get install -y libsqlite3-dev python3 cmake g++ && \
++    rm -rf /var/lib/apt/lists/* && \
++    yarn config set python /usr/bin/python3
++
+ RUN yarn install --frozen-lockfile --production --network-timeout 300000 && rm -rf "$(yarn cache dir)"
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index e908e1e..e49967b 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -16,15 +16,18 @@
+   "dependencies": {
+-    "app": "0.0.0",
+-    "@backstage/backend-common": "^0.9.12",
+-    "@backstage/catalog-model": "^0.9.7",
+-    "@backstage/catalog-client": "^0.5.2",
+-    "@backstage/config": "^0.1.11",
+-    "@backstage/plugin-app-backend": "^0.3.19",
+-    "@backstage/plugin-auth-backend": "^0.4.10",
+-    "@backstage/plugin-catalog-backend": "^0.19.0",
+-    "@backstage/plugin-proxy-backend": "^0.2.14",
+-    "@backstage/plugin-scaffolder-backend": "^0.15.15",
+-    "@backstage/plugin-search-backend": "^0.2.7",
+-    "@backstage/plugin-search-backend-node": "^0.4.3",
+-    "@backstage/plugin-techdocs-backend": "^0.11.0",
++    "app": "link:../app",
++    "@backstage/backend-common": "^0.11.0",
++    "@backstage/backend-tasks": "^0.1.9",
++    "@backstage/catalog-model": "^0.11.0",
++    "@backstage/catalog-client": "^0.7.2",
++    "@backstage/config": "^0.1.15",
++    "@backstage/plugin-app-backend": "^0.3.27",
++    "@backstage/plugin-auth-backend": "^0.11.0",
++    "@backstage/plugin-catalog-backend": "^0.22.0",
++    "@backstage/plugin-permission-common": "^0.5.1",
++    "@backstage/plugin-permission-node": "^0.5.2",
++    "@backstage/plugin-proxy-backend": "^0.2.21",
++    "@backstage/plugin-scaffolder-backend": "^0.17.0",
++    "@backstage/plugin-search-backend": "^0.4.5",
++    "@backstage/plugin-search-backend-node": "^0.4.7",
++    "@backstage/plugin-techdocs-backend": "^0.14.0",
+     "@gitbeaker/node": "^34.6.0",
+@@ -35,3 +38,3 @@
+     "knex": "^0.21.6",
+-    "sqlite3": "^5.0.1",
++    "@vscode/sqlite3": "^5.0.7",
+     "winston": "^3.2.1"
+@@ -39,3 +42,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.10.0",
++    "@backstage/cli": "^0.14.1",
+     "@types/dockerode": "^3.3.0",
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 3f12122..70bc66b 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -21,2 +21,3 @@ import {
+ } from '@backstage/backend-common';
++import { TaskScheduler } from '@backstage/backend-tasks';
+ import { Config } from '@backstage/config';
+@@ -30,2 +31,3 @@ import search from './plugins/search';
+ import { PluginEnvironment } from './types';
++import { ServerPermissionClient } from '@backstage/plugin-permission-node';
+ 
+@@ -35,5 +37,2 @@ function makeCreateEnv(config: Config) {
+   const discovery = SingleHostDiscovery.fromConfig(config);
+-
+-  root.info(`Created UrlReader ${reader}`);
+-
+   const cacheManager = CacheManager.fromConfig(config);
+@@ -41,2 +40,9 @@ function makeCreateEnv(config: Config) {
+   const tokenManager = ServerTokenManager.noop();
++  const taskScheduler = TaskScheduler.fromConfig(config);
++  const permissions = ServerPermissionClient.fromConfig(config, {
++    discovery,
++    tokenManager,
++  });
++
++  root.info(`Created UrlReader ${reader}`);
+ 
+@@ -46,3 +52,14 @@ function makeCreateEnv(config: Config) {
+     const cache = cacheManager.forPlugin(plugin);
+-    return { logger, database, cache, config, reader, discovery, tokenManager };
++    const scheduler = taskScheduler.forPlugin(plugin);
++    return {
++      logger,
++      database,
++      cache,
++      config,
++      reader,
++      discovery,
++      tokenManager,
++      scheduler,
++      permissions,
++    };
+   };
+@@ -72,2 +89,4 @@ async function main() {
+   apiRouter.use('/search', await search(searchEnv));
++
++  // Add backends ABOVE this line; this 404 handler is the catch-all fallback
+   apiRouter.use(notFoundHandler());
+diff --git a/packages/backend/src/plugins/app.ts b/packages/backend/src/plugins/app.ts
+index 07fb04f..14e19a1 100644
+--- a/packages/backend/src/plugins/app.ts
++++ b/packages/backend/src/plugins/app.ts
+@@ -7,2 +7,3 @@ export default async function createPlugin({
+   config,
++  database,
+ }: PluginEnvironment): Promise<Router> {
+@@ -11,2 +12,3 @@ export default async function createPlugin({
+     config,
++    database,
+     appPackageName: 'app',
+diff --git a/packages/backend/src/plugins/auth.ts b/packages/backend/src/plugins/auth.ts
+index 5216510..015c864 100644
+--- a/packages/backend/src/plugins/auth.ts
++++ b/packages/backend/src/plugins/auth.ts
+@@ -9,4 +9,11 @@ export default async function createPlugin({
+   discovery,
++  tokenManager,
+ }: PluginEnvironment): Promise<Router> {
+-  return await createRouter({ logger, config, database, discovery });
++  return await createRouter({
++    logger,
++    config,
++    database,
++    discovery,
++    tokenManager,
++  });
+ }
+diff --git a/packages/backend/src/plugins/search.ts b/packages/backend/src/plugins/search.ts
+index f23b0c7..a0a1cc3 100644
+--- a/packages/backend/src/plugins/search.ts
++++ b/packages/backend/src/plugins/search.ts
+@@ -12,2 +12,3 @@ export default async function createPlugin({
+   logger,
++  permissions,
+   discovery,
+@@ -51,2 +52,5 @@ export default async function createPlugin({
+     engine: indexBuilder.getSearchEngine(),
++    types: indexBuilder.getDocumentTypes(),
++    permissions,
++    config,
+     logger,
+diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
+index 906d86d..054c64d 100644
+--- a/packages/backend/src/plugins/techdocs.ts
++++ b/packages/backend/src/plugins/techdocs.ts
+@@ -16,2 +16,3 @@ export default async function createPlugin({
+   reader,
++  cache,
+ }: PluginEnvironment): Promise<Router> {
+@@ -51,2 +52,3 @@ export default async function createPlugin({
+     discovery,
++    cache,
+   });
+diff --git a/packages/backend/src/types.ts b/packages/backend/src/types.ts
+index b1e2e0a..0862b0e 100644
+--- a/packages/backend/src/types.ts
++++ b/packages/backend/src/types.ts
+@@ -9,2 +9,4 @@ import {
+ } from '@backstage/backend-common';
++import { PluginTaskScheduler } from '@backstage/backend-tasks';
++import { PermissionAuthorizer } from '@backstage/plugin-permission-common';
+ 
+@@ -18,2 +20,4 @@ export type PluginEnvironment = {
+   tokenManager: TokenManager;
++  scheduler: PluginTaskScheduler;
++  permissions: PermissionAuthorizer;
+ };
