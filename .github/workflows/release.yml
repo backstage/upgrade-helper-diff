@@ -76,9 +76,9 @@ jobs:
           done
 
           if [ -z "$RELEASE_VERSION" ]; then
-            jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
+            jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\"}" < releases.json > _releases.json
           else
-            jq ".\"$NEW_VERSION\" = { release: \"$RELEASE_VERSION\"}" < releases.json > _releases.json
+            jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
           fi
           mv _releases.json releases.json
         env:
