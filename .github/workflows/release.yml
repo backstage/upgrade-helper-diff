@@ -3,16 +3,19 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "The version of Backstage to release. If missing, the latest version will be used"
+        description: "The version of @backstage/create-app to release. If missing, the latest version will be used"
         required: false
         default: ""
+      releaseVersion:
+        description: "The version of Backstage to release."
+        required: false
 jobs:
   release:
     name: Create release branch
     runs-on: ubuntu-latest
     env:
       BACKSTAGE_APP_NAME: backstagediffapp
-      RELEASE_VERSION: ${{ github.event.inputs.version }}
+      VERSION: ${{ github.event.inputs.version }}
     outputs:
       backstage_version: ${{ steps.set-outputs.outputs.backstage_version }}
     steps:
@@ -44,19 +47,21 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Add release
         run: |
-          git checkout -b release/${RELEASE_VERSION}
+          git checkout -b release/${VERSION}
           git add .
           git reset $BACKSTAGE_APP_NAME
-          git commit -m "Release ${RELEASE_VERSION}"
-          git push origin release/${RELEASE_VERSION}
+          git commit -m "Release ${VERSION}"
+          git push origin release/${VERSION}
       - id: set-outputs
         name: Set outputs
-        run: echo "::set-output name=backstage_version::$(echo $RELEASE_VERSION)"
+        run: echo "::set-output name=backstage_version::$(echo $VERSION)"
       - run: echo "🍏 This job's status is ${{ job.status }}."
   diff:
     name: Create new diffs
     runs-on: ubuntu-latest
     needs: release
+    env:
+      RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
     steps:
       - name: Check out diffs branch
         uses: actions/checkout@v2
@@ -69,7 +74,12 @@ jobs:
             echo "Creating diffs between version $version and $NEW_VERSION"
             git diff -U1 origin/release/$version..origin/release/$NEW_VERSION > diffs/$version..$NEW_VERSION.diff
           done
-          jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
+
+          if [ -z "$RELEASE_VERSION" ]; then
+            jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\"}" < releases.json > _releases.json
+          else
+            jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
+          fi
           mv _releases.json releases.json
         env:
           NEW_VERSION: ${{needs.release.outputs.backstage_version}}
