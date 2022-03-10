@@ -62,7 +62,7 @@ jobs:
           fetch-depth: 0
       - name: Create new diffs
         run: |
-          for version in $(jq -r 'keys |.[]' < releases.json); do
+          for version in $(jq -r 'to_entries |.[] | .value.createApp // .key'  < releases.json); do
             echo "Creating diffs between version $version and $NEW_VERSION"
             git diff -U1 origin/release/$version..origin/release/$NEW_VERSION > diffs/$version..$NEW_VERSION.diff
           done
