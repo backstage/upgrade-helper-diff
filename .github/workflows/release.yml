@@ -16,8 +16,6 @@ jobs:
     env:
       BACKSTAGE_APP_NAME: backstagediffapp
       VERSION: ${{ github.event.inputs.version }}
-    outputs:
-      backstage_version: ${{ steps.set-outputs.outputs.backstage_version }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
@@ -27,16 +25,12 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 16
-      - name: Get @backstage/create-app version
-        id: get-create-app-version
-        run: node lookup-create-app-version.js
-
       - name: Check out release base
         uses: actions/checkout@v2
         with:
           ref: "release-base"
       - name: Run @backstage/create-app
-        run: printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${{ steps.get-create-app-version.outputs.version }} --skip-install
+        run: printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${{ VERSION }} --skip-install
       - name: Check current directory
         run: pwd
       - name: Move all the files into the root directory
@@ -52,9 +46,6 @@ jobs:
           git reset $BACKSTAGE_APP_NAME
           git commit -m "Release ${VERSION}"
           git push origin release/${VERSION}
-      - id: set-outputs
-        name: Set outputs
-        run: echo "::set-output name=backstage_version::$(echo $VERSION)"
       - run: echo "🍏 This job's status is ${{ job.status }}."
   diff:
     name: Create new diffs
@@ -62,6 +53,7 @@ jobs:
     needs: release
     env:
       RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
+      NEW_VERSION: ${{ github.event.inputs.version }}
     steps:
       - name: Check out diffs branch
         uses: actions/checkout@v2
@@ -81,8 +73,6 @@ jobs:
             jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
           fi
           mv _releases.json releases.json
-        env:
-          NEW_VERSION: ${{needs.release.outputs.backstage_version}}
       - name: Setup git bot user
         run: |
           git config user.name "github-actions[bot]"
@@ -92,5 +82,3 @@ jobs:
           git add .
           git commit -m "Add release ${NEW_VERSION}"
           git push
-        env:
-          NEW_VERSION: ${{needs.release.outputs.backstage_version}}
