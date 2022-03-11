@@ -16,8 +16,6 @@ jobs:
     env:
       BACKSTAGE_APP_NAME: backstagediffapp
       VERSION: ${{ github.event.inputs.version }}
-    outputs:
-      skip_create_diff: ${{ steps.check_branch.outputs.skip_create_diff }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
@@ -70,7 +68,6 @@ jobs:
           ref: "master"
           fetch-depth: 0
       - name: Create new diffs
-        if: ${{ needs.release.outputs.skip_create_diff == 'false' }}
         run: |
           for version in $(jq -r 'to_entries |.[] | .value.createApp // .key'  < releases.json); do
             echo "Creating diffs between version $version and $NEW_VERSION"
