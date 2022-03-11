@@ -16,6 +16,8 @@ jobs:
     env:
       BACKSTAGE_APP_NAME: backstagediffapp
       VERSION: ${{ github.event.inputs.version }}
+    outputs:
+      skip_create_diff: ${{ steps.check_branch.outputs.skip_create_diff }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
@@ -39,6 +41,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - id: check_branch
+        name: Check if branch already exists
+        run: |
+          SKIP_DIFF="true" && [[ -z "$(git ls-remote --heads origin release/${VERSION})" ]] && SKIP_DIFF="false"
+          echo "::set-output name=skip_create_diff::${SKIP_DIFF}"
       - name: Add release
         run: |
           git checkout -b release/${VERSION}
@@ -46,6 +53,7 @@ jobs:
           git reset $BACKSTAGE_APP_NAME
           git commit -m "Release ${VERSION}"
           git push origin release/${VERSION}
+        if: steps.check_branch.outputs.skip_create_diff == 'false'
       - run: echo "🍏 This job's status is ${{ job.status }}."
   diff:
     name: Create new diffs
@@ -54,6 +62,7 @@ jobs:
     env:
       RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
       NEW_VERSION: ${{ github.event.inputs.version }}
+    if: ${{ needs.release.outputs.skip_create_diff == 'false' }}
     steps:
       - name: Check out diffs branch
         uses: actions/checkout@v2
