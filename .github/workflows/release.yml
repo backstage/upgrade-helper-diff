@@ -79,9 +79,9 @@ jobs:
       - name: Add new version to release.json
         run: |
           if [ -z "$RELEASE_VERSION" ]; then
-            jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\"}" < releases.json > _releases.json
-          else
             jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
+          else
+            jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\"}" < releases.json > _releases.json
           fi
           mv _releases.json releases.json
       - name: Setup git bot user
