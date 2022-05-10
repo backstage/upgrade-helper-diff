@@ -175,5 +175,8 @@
   },
   "1.2.0-next.1": {
     "createApp": "0.4.27-next.1"
+  },
+  "1.2.0-next.2": {
+    "createApp": "0.4.27-next.2"
   }
 }
