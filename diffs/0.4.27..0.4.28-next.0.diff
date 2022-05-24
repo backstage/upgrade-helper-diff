@@ -1,0 +1,148 @@
+diff --git a/backstage.json b/backstage.json
+index a15e91f..1b35d9c 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.2.0"
++  "version": "1.3.0-next.0"
+ }
+diff --git a/package.json b/package.json
+index 5a3196b..a3fcfee 100644
+--- a/package.json
++++ b/package.json
+@@ -32,3 +32,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.17.1",
++    "@backstage/cli": "^0.17.2-next.0",
+     "@spotify/prettier-config": "^12.0.0",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 7f04bae..c6cb9cf 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -9,26 +9,26 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.0.2",
++    "@backstage/app-defaults": "^1.0.3-next.0",
+     "@backstage/catalog-model": "^1.0.2",
+-    "@backstage/cli": "^0.17.1",
++    "@backstage/cli": "^0.17.2-next.0",
+     "@backstage/core-app-api": "^1.0.2",
+-    "@backstage/core-components": "^0.9.4",
++    "@backstage/core-components": "^0.9.5-next.0",
+     "@backstage/core-plugin-api": "^1.0.2",
+-    "@backstage/integration-react": "^1.1.0",
+-    "@backstage/plugin-api-docs": "^0.8.5",
+-    "@backstage/plugin-catalog": "^1.2.0",
++    "@backstage/integration-react": "^1.1.1-next.0",
++    "@backstage/plugin-api-docs": "^0.8.6-next.0",
++    "@backstage/plugin-catalog": "^1.2.1-next.0",
+     "@backstage/plugin-catalog-common": "^1.0.2",
+-    "@backstage/plugin-catalog-graph": "^0.2.17",
+-    "@backstage/plugin-catalog-import": "^0.8.8",
+-    "@backstage/plugin-catalog-react": "^1.1.0",
+-    "@backstage/plugin-github-actions": "^0.5.5",
+-    "@backstage/plugin-org": "^0.5.5",
++    "@backstage/plugin-catalog-graph": "^0.2.18-next.0",
++    "@backstage/plugin-catalog-import": "^0.8.9-next.0",
++    "@backstage/plugin-catalog-react": "^1.1.1-next.0",
++    "@backstage/plugin-github-actions": "^0.5.6-next.0",
++    "@backstage/plugin-org": "^0.5.6-next.0",
+     "@backstage/plugin-permission-react": "^0.4.1",
+-    "@backstage/plugin-scaffolder": "^1.2.0",
+-    "@backstage/plugin-search": "^0.8.1",
++    "@backstage/plugin-scaffolder": "^1.3.0-next.0",
++    "@backstage/plugin-search": "^0.8.2-next.0",
+     "@backstage/plugin-search-react": "^0.2.0",
+-    "@backstage/plugin-tech-radar": "^0.5.12",
+-    "@backstage/plugin-techdocs": "^1.1.1",
+-    "@backstage/plugin-techdocs-react": "^1.0.0",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.0",
+-    "@backstage/plugin-user-settings": "^0.4.4",
++    "@backstage/plugin-tech-radar": "^0.5.13-next.0",
++    "@backstage/plugin-techdocs": "^1.1.2-next.0",
++    "@backstage/plugin-techdocs-react": "^1.0.1-next.0",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.1-next.0",
++    "@backstage/plugin-user-settings": "^0.4.5-next.0",
+     "@backstage/theme": "^0.2.15",
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+index 90738c4..d10eccf 100644
+--- a/packages/app/src/components/Root/Root.tsx
++++ b/packages/app/src/components/Root/Root.tsx
+@@ -71,2 +71,3 @@ const SidebarLogo = () => {
+         className={classes.link}
++        aria-label="Home"
+       >
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 84d0944..6ec4da0 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -70,2 +70,13 @@ import {
+ 
++import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
++import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
++
++const techdocsContent = (
++  <EntityTechdocsContent>
++    <TechDocsAddons>
++      <ReportIssue />
++    </TechDocsAddons>
++  </EntityTechdocsContent>
++);
++
+ const cicdContent = (
+@@ -169,3 +180,3 @@ const serviceEntityPage = (
+     <EntityLayout.Route path="/docs" title="Docs">
+-      <EntityTechdocsContent />
++      {techdocsContent}
+     </EntityLayout.Route>
+@@ -196,3 +207,3 @@ const websiteEntityPage = (
+     <EntityLayout.Route path="/docs" title="Docs">
+-      <EntityTechdocsContent />
++      {techdocsContent}
+     </EntityLayout.Route>
+@@ -215,3 +226,3 @@ const defaultEntityPage = (
+     <EntityLayout.Route path="/docs" title="Docs">
+-      <EntityTechdocsContent />
++      {techdocsContent}
+     </EntityLayout.Route>
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 134ddf4..9ddc756 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -19,4 +19,4 @@
+     "app": "link:../app",
+-    "@backstage/backend-common": "^0.13.3",
+-    "@backstage/backend-tasks": "^0.3.1",
++    "@backstage/backend-common": "^0.13.6-next.0",
++    "@backstage/backend-tasks": "^0.3.2-next.0",
+     "@backstage/catalog-model": "^1.0.2",
+@@ -24,13 +24,13 @@
+     "@backstage/config": "^1.0.1",
+-    "@backstage/plugin-app-backend": "^0.3.32",
+-    "@backstage/plugin-auth-backend": "^0.14.0",
+-    "@backstage/plugin-catalog-backend": "^1.1.2",
++    "@backstage/plugin-app-backend": "^0.3.33-next.0",
++    "@backstage/plugin-auth-backend": "^0.14.1-next.0",
++    "@backstage/plugin-catalog-backend": "^1.2.0-next.0",
+     "@backstage/plugin-permission-common": "^0.6.1",
+-    "@backstage/plugin-permission-node": "^0.6.1",
+-    "@backstage/plugin-proxy-backend": "^0.2.26",
+-    "@backstage/plugin-scaffolder-backend": "^1.2.0",
+-    "@backstage/plugin-search-backend": "^0.5.2",
+-    "@backstage/plugin-search-backend-module-pg": "^0.3.3",
+-    "@backstage/plugin-search-backend-node": "^0.6.1",
+-    "@backstage/plugin-techdocs-backend": "^1.1.1",
++    "@backstage/plugin-permission-node": "^0.6.2-next.0",
++    "@backstage/plugin-proxy-backend": "^0.2.27-next.0",
++    "@backstage/plugin-scaffolder-backend": "^1.3.0-next.0",
++    "@backstage/plugin-search-backend": "^0.5.3-next.0",
++    "@backstage/plugin-search-backend-module-pg": "^0.3.4-next.0",
++    "@backstage/plugin-search-backend-node": "^0.6.2-next.0",
++    "@backstage/plugin-techdocs-backend": "^1.1.2-next.0",
+     "dockerode": "^3.3.1",
+@@ -42,3 +42,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.17.1",
++    "@backstage/cli": "^0.17.2-next.0",
+     "@types/dockerode": "^3.3.0",
