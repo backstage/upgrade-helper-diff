@@ -35,6 +35,8 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Run @backstage/create-app
         run: printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${VERSION} --skip-install
+      - name: Remove git repository in app
+        run: rm -rf "$(pwd)/$BACKSTAGE_APP_NAME/.git"
       - name: Check current directory
         run: pwd
       - name: Move all the files into the root directory
