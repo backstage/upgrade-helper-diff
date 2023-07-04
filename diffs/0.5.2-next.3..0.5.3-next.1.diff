@@ -1,0 +1,178 @@
+diff --git a/app-config.yaml b/app-config.yaml
+index 3d216ec..194549f 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -32,4 +32,2 @@ backend:
+     connection: ':memory:'
+-  cache:
+-    store: memory
+   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
+diff --git a/backstage.json b/backstage.json
+index bbbbcc1..2ec3b5f 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.15.0-next.3"
++  "version": "1.16.0-next.1"
+ }
+diff --git a/package.json b/package.json
+index ceff693..0c495ac 100644
+--- a/package.json
++++ b/package.json
+@@ -31,3 +31,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.22.8-next.2",
++    "@backstage/cli": "^0.22.9-next.0",
+     "@spotify/prettier-config": "^12.0.0",
+diff --git a/packages/app/cypress/.eslintrc.json b/packages/app/cypress/.eslintrc.json
+index a467608..b903ff2 100644
+--- a/packages/app/cypress/.eslintrc.json
++++ b/packages/app/cypress/.eslintrc.json
+@@ -7,3 +7,3 @@
+       {
+-        "assertFunctionNames": ["expect", "cy.contains"]
++        "assertFunctionNames": ["expect", "cy.contains", "cy.**.should"]
+       }
+diff --git a/packages/app/package.json b/packages/app/package.json
+index f045465..e63bebb 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -20,27 +20,27 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.4.0-next.3",
+-    "@backstage/catalog-model": "^1.4.0-next.1",
+-    "@backstage/cli": "^0.22.8-next.2",
+-    "@backstage/core-app-api": "^1.8.1-next.0",
+-    "@backstage/core-components": "^0.13.2-next.3",
+-    "@backstage/core-plugin-api": "^1.5.2-next.0",
+-    "@backstage/integration-react": "^1.1.14-next.3",
+-    "@backstage/plugin-api-docs": "^0.9.5-next.3",
+-    "@backstage/plugin-catalog": "^1.11.2-next.3",
+-    "@backstage/plugin-catalog-common": "^1.0.14-next.1",
+-    "@backstage/plugin-catalog-graph": "^0.2.31-next.3",
+-    "@backstage/plugin-catalog-import": "^0.9.9-next.3",
+-    "@backstage/plugin-catalog-react": "^1.7.0-next.3",
+-    "@backstage/plugin-github-actions": "^0.6.0-next.3",
+-    "@backstage/plugin-org": "^0.6.9-next.3",
+-    "@backstage/plugin-permission-react": "^0.4.13-next.0",
+-    "@backstage/plugin-scaffolder": "^1.14.0-next.3",
+-    "@backstage/plugin-search": "^1.3.2-next.3",
+-    "@backstage/plugin-search-react": "^1.6.2-next.3",
+-    "@backstage/plugin-tech-radar": "^0.6.5-next.3",
+-    "@backstage/plugin-techdocs": "^1.6.4-next.3",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.14-next.3",
+-    "@backstage/plugin-techdocs-react": "^1.1.7-next.3",
+-    "@backstage/plugin-user-settings": "^0.7.4-next.3",
+-    "@backstage/theme": "^0.4.0-next.1",
++    "@backstage/app-defaults": "^1.4.1-next.1",
++    "@backstage/catalog-model": "^1.4.1-next.0",
++    "@backstage/cli": "^0.22.9-next.0",
++    "@backstage/core-app-api": "^1.8.2-next.0",
++    "@backstage/core-components": "^0.13.3-next.1",
++    "@backstage/core-plugin-api": "^1.5.3-next.0",
++    "@backstage/integration-react": "^1.1.15-next.1",
++    "@backstage/plugin-api-docs": "^0.9.6-next.1",
++    "@backstage/plugin-catalog": "^1.11.3-next.1",
++    "@backstage/plugin-catalog-common": "^1.0.15-next.0",
++    "@backstage/plugin-catalog-graph": "^0.2.32-next.1",
++    "@backstage/plugin-catalog-import": "^0.9.10-next.1",
++    "@backstage/plugin-catalog-react": "^1.7.1-next.1",
++    "@backstage/plugin-github-actions": "^0.6.1-next.1",
++    "@backstage/plugin-org": "^0.6.10-next.1",
++    "@backstage/plugin-permission-react": "^0.4.14-next.1",
++    "@backstage/plugin-scaffolder": "^1.14.1-next.1",
++    "@backstage/plugin-search": "^1.3.3-next.1",
++    "@backstage/plugin-search-react": "^1.6.3-next.1",
++    "@backstage/plugin-tech-radar": "^0.6.6-next.1",
++    "@backstage/plugin-techdocs": "^1.6.5-next.1",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.15-next.1",
++    "@backstage/plugin-techdocs-react": "^1.1.8-next.1",
++    "@backstage/plugin-user-settings": "^0.7.5-next.1",
++    "@backstage/theme": "^0.4.1-next.0",
+     "@material-ui/core": "^4.12.2",
+@@ -55,3 +55,3 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.4.0-next.2",
++    "@backstage/test-utils": "^1.4.1-next.1",
+     "@testing-library/jest-dom": "^5.10.1",
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 54a05ee..6722ea2 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -27,2 +27,4 @@ import {
+   isOrphan,
++  hasRelationWarnings,
++  EntityRelationWarning,
+ } from '@backstage/plugin-catalog';
+@@ -103,2 +105,10 @@ const entityWarningContent = (
+ 
++    <EntitySwitch>
++      <EntitySwitch.Case if={hasRelationWarnings}>
++        <Grid item xs={12}>
++          <EntityRelationWarning />
++        </Grid>
++      </EntitySwitch.Case>
++    </EntitySwitch>
++
+     <EntitySwitch>
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 54afbf2..49474dd 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,19 +18,19 @@
+   "dependencies": {
+-    "@backstage/backend-common": "^0.19.0-next.2",
+-    "@backstage/backend-tasks": "^0.5.3-next.2",
+-    "@backstage/catalog-client": "^1.4.2-next.2",
+-    "@backstage/catalog-model": "^1.4.0-next.1",
+-    "@backstage/config": "^1.0.7",
+-    "@backstage/plugin-app-backend": "^0.3.46-next.2",
+-    "@backstage/plugin-auth-backend": "^0.18.4-next.3",
+-    "@backstage/plugin-auth-node": "^0.2.15-next.2",
+-    "@backstage/plugin-catalog-backend": "^1.10.0-next.2",
+-    "@backstage/plugin-permission-common": "^0.7.6-next.0",
+-    "@backstage/plugin-permission-node": "^0.7.9-next.2",
+-    "@backstage/plugin-proxy-backend": "^0.2.40-next.2",
+-    "@backstage/plugin-scaffolder-backend": "^1.15.0-next.3",
+-    "@backstage/plugin-search-backend": "^1.3.2-next.2",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.7-next.2",
+-    "@backstage/plugin-search-backend-node": "^1.2.2-next.2",
+-    "@backstage/plugin-techdocs-backend": "^1.6.3-next.2",
++    "@backstage/backend-common": "^0.19.1-next.0",
++    "@backstage/backend-tasks": "^0.5.4-next.0",
++    "@backstage/catalog-client": "^1.4.3-next.0",
++    "@backstage/catalog-model": "^1.4.1-next.0",
++    "@backstage/config": "^1.0.8",
++    "@backstage/plugin-app-backend": "^0.3.47-next.0",
++    "@backstage/plugin-auth-backend": "^0.18.5-next.1",
++    "@backstage/plugin-auth-node": "^0.2.16-next.0",
++    "@backstage/plugin-catalog-backend": "^1.11.0-next.0",
++    "@backstage/plugin-permission-common": "^0.7.7-next.0",
++    "@backstage/plugin-permission-node": "^0.7.10-next.0",
++    "@backstage/plugin-proxy-backend": "^0.2.41-next.0",
++    "@backstage/plugin-scaffolder-backend": "^1.15.1-next.0",
++    "@backstage/plugin-search-backend": "^1.3.3-next.0",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.8-next.0",
++    "@backstage/plugin-search-backend-node": "^1.2.3-next.0",
++    "@backstage/plugin-techdocs-backend": "^1.6.4-next.0",
+     "app": "link:../app",
+@@ -44,3 +44,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.22.8-next.2",
++    "@backstage/cli": "^0.22.9-next.0",
+     "@types/dockerode": "^3.3.0",
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index c4736a5..1c08288 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -17,3 +17,3 @@ import {
+   DatabaseManager,
+-  SingleHostDiscovery,
++  HostDiscovery,
+   UrlReaders,
+@@ -37,3 +37,3 @@ function makeCreateEnv(config: Config) {
+   const reader = UrlReaders.default({ logger: root, config });
+-  const discovery = SingleHostDiscovery.fromConfig(config);
++  const discovery = HostDiscovery.fromConfig(config);
+   const cacheManager = CacheManager.fromConfig(config);
