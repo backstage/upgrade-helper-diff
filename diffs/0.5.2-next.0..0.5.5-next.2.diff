@@ -1,0 +1,227 @@
+diff --git a/app-config.yaml b/app-config.yaml
+index 3d216ec..08d2abf 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -32,4 +32,2 @@ backend:
+     connection: ':memory:'
+-  cache:
+-    store: memory
+   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
+@@ -50,5 +48,6 @@ proxy:
+   ### A typical reason to do this is to handle HTTPS and CORS for internal services.
+-  # '/test':
+-  #   target: 'https://example.com'
+-  #   changeOrigin: true
++  # endpoints:
++  #   '/test':
++  #     target: 'https://example.com'
++  #     changeOrigin: true
+ 
+diff --git a/backstage.json b/backstage.json
+index 731cf1c..ec3742e 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.15.0-next.0"
++  "version": "1.18.0-next.2"
+ }
+diff --git a/package.json b/package.json
+index 7ea2719..d76cc93 100644
+--- a/package.json
++++ b/package.json
+@@ -31,5 +31,5 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.22.8-next.0",
++    "@backstage/cli": "^0.22.13-next.2",
+     "@spotify/prettier-config": "^12.0.0",
+-    "concurrently": "^6.0.0",
++    "concurrently": "^8.0.0",
+     "lerna": "^4.0.0",
+diff --git a/packages/app/cypress/.eslintrc.json b/packages/app/cypress/.eslintrc.json
+index a467608..b903ff2 100644
+--- a/packages/app/cypress/.eslintrc.json
++++ b/packages/app/cypress/.eslintrc.json
+@@ -7,3 +7,3 @@
+       {
+-        "assertFunctionNames": ["expect", "cy.contains"]
++        "assertFunctionNames": ["expect", "cy.contains", "cy.**.should"]
+       }
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 77a2351..a06e5c1 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -20,27 +20,27 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.4.0-next.0",
+-    "@backstage/catalog-model": "^1.3.0",
+-    "@backstage/cli": "^0.22.8-next.0",
+-    "@backstage/core-app-api": "^1.8.0",
+-    "@backstage/core-components": "^0.13.2-next.0",
+-    "@backstage/core-plugin-api": "^1.5.1",
+-    "@backstage/integration-react": "^1.1.14-next.0",
+-    "@backstage/plugin-api-docs": "^0.9.4-next.0",
+-    "@backstage/plugin-catalog": "^1.11.1-next.0",
+-    "@backstage/plugin-catalog-common": "^1.0.13",
+-    "@backstage/plugin-catalog-graph": "^0.2.31-next.0",
+-    "@backstage/plugin-catalog-import": "^0.9.9-next.0",
+-    "@backstage/plugin-catalog-react": "^1.7.0-next.0",
+-    "@backstage/plugin-github-actions": "^0.6.0-next.0",
+-    "@backstage/plugin-org": "^0.6.9-next.0",
+-    "@backstage/plugin-permission-react": "^0.4.12",
+-    "@backstage/plugin-scaffolder": "^1.13.2-next.0",
+-    "@backstage/plugin-search": "^1.3.1-next.0",
+-    "@backstage/plugin-search-react": "^1.6.1-next.0",
+-    "@backstage/plugin-tech-radar": "^0.6.5-next.0",
+-    "@backstage/plugin-techdocs": "^1.6.3-next.0",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.14-next.0",
+-    "@backstage/plugin-techdocs-react": "^1.1.7-next.0",
+-    "@backstage/plugin-user-settings": "^0.7.4-next.0",
+-    "@backstage/theme": "^0.4.0-next.0",
++    "@backstage/app-defaults": "^1.4.3-next.2",
++    "@backstage/catalog-model": "^1.4.2-next.1",
++    "@backstage/cli": "^0.22.13-next.2",
++    "@backstage/core-app-api": "^1.10.0-next.2",
++    "@backstage/core-components": "^0.13.5-next.2",
++    "@backstage/core-plugin-api": "^1.6.0-next.2",
++    "@backstage/integration-react": "^1.1.19-next.2",
++    "@backstage/plugin-api-docs": "^0.9.11-next.2",
++    "@backstage/plugin-catalog": "^1.13.0-next.2",
++    "@backstage/plugin-catalog-common": "^1.0.16-next.1",
++    "@backstage/plugin-catalog-graph": "^0.2.36-next.2",
++    "@backstage/plugin-catalog-import": "^0.9.14-next.2",
++    "@backstage/plugin-catalog-react": "^1.8.4-next.2",
++    "@backstage/plugin-github-actions": "^0.6.5-next.2",
++    "@backstage/plugin-org": "^0.6.14-next.2",
++    "@backstage/plugin-permission-react": "^0.4.15-next.2",
++    "@backstage/plugin-scaffolder": "^1.14.5-next.2",
++    "@backstage/plugin-search": "^1.4.0-next.2",
++    "@backstage/plugin-search-react": "^1.7.0-next.2",
++    "@backstage/plugin-tech-radar": "^0.6.8-next.2",
++    "@backstage/plugin-techdocs": "^1.7.0-next.2",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.0-next.2",
++    "@backstage/plugin-techdocs-react": "^1.1.10-next.2",
++    "@backstage/plugin-user-settings": "^0.7.9-next.2",
++    "@backstage/theme": "^0.4.1",
+     "@material-ui/core": "^4.12.2",
+@@ -55,3 +55,3 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.4.0-next.0",
++    "@backstage/test-utils": "^1.4.3-next.2",
+     "@testing-library/jest-dom": "^5.10.1",
+@@ -60,3 +60,2 @@
+     "@testing-library/dom": "^8.0.0",
+-    "@types/node": "^16.11.26",
+     "@types/react-dom": "*",
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index 056402f..8d62f29 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -42,2 +42,3 @@ const app = createApp({
+       viewTechDoc: techdocsPlugin.routes.docRoot,
++      createFromTemplate: scaffolderPlugin.routes.selectedTemplate,
+     });
+@@ -48,2 +49,3 @@ const app = createApp({
+       registerComponent: catalogImportPlugin.routes.importPage,
++      viewTechDoc: techdocsPlugin.routes.docRoot,
+     });
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 54a05ee..6722ea2 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -27,2 +27,4 @@ import {
+   isOrphan,
++  hasRelationWarnings,
++  EntityRelationWarning,
+ } from '@backstage/plugin-catalog';
+@@ -103,2 +105,10 @@ const entityWarningContent = (
+ 
++    <EntitySwitch>
++      <EntitySwitch.Case if={hasRelationWarnings}>
++        <Grid item xs={12}>
++          <EntityRelationWarning />
++        </Grid>
++      </EntitySwitch.Case>
++    </EntitySwitch>
++
+     <EntitySwitch>
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 51f7124..a60fee7 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -13,2 +13,9 @@ FROM node:16-bullseye-slim
+ 
++# Install isolate-vm dependencies, these are needed by the @backstage/plugin-scaffolder-backend.
++RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
++    --mount=type=cache,target=/var/lib/apt,sharing=locked \
++    apt-get update && \
++    apt-get install -y --no-install-recommends python3 g++ build-essential && \
++    yarn config set python /usr/bin/python3
++
+ # Install sqlite3 dependencies. You can skip this if you don't use sqlite3 in the image,
+@@ -18,4 +25,3 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+     apt-get update && \
+-    apt-get install -y --no-install-recommends libsqlite3-dev python3 build-essential && \
+-    yarn config set python /usr/bin/python3
++    apt-get install -y --no-install-recommends libsqlite3-dev
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 2a5570a..e200431 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,19 +18,19 @@
+   "dependencies": {
+-    "@backstage/backend-common": "^0.18.6-next.0",
+-    "@backstage/backend-tasks": "^0.5.3-next.0",
+-    "@backstage/catalog-client": "^1.4.2-next.0",
+-    "@backstage/catalog-model": "^1.3.0",
+-    "@backstage/config": "^1.0.7",
+-    "@backstage/plugin-app-backend": "^0.3.46-next.0",
+-    "@backstage/plugin-auth-backend": "^0.18.4-next.0",
+-    "@backstage/plugin-auth-node": "^0.2.15-next.0",
+-    "@backstage/plugin-catalog-backend": "^1.9.2-next.0",
+-    "@backstage/plugin-permission-common": "^0.7.5",
+-    "@backstage/plugin-permission-node": "^0.7.9-next.0",
+-    "@backstage/plugin-proxy-backend": "^0.2.40-next.0",
+-    "@backstage/plugin-scaffolder-backend": "^1.14.1-next.0",
+-    "@backstage/plugin-search-backend": "^1.3.2-next.0",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.7-next.0",
+-    "@backstage/plugin-search-backend-node": "^1.2.2-next.0",
+-    "@backstage/plugin-techdocs-backend": "^1.6.3-next.0",
++    "@backstage/backend-common": "^0.19.5-next.2",
++    "@backstage/backend-tasks": "^0.5.8-next.2",
++    "@backstage/catalog-client": "^1.4.4-next.1",
++    "@backstage/catalog-model": "^1.4.2-next.1",
++    "@backstage/config": "^1.1.0-next.1",
++    "@backstage/plugin-app-backend": "^0.3.51-next.2",
++    "@backstage/plugin-auth-backend": "^0.18.9-next.2",
++    "@backstage/plugin-auth-node": "^0.3.0-next.2",
++    "@backstage/plugin-catalog-backend": "^1.13.0-next.2",
++    "@backstage/plugin-permission-common": "^0.7.8-next.1",
++    "@backstage/plugin-permission-node": "^0.7.14-next.2",
++    "@backstage/plugin-proxy-backend": "^0.3.3-next.2",
++    "@backstage/plugin-scaffolder-backend": "^1.16.6-next.2",
++    "@backstage/plugin-search-backend": "^1.4.3-next.2",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.12-next.2",
++    "@backstage/plugin-search-backend-node": "^1.2.7-next.2",
++    "@backstage/plugin-techdocs-backend": "^1.7.0-next.2",
+     "app": "link:../app",
+@@ -44,3 +44,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.22.8-next.0",
++    "@backstage/cli": "^0.22.13-next.2",
+     "@types/dockerode": "^3.3.0",
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index c4736a5..1c08288 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -17,3 +17,3 @@ import {
+   DatabaseManager,
+-  SingleHostDiscovery,
++  HostDiscovery,
+   UrlReaders,
+@@ -37,3 +37,3 @@ function makeCreateEnv(config: Config) {
+   const reader = UrlReaders.default({ logger: root, config });
+-  const discovery = SingleHostDiscovery.fromConfig(config);
++  const discovery = HostDiscovery.fromConfig(config);
+   const cacheManager = CacheManager.fromConfig(config);
