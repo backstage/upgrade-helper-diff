@@ -1,0 +1,1002 @@
+diff --git a/.dockerignore b/.dockerignore
+index 505a7b5..05edb62 100644
+--- a/.dockerignore
++++ b/.dockerignore
+@@ -1,2 +1,4 @@
+ .git
++.yarn/cache
++.yarn/install-state.gz
+ node_modules
+diff --git a/.eslintignore b/.eslintignore
+new file mode 100644
+index 0000000..e5b1994
+--- /dev/null
++++ b/.eslintignore
+@@ -0,0 +1 @@
++playwright.config.ts
+diff --git a/.gitignore b/.gitignore
+index d16a8d3..fbf8139 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -17,2 +17,11 @@ node_modules/
+ 
++# Yarn 3 files
++.pnp.*
++.yarn/*
++!.yarn/patches
++!.yarn/plugins
++!.yarn/releases
++!.yarn/sdks
++!.yarn/versions
++
+ # Node version directives
+@@ -39 +48,7 @@ site
+ *-credentials.yaml
++
++# vscode database functionality support files
++*.session.sql
++
++# E2E test reports
++e2e-test-report/
+diff --git a/app-config.production.yaml b/app-config.production.yaml
+index 6535d96..8f0751c 100644
+--- a/app-config.production.yaml
++++ b/app-config.production.yaml
+@@ -11,10 +11,5 @@ backend:
+   baseUrl: http://localhost:7007
+-  listen:
+-    port: 7007
+-    # The following host directive binds to all IPv4 interfaces when its value
+-    # is "0.0.0.0". This is the most permissive setting. The right value depends
+-    # on your specific deployment. If you remove the host line entirely, the
+-    # backend will bind on the interface that corresponds to the backend.baseUrl
+-    # hostname.
+-    host: 0.0.0.0
++  # The listener can also be expressed as a single <host>:<port> string. In this case we bind to
++  # all interfaces, the most permissive setting. The right value depends on your specific deployment.
++  listen: ':7007'
+ 
+@@ -37,3 +32,3 @@ catalog:
+   # Overrides the default list locations from app-config.yaml as these contain example data.
+-  # See https://backstage.io/docs/features/software-catalog/software-catalog-overview#adding-components-to-the-catalog for more details
++  # See https://backstage.io/docs/features/software-catalog/#adding-components-to-the-catalog for more details
+   # on how to get entities into the catalog.
+diff --git a/app-config.yaml b/app-config.yaml
+index 4a058de..08d2abf 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -9,3 +9,3 @@ backend:
+   # Used for enabling authentication, secret is shared by all backend plugins
+-  # See https://backstage.io/docs/tutorials/backend-to-backend-auth for
++  # See https://backstage.io/docs/auth/service-to-service-auth for
+   # information on the format
+@@ -17,5 +17,4 @@ backend:
+     port: 7007
+-    # Uncomment the following host directive to bind to all IPv4 interfaces and
+-    # not just the baseUrl hostname.
+-    # host: 0.0.0.0
++    # Uncomment the following host directive to bind to specific interfaces
++    # host: 127.0.0.1
+   csp:
+@@ -33,4 +32,2 @@ backend:
+     connection: ':memory:'
+-  cache:
+-    store: memory
+   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
+@@ -49,5 +46,8 @@ integrations:
+ proxy:
+-  '/test':
+-    target: 'https://example.com'
+-    changeOrigin: true
++  ### Example for how to add a proxy endpoint for the frontend.
++  ### A typical reason to do this is to handle HTTPS and CORS for internal services.
++  # endpoints:
++  #   '/test':
++  #     target: 'https://example.com'
++  #     changeOrigin: true
+ 
+diff --git a/backstage.json b/backstage.json
+index 08df5a2..498b8c1 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.5.0"
++  "version": "1.20.0"
+ }
+diff --git a/examples/template/template.yaml b/examples/template/template.yaml
+index 50052b7..33f262b 100644
+--- a/examples/template/template.yaml
++++ b/examples/template/template.yaml
+@@ -63,3 +63,3 @@ spec:
+       input:
+-        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
++        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+         catalogInfoPath: '/catalog-info.yaml'
+@@ -70,5 +70,5 @@ spec:
+       - title: Repository
+-        url: ${{ steps.publish.output.remoteUrl }}
++        url: ${{ steps['publish'].output.remoteUrl }}
+       - title: Open in catalog
+         icon: catalog
+-        entityRef: ${{ steps.register.output.entityRef }}
++        entityRef: ${{ steps['register'].output.entityRef }}
+diff --git a/lerna.json b/lerna.json
+index 322929d..529a62f 100644
+--- a/lerna.json
++++ b/lerna.json
+@@ -3,4 +3,4 @@
+   "npmClient": "yarn",
+-  "useWorkspaces": true,
+-  "version": "0.1.0"
++  "version": "0.1.0",
++  "$schema": "node_modules/lerna/schemas/lerna-schema.json"
+ }
+diff --git a/package.json b/package.json
+index d010cc8..f9cb075 100644
+--- a/package.json
++++ b/package.json
+@@ -5,3 +5,3 @@
+   "engines": {
+-    "node": "14 || 16"
++    "node": "18 || 20"
+   },
+@@ -11,3 +11,4 @@
+     "start-backend": "yarn workspace backend start",
+-    "build": "backstage-cli repo build --all",
++    "build:backend": "yarn workspace backend build",
++    "build:all": "backstage-cli repo build --all",
+     "build-image": "yarn workspace backend build-image",
+@@ -15,6 +16,7 @@
+     "tsc:full": "tsc --skipLibCheck false --incremental false",
+-    "clean": "backstage-cli clean && lerna run clean",
+-    "diff": "lerna run diff --",
+-    "test": "backstage-cli test",
+-    "test:all": "lerna run test -- --coverage",
++    "clean": "backstage-cli repo clean",
++    "test": "backstage-cli repo test",
++    "test:all": "backstage-cli repo test --coverage",
++    "test:e2e": "playwright test",
++    "fix": "backstage-cli repo fix",
+     "lint": "backstage-cli repo lint --since origin/master",
+@@ -22,4 +24,3 @@
+     "prettier:check": "prettier --check .",
+-    "create-plugin": "backstage-cli create-plugin --scope internal",
+-    "remove-plugin": "backstage-cli remove-plugin"
++    "new": "backstage-cli new --scope internal"
+   },
+@@ -32,9 +33,11 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.18.1",
++    "@backstage/cli": "^0.24.0",
++    "@backstage/e2e-test-utils": "^0.1.0",
++    "@playwright/test": "^1.32.3",
+     "@spotify/prettier-config": "^12.0.0",
+-    "concurrently": "^6.0.0",
+-    "lerna": "^4.0.0",
++    "concurrently": "^8.0.0",
++    "lerna": "^7.3.0",
++    "node-gyp": "^9.0.0",
+     "prettier": "^2.3.2",
+-    "typescript": "~4.6.4",
+-    "node-gyp": "^9.0.0"
++    "typescript": "~5.2.0"
+   },
+diff --git a/packages/app/.eslintignore b/packages/app/.eslintignore
+new file mode 100644
+index 0000000..a48cf0d
+--- /dev/null
++++ b/packages/app/.eslintignore
+@@ -0,0 +1 @@
++public
+diff --git a/packages/app/cypress.json b/packages/app/cypress.json
+deleted file mode 100644
+index 0cb845a..0000000
+--- a/packages/app/cypress.json
++++ /dev/null
+@@ -1,6 +0,0 @@
+-{
+-  "baseUrl": "http://localhost:3001",
+-  "fixturesFolder": false,
+-  "pluginsFile": false,
+-  "retries": 3
+-}
+diff --git a/packages/app/cypress/.eslintrc.json b/packages/app/cypress/.eslintrc.json
+deleted file mode 100644
+index 2b3a458..0000000
+--- a/packages/app/cypress/.eslintrc.json
++++ /dev/null
+@@ -1,21 +0,0 @@
+-{
+-  "plugins": ["cypress"],
+-  "extends": ["plugin:cypress/recommended"],
+-  "rules": {
+-    "jest/expect-expect": [
+-      "error",
+-      {
+-        "assertFunctionNames": ["expect", "cy.contains"]
+-      }
+-    ],
+-    "import/no-extraneous-dependencies": [
+-      "error",
+-      {
+-        "devDependencies": true,
+-        "optionalDependencies": true,
+-        "peerDependencies": true,
+-        "bundledDependencies": true
+-      }
+-    ]
+-  }
+-}
+diff --git a/packages/app/cypress/integration/app.js b/packages/app/cypress/integration/app.js
+deleted file mode 100644
+index 43fb2e3..0000000
+--- a/packages/app/cypress/integration/app.js
++++ /dev/null
+@@ -1,6 +0,0 @@
+-describe('App', () => {
+-  it('should render the catalog', () => {
+-    cy.visit('/');
+-    cy.contains('My Company Catalog');
+-  });
+-});
+diff --git a/packages/app/e2e-tests/app.test.ts b/packages/app/e2e-tests/app.test.ts
+new file mode 100644
+index 0000000..d45bc0d
+--- /dev/null
++++ b/packages/app/e2e-tests/app.test.ts
+@@ -0,0 +1,23 @@
++/*
++ * Copyright 2020 The Backstage Authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++import { test, expect } from '@playwright/test';
++
++test('App should render the welcome page', async ({ page }) => {
++  await page.goto('/');
++
++  await expect(page.getByText('My Company Catalog')).toBeVisible();
++});
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 1d7aa24..16cbc8a 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -8,28 +8,35 @@
+   },
++  "scripts": {
++    "start": "backstage-cli package start",
++    "build": "backstage-cli package build",
++    "clean": "backstage-cli package clean",
++    "test": "backstage-cli package test",
++    "lint": "backstage-cli package lint"
++  },
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.0.5",
+-    "@backstage/catalog-model": "^1.1.0",
+-    "@backstage/cli": "^0.18.1",
+-    "@backstage/core-app-api": "^1.0.5",
+-    "@backstage/core-components": "^0.11.0",
+-    "@backstage/core-plugin-api": "^1.0.5",
+-    "@backstage/integration-react": "^1.1.3",
+-    "@backstage/plugin-api-docs": "^0.8.8",
+-    "@backstage/plugin-catalog": "^1.5.0",
+-    "@backstage/plugin-catalog-common": "^1.0.5",
+-    "@backstage/plugin-catalog-graph": "^0.2.20",
+-    "@backstage/plugin-catalog-import": "^0.8.11",
+-    "@backstage/plugin-catalog-react": "^1.1.3",
+-    "@backstage/plugin-github-actions": "^0.5.8",
+-    "@backstage/plugin-org": "^0.5.8",
+-    "@backstage/plugin-permission-react": "^0.4.4",
+-    "@backstage/plugin-scaffolder": "^1.5.0",
+-    "@backstage/plugin-search": "^1.0.1",
+-    "@backstage/plugin-search-react": "^1.0.1",
+-    "@backstage/plugin-tech-radar": "^0.5.15",
+-    "@backstage/plugin-techdocs": "^1.3.1",
+-    "@backstage/plugin-techdocs-react": "^1.0.3",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.3",
+-    "@backstage/plugin-user-settings": "^0.4.7",
+-    "@backstage/theme": "^0.2.16",
++    "@backstage/app-defaults": "^1.4.5",
++    "@backstage/catalog-model": "^1.4.3",
++    "@backstage/cli": "^0.24.0",
++    "@backstage/core-app-api": "^1.11.1",
++    "@backstage/core-components": "^0.13.8",
++    "@backstage/core-plugin-api": "^1.8.0",
++    "@backstage/integration-react": "^1.1.21",
++    "@backstage/plugin-api-docs": "^0.10.0",
++    "@backstage/plugin-catalog": "^1.15.0",
++    "@backstage/plugin-catalog-common": "^1.0.18",
++    "@backstage/plugin-catalog-graph": "^0.3.0",
++    "@backstage/plugin-catalog-import": "^0.10.2",
++    "@backstage/plugin-catalog-react": "^1.9.0",
++    "@backstage/plugin-github-actions": "^0.6.7",
++    "@backstage/plugin-org": "^0.6.16",
++    "@backstage/plugin-permission-react": "^0.4.17",
++    "@backstage/plugin-scaffolder": "^1.16.0",
++    "@backstage/plugin-search": "^1.4.2",
++    "@backstage/plugin-search-react": "^1.7.2",
++    "@backstage/plugin-tech-radar": "^0.6.10",
++    "@backstage/plugin-techdocs": "^1.9.0",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.2",
++    "@backstage/plugin-techdocs-react": "^1.1.13",
++    "@backstage/plugin-user-settings": "^0.7.12",
++    "@backstage/theme": "^0.4.4",
+     "@material-ui/core": "^4.12.2",
+@@ -39,29 +46,15 @@
+     "react-dom": "^17.0.2",
+-    "react-router": "6.0.0-beta.0",
+-    "react-router-dom": "6.0.0-beta.0",
+-    "react-use": "^15.3.3"
++    "react-router": "^6.3.0",
++    "react-router-dom": "^6.3.0",
++    "react-use": "^17.2.4"
+   },
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.1.3",
++    "@backstage/test-utils": "^1.4.5",
++    "@playwright/test": "^1.32.3",
+     "@testing-library/jest-dom": "^5.10.1",
+     "@testing-library/react": "^12.1.3",
+-    "@testing-library/user-event": "^12.0.7",
+-    "@types/jest": "^26.0.7",
+-    "@types/node": "^14.14.32",
++    "@testing-library/user-event": "^14.0.0",
++    "@testing-library/dom": "^8.0.0",
+     "@types/react-dom": "*",
+-    "cross-env": "^7.0.0",
+-    "cypress": "^9.7.0",
+-    "eslint-plugin-cypress": "^2.10.3",
+-    "start-server-and-test": "^1.10.11"
+-  },
+-  "scripts": {
+-    "start": "backstage-cli package start",
+-    "build": "backstage-cli package build",
+-    "clean": "backstage-cli package clean",
+-    "test": "backstage-cli package test",
+-    "lint": "backstage-cli package lint",
+-    "test:e2e": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:dev",
+-    "test:e2e:ci": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:run",
+-    "cy:dev": "cypress open",
+-    "cy:run": "cypress run --browser chrome"
++    "cross-env": "^7.0.0"
+   },
+diff --git a/packages/app/public/index.html b/packages/app/public/index.html
+index a936c73..fc758ee 100644
+--- a/packages/app/public/index.html
++++ b/packages/app/public/index.html
+@@ -10,3 +10,2 @@
+     />
+-    <link rel="apple-touch-icon" href="<%= publicPath %>/logo192.png" />
+     <!--
+@@ -45,20 +44,2 @@
+     <title><%= config.getString('app.title') %></title>
+-    <% if (config.has('app.googleAnalyticsTrackingId')) { %>
+-    <script
+-      async
+-      src="https://www.googletagmanager.com/gtag/js?id=<%= config.getString('app.googleAnalyticsTrackingId') %>"
+-    ></script>
+-    <script>
+-      window.dataLayer = window.dataLayer || [];
+-      function gtag() {
+-        dataLayer.push(arguments);
+-      }
+-      gtag('js', new Date());
+-
+-      gtag(
+-        'config',
+-        '<%= config.getString("app.googleAnalyticsTrackingId") %>',
+-      );
+-    </script>
+-    <% } %>
+   </head>
+@@ -74,4 +55,4 @@
+ 
+-      To begin the development, run `npm start` or `yarn start`.
+-      To create a production bundle, use `npm run build` or `yarn build`.
++      To begin the development, run `yarn start`.
++      To create a production bundle, use `yarn build`.
+     -->
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index c487726..8d62f29 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -1,3 +1,3 @@
+ import React from 'react';
+-import { Navigate, Route } from 'react-router';
++import { Navigate, Route } from 'react-router-dom';
+ import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
+@@ -31,5 +31,5 @@ import { AlertDisplay, OAuthRequestDialog } from '@backstage/core-components';
+ import { createApp } from '@backstage/app-defaults';
+-import { FlatRoutes } from '@backstage/core-app-api';
++import { AppRouter, FlatRoutes } from '@backstage/core-app-api';
+ import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
+-import { PermissionedRoute } from '@backstage/plugin-permission-react';
++import { RequirePermission } from '@backstage/plugin-permission-react';
+ import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
+@@ -42,2 +42,3 @@ const app = createApp({
+       viewTechDoc: techdocsPlugin.routes.docRoot,
++      createFromTemplate: scaffolderPlugin.routes.selectedTemplate,
+     });
+@@ -48,2 +49,3 @@ const app = createApp({
+       registerComponent: catalogImportPlugin.routes.importPage,
++      viewTechDoc: techdocsPlugin.routes.docRoot,
+     });
+@@ -55,8 +57,5 @@ const app = createApp({
+ 
+-const AppProvider = app.getProvider();
+-const AppRouter = app.getRouter();
+-
+ const routes = (
+   <FlatRoutes>
+-    <Navigate key="/" to="catalog" />
++    <Route path="/" element={<Navigate to="catalog" />} />
+     <Route path="/catalog" element={<CatalogIndexPage />} />
+@@ -83,6 +82,9 @@ const routes = (
+     />
+-    <PermissionedRoute
++    <Route
+       path="/catalog-import"
+-      permission={catalogEntityCreatePermission}
+-      element={<CatalogImportPage />}
++      element={
++        <RequirePermission permission={catalogEntityCreatePermission}>
++          <CatalogImportPage />
++        </RequirePermission>
++      }
+     />
+@@ -96,4 +98,4 @@ const routes = (
+ 
+-const App = () => (
+-  <AppProvider>
++export default app.createRoot(
++  <>
+     <AlertDisplay />
+@@ -103,5 +105,3 @@ const App = () => (
+     </AppRouter>
+-  </AppProvider>
++  </>,
+ );
+-
+-export default App;
+diff --git a/packages/app/src/components/Root/LogoFull.tsx b/packages/app/src/components/Root/LogoFull.tsx
+index c7b1c84..47e3b73 100644
+--- a/packages/app/src/components/Root/LogoFull.tsx
++++ b/packages/app/src/components/Root/LogoFull.tsx
+@@ -1,17 +1 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+ import React from 'react';
+diff --git a/packages/app/src/components/Root/LogoIcon.tsx b/packages/app/src/components/Root/LogoIcon.tsx
+index 073cf6e..7eae8c7 100644
+--- a/packages/app/src/components/Root/LogoIcon.tsx
++++ b/packages/app/src/components/Root/LogoIcon.tsx
+@@ -1,17 +1 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+ import React from 'react';
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+index b1164a3..6768b48 100644
+--- a/packages/app/src/components/Root/Root.tsx
++++ b/packages/app/src/components/Root/Root.tsx
+@@ -1,19 +1,3 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+ import React, { PropsWithChildren } from 'react';
+-import { Link, makeStyles } from '@material-ui/core';
++import { makeStyles } from '@material-ui/core';
+ import HomeIcon from '@material-ui/icons/Home';
+@@ -25,3 +9,2 @@ import LogoFull from './LogoFull';
+ import LogoIcon from './LogoIcon';
+-import { NavLink } from 'react-router-dom';
+ import {
+@@ -41,2 +24,3 @@ import {
+   useSidebarOpenState,
++  Link,
+ } from '@backstage/core-components';
+@@ -66,9 +50,3 @@ const SidebarLogo = () => {
+     <div className={classes.root}>
+-      <Link
+-        component={NavLink}
+-        to="/"
+-        underline="none"
+-        className={classes.link}
+-        aria-label="Home"
+-      >
++      <Link to="/" underline="none" className={classes.link} aria-label="Home">
+         {isOpen ? <LogoFull /> : <LogoIcon />}
+diff --git a/packages/app/src/components/Root/index.ts b/packages/app/src/components/Root/index.ts
+index dff706f..3528881 100644
+--- a/packages/app/src/components/Root/index.ts
++++ b/packages/app/src/components/Root/index.ts
+@@ -1,17 +1 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+ export { Root } from './Root';
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 6ec4da0..6722ea2 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -1,16 +1 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+ import React from 'react';
+@@ -42,2 +27,4 @@ import {
+   isOrphan,
++  hasRelationWarnings,
++  EntityRelationWarning,
+ } from '@backstage/plugin-catalog';
+@@ -118,2 +105,10 @@ const entityWarningContent = (
+ 
++    <EntitySwitch>
++      <EntitySwitch.Case if={hasRelationWarnings}>
++        <Grid item xs={12}>
++          <EntityRelationWarning />
++        </Grid>
++      </EntitySwitch.Case>
++    </EntitySwitch>
++
+     <EntitySwitch>
+@@ -326,3 +321,6 @@ const systemPage = (
+         </Grid>
+-        <Grid item md={6}>
++        <Grid item md={4} xs={12}>
++          <EntityLinksCard />
++        </Grid>
++        <Grid item md={8}>
+           <EntityHasComponentsCard variant="gridItem" />
+diff --git a/packages/app/src/components/search/SearchPage.tsx b/packages/app/src/components/search/SearchPage.tsx
+index 928b820..1788dde 100644
+--- a/packages/app/src/components/search/SearchPage.tsx
++++ b/packages/app/src/components/search/SearchPage.tsx
+@@ -1,3 +1,3 @@
+ import React from 'react';
+-import { makeStyles, Theme, Grid, List, Paper } from '@material-ui/core';
++import { makeStyles, Theme, Grid, Paper } from '@material-ui/core';
+ 
+@@ -12,3 +12,2 @@ import { SearchType } from '@backstage/plugin-search';
+ import {
+-  DefaultResultListItem,
+   SearchBar,
+@@ -16,2 +15,3 @@ import {
+   SearchResult,
++  SearchPagination,
+   useSearch,
+@@ -111,38 +111,6 @@ const SearchPage = () => {
+           <Grid item xs={9}>
++            <SearchPagination />
+             <SearchResult>
+-              {({ results }) => (
+-                <List>
+-                  {results.map(({ type, document, highlight, rank }) => {
+-                    switch (type) {
+-                      case 'software-catalog':
+-                        return (
+-                          <CatalogSearchResultListItem
+-                            key={document.location}
+-                            result={document}
+-                            highlight={highlight}
+-                            rank={rank}
+-                          />
+-                        );
+-                      case 'techdocs':
+-                        return (
+-                          <TechDocsSearchResultListItem
+-                            key={document.location}
+-                            result={document}
+-                            highlight={highlight}
+-                            rank={rank}
+-                          />
+-                        );
+-                      default:
+-                        return (
+-                          <DefaultResultListItem
+-                            key={document.location}
+-                            result={document}
+-                            highlight={highlight}
+-                            rank={rank}
+-                          />
+-                        );
+-                    }
+-                  })}
+-                </List>
+-              )}
++              <CatalogSearchResultListItem icon={<CatalogIcon />} />
++              <TechDocsSearchResultListItem icon={<DocsIcon />} />
+             </SearchResult>
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 8836ac7..18548e9 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -7,3 +7,3 @@
+ # yarn tsc
+-# yarn build
++# yarn build:backend
+ #
+@@ -11,5 +11,10 @@
+ 
+-FROM node:16-bullseye-slim
++FROM node:18-bookworm-slim
+ 
+-WORKDIR /app
++# Install isolate-vm dependencies, these are needed by the @backstage/plugin-scaffolder-backend.
++RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
++    --mount=type=cache,target=/var/lib/apt,sharing=locked \
++    apt-get update && \
++    apt-get install -y --no-install-recommends python3 g++ build-essential && \
++    yarn config set python /usr/bin/python3
+ 
+@@ -17,6 +22,17 @@ WORKDIR /app
+ # in which case you should also move better-sqlite3 to "devDependencies" in package.json.
+-RUN apt-get update && \
+-    apt-get install -y --no-install-recommends libsqlite3-dev python3 build-essential && \
+-    rm -rf /var/lib/apt/lists/* && \
+-    yarn config set python /usr/bin/python3
++RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
++    --mount=type=cache,target=/var/lib/apt,sharing=locked \
++    apt-get update && \
++    apt-get install -y --no-install-recommends libsqlite3-dev
++
++# From here on we use the least-privileged `node` user to run the backend.
++USER node
++
++# This should create the app dir as `node`.
++# If it is instead created as `root` then the `tar` command below will fail: `can't create directory 'packages/': Permission denied`.
++# If this occurs, then ensure BuildKit is enabled (`DOCKER_BUILDKIT=1`) so the app dir is correctly created as `node`.
++WORKDIR /app
++
++# This switches many Node.js dependencies to production mode.
++ENV NODE_ENV production
+ 
+@@ -25,9 +41,10 @@ RUN apt-get update && \
+ # and along with yarn.lock and the root package.json, that's enough to run yarn install.
+-COPY yarn.lock package.json packages/backend/dist/skeleton.tar.gz ./
++COPY --chown=node:node yarn.lock package.json packages/backend/dist/skeleton.tar.gz ./
+ RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
+ 
+-RUN yarn install --frozen-lockfile --production --network-timeout 300000 && rm -rf "$(yarn cache dir)"
++RUN --mount=type=cache,target=/home/node/.cache/yarn,sharing=locked,uid=1000,gid=1000 \
++    yarn install --frozen-lockfile --production --network-timeout 300000
+ 
+ # Then copy the rest of the backend bundle, along with any other files we might want.
+-COPY packages/backend/dist/bundle.tar.gz app-config*.yaml ./
++COPY --chown=node:node packages/backend/dist/bundle.tar.gz app-config*.yaml ./
+ RUN tar xzf bundle.tar.gz && rm bundle.tar.gz
+diff --git a/packages/backend/README.md b/packages/backend/README.md
+index 02426ef..3607b0a 100644
+--- a/packages/backend/README.md
++++ b/packages/backend/README.md
+@@ -18,4 +18,2 @@ To run the example backend, first go to the project root and run
+ yarn install
+-yarn tsc
+-yarn build
+ ```
+@@ -27,7 +25,2 @@ After that, go to the `packages/backend` directory and run
+ ```bash
+-AUTH_GOOGLE_CLIENT_ID=x AUTH_GOOGLE_CLIENT_SECRET=x \
+-AUTH_GITHUB_CLIENT_ID=x AUTH_GITHUB_CLIENT_SECRET=x \
+-AUTH_OAUTH2_CLIENT_ID=x AUTH_OAUTH2_CLIENT_SECRET=x \
+-AUTH_OAUTH2_AUTH_URL=x AUTH_OAUTH2_TOKEN_URL=x \
+-LOG_LEVEL=debug \
+ yarn start
+@@ -35,4 +28,4 @@ yarn start
+ 
+-Substitute `x` for actual values, or leave them as dummy values just to try out
+-the backend without using the auth or sentry features.
++If you want to override any configuration locally, for example adding any secrets,
++you can do so in `app-config.local.yaml`.
+ 
+@@ -45,3 +38,3 @@ locations to the backend. These are places where the backend can find some
+ entity descriptor data to consume and serve. For more information, see
+-[Software Catalog Overview - Adding Components to the Catalog](https://backstage.io/docs/features/software-catalog/software-catalog-overview#adding-components-to-the-catalog).
++[Software Catalog Overview - Adding Components to the Catalog](https://backstage.io/docs/features/software-catalog/#adding-components-to-the-catalog).
+ 
+@@ -65,2 +58,2 @@ and
+ - [Backstage Readme](https://github.com/backstage/backstage/blob/master/README.md)
+-- [Backstage Documentation](https://github.com/backstage/backstage/blob/master/docs/README.md)
++- [Backstage Documentation](https://backstage.io/docs)
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index f005c39..a88fced 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,20 +18,24 @@
+   "dependencies": {
++    "@backstage/backend-common": "^0.19.9",
++    "@backstage/backend-tasks": "^0.5.12",
++    "@backstage/catalog-client": "^1.4.6",
++    "@backstage/catalog-model": "^1.4.3",
++    "@backstage/config": "^1.1.1",
++    "@backstage/plugin-app-backend": "^0.3.55",
++    "@backstage/plugin-auth-backend": "^0.20.0",
++    "@backstage/plugin-auth-node": "^0.4.1",
++    "@backstage/plugin-catalog-backend": "^1.15.0",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.1.4",
++    "@backstage/plugin-permission-common": "^0.7.10",
++    "@backstage/plugin-permission-node": "^0.7.18",
++    "@backstage/plugin-proxy-backend": "^0.4.5",
++    "@backstage/plugin-scaffolder-backend": "^1.19.0",
++    "@backstage/plugin-search-backend": "^1.4.7",
++    "@backstage/plugin-search-backend-module-catalog": "^0.1.11",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.16",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.1.11",
++    "@backstage/plugin-search-backend-node": "^1.2.11",
++    "@backstage/plugin-techdocs-backend": "^1.9.0",
+     "app": "link:../app",
+-    "@backstage/backend-common": "^0.15.0",
+-    "@backstage/backend-tasks": "^0.3.4",
+-    "@backstage/catalog-model": "^1.1.0",
+-    "@backstage/catalog-client": "^1.0.4",
+-    "@backstage/config": "^1.0.1",
+-    "@backstage/plugin-app-backend": "^0.3.35",
+-    "@backstage/plugin-auth-backend": "^0.15.1",
+-    "@backstage/plugin-catalog-backend": "^1.3.1",
+-    "@backstage/plugin-permission-common": "^0.6.3",
+-    "@backstage/plugin-permission-node": "^0.6.4",
+-    "@backstage/plugin-proxy-backend": "^0.2.29",
+-    "@backstage/plugin-scaffolder-backend": "^1.5.0",
+-    "@backstage/plugin-search-backend": "^1.0.1",
+-    "@backstage/plugin-search-backend-module-pg": "^0.3.6",
+-    "@backstage/plugin-search-backend-node": "^1.0.1",
+-    "@backstage/plugin-techdocs-backend": "^1.2.1",
+-    "better-sqlite3": "^7.5.0",
++    "better-sqlite3": "^9.0.0",
+     "dockerode": "^3.3.1",
+@@ -39,3 +43,4 @@
+     "express-promise-router": "^4.1.0",
+-    "pg": "^8.3.0",
++    "node-gyp": "^9.0.0",
++    "pg": "^8.11.3",
+     "winston": "^3.2.1"
+@@ -43,6 +48,6 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.18.1",
++    "@backstage/cli": "^0.24.0",
+     "@types/dockerode": "^3.3.0",
+-    "@types/express-serve-static-core": "^4.17.5",
+     "@types/express": "^4.17.6",
++    "@types/express-serve-static-core": "^4.17.5",
+     "@types/luxon": "^2.0.4"
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index ef05fa5..04c4ff9 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -17,3 +17,3 @@ import {
+   DatabaseManager,
+-  SingleHostDiscovery,
++  HostDiscovery,
+   UrlReaders,
+@@ -32,2 +32,3 @@ import { PluginEnvironment } from './types';
+ import { ServerPermissionClient } from '@backstage/plugin-permission-node';
++import { DefaultIdentityClient } from '@backstage/plugin-auth-node';
+ 
+@@ -36,7 +37,11 @@ function makeCreateEnv(config: Config) {
+   const reader = UrlReaders.default({ logger: root, config });
+-  const discovery = SingleHostDiscovery.fromConfig(config);
++  const discovery = HostDiscovery.fromConfig(config);
+   const cacheManager = CacheManager.fromConfig(config);
+-  const databaseManager = DatabaseManager.fromConfig(config);
++  const databaseManager = DatabaseManager.fromConfig(config, { logger: root });
+   const tokenManager = ServerTokenManager.noop();
+-  const taskScheduler = TaskScheduler.fromConfig(config);
++  const taskScheduler = TaskScheduler.fromConfig(config, { databaseManager });
++
++  const identity = DefaultIdentityClient.create({
++    discovery,
++  });
+   const permissions = ServerPermissionClient.fromConfig(config, {
+@@ -63,2 +68,3 @@ function makeCreateEnv(config: Config) {
+       permissions,
++      identity,
+     };
+diff --git a/packages/backend/src/plugins/auth.ts b/packages/backend/src/plugins/auth.ts
+index 159116d..77eb6aa 100644
+--- a/packages/backend/src/plugins/auth.ts
++++ b/packages/backend/src/plugins/auth.ts
+@@ -27,3 +27,3 @@ export default async function createPlugin(
+       //
+-      // If you want to use a production ready resolver you can switch to the
++      // If you want to use a production ready resolver you can switch to
+       // the one that is commented out below, it looks up a user entity in the
+diff --git a/packages/backend/src/plugins/catalog.ts b/packages/backend/src/plugins/catalog.ts
+index 876cb6b..4decdca 100644
+--- a/packages/backend/src/plugins/catalog.ts
++++ b/packages/backend/src/plugins/catalog.ts
+@@ -1,3 +1,3 @@
+ import { CatalogBuilder } from '@backstage/plugin-catalog-backend';
+-import { ScaffolderEntitiesProcessor } from '@backstage/plugin-scaffolder-backend';
++import { ScaffolderEntitiesProcessor } from '@backstage/plugin-catalog-backend-module-scaffolder-entity-model';
+ import { Router } from 'express';
+diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
+index 7ce5fcf..a12fee2 100644
+--- a/packages/backend/src/plugins/scaffolder.ts
++++ b/packages/backend/src/plugins/scaffolder.ts
+@@ -18,2 +18,4 @@ export default async function createPlugin(
+     catalogClient,
++    identity: env.identity,
++    permissions: env.permissions,
+   });
+diff --git a/packages/backend/src/plugins/search.ts b/packages/backend/src/plugins/search.ts
+index e9469dc..467ac60 100644
+--- a/packages/backend/src/plugins/search.ts
++++ b/packages/backend/src/plugins/search.ts
+@@ -7,4 +7,4 @@ import {
+ import { PluginEnvironment } from '../types';
+-import { DefaultCatalogCollatorFactory } from '@backstage/plugin-catalog-backend';
+-import { DefaultTechDocsCollatorFactory } from '@backstage/plugin-techdocs-backend';
++import { DefaultCatalogCollatorFactory } from '@backstage/plugin-search-backend-module-catalog';
++import { DefaultTechDocsCollatorFactory } from '@backstage/plugin-search-backend-module-techdocs';
+ import { Router } from 'express';
+diff --git a/packages/backend/src/types.ts b/packages/backend/src/types.ts
+index 8e0a864..9cd2c74 100644
+--- a/packages/backend/src/types.ts
++++ b/packages/backend/src/types.ts
+@@ -11,2 +11,3 @@ import { PluginTaskScheduler } from '@backstage/backend-tasks';
+ import { PermissionEvaluator } from '@backstage/plugin-permission-common';
++import { IdentityApi } from '@backstage/plugin-auth-node';
+ 
+@@ -22,2 +23,3 @@ export type PluginEnvironment = {
+   permissions: PermissionEvaluator;
++  identity: IdentityApi;
+ };
+diff --git a/playwright.config.ts b/playwright.config.ts
+new file mode 100644
+index 0000000..37c7fb1
+--- /dev/null
++++ b/playwright.config.ts
+@@ -0,0 +1,60 @@
++/*
++ * Copyright 2023 The Backstage Authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++import { defineConfig } from '@playwright/test';
++import { generateProjects } from '@backstage/e2e-test-utils/playwright';
++
++/**
++ * See https://playwright.dev/docs/test-configuration.
++ */
++export default defineConfig({
++  timeout: 60_000,
++
++  expect: {
++    timeout: 5_000,
++  },
++
++  // Run your local dev server before starting the tests
++  webServer: process.env.CI
++    ? []
++    : [
++        {
++          command: 'yarn start',
++          port: 3000,
++          reuseExistingServer: true,
++          timeout: 60_000,
++        },
++      ],
++
++  forbidOnly: !!process.env.CI,
++
++  retries: process.env.CI ? 2 : 0,
++
++  reporter: [['html', { open: 'never', outputFolder: 'e2e-test-report' }]],
++
++  use: {
++    actionTimeout: 0,
++    baseURL:
++      process.env.PLAYWRIGHT_URL ??
++      (process.env.CI ? 'http://localhost:7007' : 'http://localhost:3000'),
++    screenshot: 'only-on-failure',
++    trace: 'on-first-retry',
++  },
++
++  outputDir: 'node_modules/.cache/e2e-test-results',
++
++  projects: generateProjects(), // Find all packages with e2e-test folders
++});
+diff --git a/plugins/README.md b/plugins/README.md
+index 58dc32c..d7865fd 100644
+--- a/plugins/README.md
++++ b/plugins/README.md
+@@ -6,3 +6,3 @@ separate folder of its own.
+ If you want to create a new plugin here, go to your project root directory, run
+-the command `yarn backstage-cli create`, and follow the on-screen instructions.
++the command `yarn new`, and follow the on-screen instructions.
+ 
+diff --git a/yarn.lock b/yarn.lock
+new file mode 100644
+index 0000000..5ad7fe2
+--- /dev/null
++++ b/yarn.lock
+@@ -0,0 +1 @@
++# intentionally left empty
