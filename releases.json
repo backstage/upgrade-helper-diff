@@ -433,5 +433,8 @@
   },
   "1.21.0-next.3": {
     "createApp": "0.5.8-next.3"
+  },
+  "1.21.0-next.4": {
+    "createApp": "0.5.8-next.4"
   }
 }
