@@ -1,0 +1,196 @@
+diff --git a/backstage.json b/backstage.json
+index 93b9fa0..f596323 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.20.0-next.2"
++  "version": "1.23.0-next.0"
+ }
+diff --git a/package.json b/package.json
+index 2364da8..3341794 100644
+--- a/package.json
++++ b/package.json
+@@ -33,3 +33,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.24.0-next.1",
++    "@backstage/cli": "^0.25.2-next.0",
+     "@backstage/e2e-test-utils": "^0.1.0",
+@@ -44,4 +44,4 @@
+   "resolutions": {
+-    "@types/react": "^17",
+-    "@types/react-dom": "^17"
++    "@types/react": "^18",
++    "@types/react-dom": "^18"
+   },
+diff --git a/packages/app/package.json b/packages/app/package.json
+index aab8d53..e46a7b5 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -16,27 +16,27 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.4.5-next.2",
++    "@backstage/app-defaults": "^1.4.8-next.0",
+     "@backstage/catalog-model": "^1.4.3",
+-    "@backstage/cli": "^0.24.0-next.1",
+-    "@backstage/core-app-api": "^1.11.1-next.0",
+-    "@backstage/core-components": "^0.13.8-next.2",
+-    "@backstage/core-plugin-api": "^1.8.0-next.0",
+-    "@backstage/integration-react": "^1.1.21-next.1",
+-    "@backstage/plugin-api-docs": "^0.10.0-next.2",
+-    "@backstage/plugin-catalog": "^1.15.0-next.2",
+-    "@backstage/plugin-catalog-common": "^1.0.17",
+-    "@backstage/plugin-catalog-graph": "^0.2.38-next.2",
+-    "@backstage/plugin-catalog-import": "^0.10.2-next.2",
+-    "@backstage/plugin-catalog-react": "^1.9.0-next.2",
+-    "@backstage/plugin-github-actions": "^0.6.7-next.2",
+-    "@backstage/plugin-org": "^0.6.16-next.2",
+-    "@backstage/plugin-permission-react": "^0.4.17-next.0",
+-    "@backstage/plugin-scaffolder": "^1.16.0-next.2",
+-    "@backstage/plugin-search": "^1.4.2-next.2",
+-    "@backstage/plugin-search-react": "^1.7.2-next.2",
+-    "@backstage/plugin-tech-radar": "^0.6.10-next.2",
+-    "@backstage/plugin-techdocs": "^1.9.0-next.2",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.2-next.2",
+-    "@backstage/plugin-techdocs-react": "^1.1.13-next.2",
+-    "@backstage/plugin-user-settings": "^0.7.12-next.2",
+-    "@backstage/theme": "^0.4.4-next.0",
++    "@backstage/cli": "^0.25.2-next.0",
++    "@backstage/core-app-api": "^1.11.3",
++    "@backstage/core-components": "^0.13.10",
++    "@backstage/core-plugin-api": "^1.8.2",
++    "@backstage/integration-react": "^1.1.23",
++    "@backstage/plugin-api-docs": "^0.10.4-next.0",
++    "@backstage/plugin-catalog": "^1.17.0-next.0",
++    "@backstage/plugin-catalog-common": "^1.0.20",
++    "@backstage/plugin-catalog-graph": "^0.3.4-next.0",
++    "@backstage/plugin-catalog-import": "^0.10.6-next.0",
++    "@backstage/plugin-catalog-react": "^1.9.4-next.0",
++    "@backstage/plugin-github-actions": "^0.6.11-next.0",
++    "@backstage/plugin-org": "^0.6.20-next.0",
++    "@backstage/plugin-permission-react": "^0.4.19",
++    "@backstage/plugin-scaffolder": "^1.18.0-next.0",
++    "@backstage/plugin-search": "^1.4.6-next.0",
++    "@backstage/plugin-search-react": "^1.7.6-next.0",
++    "@backstage/plugin-tech-radar": "^0.6.13-next.0",
++    "@backstage/plugin-techdocs": "^1.9.4-next.0",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.5-next.0",
++    "@backstage/plugin-techdocs-react": "^1.1.15",
++    "@backstage/plugin-user-settings": "^0.8.1-next.0",
++    "@backstage/theme": "^0.5.0",
+     "@material-ui/core": "^4.12.2",
+@@ -44,4 +44,4 @@
+     "history": "^5.0.0",
+-    "react": "^17.0.2",
+-    "react-dom": "^17.0.2",
++    "react": "^18.0.2",
++    "react-dom": "^18.0.2",
+     "react-router": "^6.3.0",
+@@ -51,8 +51,8 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.4.5-next.0",
++    "@backstage/test-utils": "^1.5.0-next.0",
+     "@playwright/test": "^1.32.3",
+-    "@testing-library/jest-dom": "^5.10.1",
+-    "@testing-library/react": "^12.1.3",
++    "@testing-library/jest-dom": "^6.0.0",
++    "@testing-library/react": "^14.0.0",
+     "@testing-library/user-event": "^14.0.0",
+-    "@testing-library/dom": "^8.0.0",
++    "@testing-library/dom": "^9.0.0",
+     "@types/react-dom": "*",
+diff --git a/packages/app/src/App.test.tsx b/packages/app/src/App.test.tsx
+index b94cac7..ec8ba1d 100644
+--- a/packages/app/src/App.test.tsx
++++ b/packages/app/src/App.test.tsx
+@@ -1,3 +1,3 @@
+ import React from 'react';
+-import { renderWithEffects } from '@backstage/test-utils';
++import { render, waitFor } from '@testing-library/react';
+ import App from './App';
+@@ -22,4 +22,7 @@ describe('App', () => {
+ 
+-    const rendered = await renderWithEffects(<App />);
+-    expect(rendered.baseElement).toBeInTheDocument();
++    const rendered = render(<App />);
++
++    await waitFor(() => {
++      expect(rendered.baseElement).toBeInTheDocument();
++    });
+   });
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 6722ea2..7c6a71e 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -302,5 +302,8 @@ const groupPage = (
+         </Grid>
+-        <Grid item xs={12}>
++        <Grid item xs={12} md={6}>
+           <EntityMembersListCard />
+         </Grid>
++        <Grid item xs={12} md={6}>
++          <EntityLinksCard />
++        </Grid>
+       </Grid>
+diff --git a/packages/app/src/index.tsx b/packages/app/src/index.tsx
+index b16aaf7..d875c77 100644
+--- a/packages/app/src/index.tsx
++++ b/packages/app/src/index.tsx
+@@ -2,5 +2,5 @@ import '@backstage/cli/asset-types';
+ import React from 'react';
+-import ReactDOM from 'react-dom';
++import ReactDOM from 'react-dom/client';
+ import App from './App';
+ 
+-ReactDOM.render(<App />, document.getElementById('root'));
++ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 2131355..9ce930a 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,22 +18,22 @@
+   "dependencies": {
+-    "@backstage/backend-common": "^0.19.9-next.2",
+-    "@backstage/backend-tasks": "^0.5.12-next.2",
+-    "@backstage/catalog-client": "^1.4.5",
++    "@backstage/backend-common": "^0.21.0-next.0",
++    "@backstage/backend-tasks": "^0.5.15-next.0",
++    "@backstage/catalog-client": "^1.6.0-next.0",
+     "@backstage/catalog-model": "^1.4.3",
+     "@backstage/config": "^1.1.1",
+-    "@backstage/plugin-app-backend": "^0.3.55-next.2",
+-    "@backstage/plugin-auth-backend": "^0.20.0-next.2",
+-    "@backstage/plugin-auth-node": "^0.4.1-next.2",
+-    "@backstage/plugin-catalog-backend": "^1.15.0-next.2",
+-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.1.4-next.2",
+-    "@backstage/plugin-permission-common": "^0.7.9",
+-    "@backstage/plugin-permission-node": "^0.7.18-next.2",
+-    "@backstage/plugin-proxy-backend": "^0.4.5-next.2",
+-    "@backstage/plugin-scaffolder-backend": "^1.19.0-next.2",
+-    "@backstage/plugin-search-backend": "^1.4.7-next.2",
+-    "@backstage/plugin-search-backend-module-catalog": "^0.1.11-next.2",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.16-next.2",
+-    "@backstage/plugin-search-backend-module-techdocs": "^0.1.11-next.2",
+-    "@backstage/plugin-search-backend-node": "^1.2.11-next.2",
+-    "@backstage/plugin-techdocs-backend": "^1.9.0-next.2",
++    "@backstage/plugin-app-backend": "^0.3.58-next.0",
++    "@backstage/plugin-auth-backend": "^0.20.4-next.0",
++    "@backstage/plugin-auth-node": "^0.4.4-next.0",
++    "@backstage/plugin-catalog-backend": "^1.17.0-next.0",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.1.7-next.0",
++    "@backstage/plugin-permission-common": "^0.7.12",
++    "@backstage/plugin-permission-node": "^0.7.21-next.0",
++    "@backstage/plugin-proxy-backend": "^0.4.8-next.0",
++    "@backstage/plugin-scaffolder-backend": "^1.21.0-next.0",
++    "@backstage/plugin-search-backend": "^1.5.0-next.0",
++    "@backstage/plugin-search-backend-module-catalog": "^0.1.14-next.0",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.19-next.0",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.1.14-next.0",
++    "@backstage/plugin-search-backend-node": "^1.2.14-next.0",
++    "@backstage/plugin-techdocs-backend": "^1.9.3-next.0",
+     "app": "link:../app",
+@@ -48,3 +48,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.24.0-next.1",
++    "@backstage/cli": "^0.25.2-next.0",
+     "@types/dockerode": "^3.3.0",
