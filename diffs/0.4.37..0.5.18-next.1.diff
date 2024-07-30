@@ -1,0 +1,1170 @@
+diff --git a/.eslintignore b/.eslintignore
+new file mode 100644
+index 0000000..e5b1994
+--- /dev/null
++++ b/.eslintignore
+@@ -0,0 +1 @@
++playwright.config.ts
+diff --git a/.gitignore b/.gitignore
+index d452ac2..fbf8139 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -51 +51,4 @@ site
+ *.session.sql
++
++# E2E test reports
++e2e-test-report/
+diff --git a/app-config.production.yaml b/app-config.production.yaml
+index df09dac..5d426f5 100644
+--- a/app-config.production.yaml
++++ b/app-config.production.yaml
+@@ -15,3 +15,3 @@ backend:
+ 
+-  # config options: https://node-postgres.com/api/client
++  # config options: https://node-postgres.com/apis/client
+   database:
+@@ -30,6 +30,26 @@ backend:
+ 
++auth:
++  providers:
++    guest: {}
++
+ catalog:
+   # Overrides the default list locations from app-config.yaml as these contain example data.
+-  # See https://backstage.io/docs/features/software-catalog/software-catalog-overview#adding-components-to-the-catalog for more details
++  # See https://backstage.io/docs/features/software-catalog/#adding-components-to-the-catalog for more details
+   # on how to get entities into the catalog.
+-  locations: []
++  locations:
++    # Local example data, replace this with your production config, these are intended for demo use only.
++    # File locations are relative to the backend process, typically in a deployed context, such as in a Docker container, this will be the root
++    - type: file
++      target: ./examples/entities.yaml
++
++    # Local example template
++    - type: file
++      target: ./examples/template/template.yaml
++      rules:
++        - allow: [Template]
++
++    # Local example organizational data
++    - type: file
++      target: ./examples/org.yaml
++      rules:
++        - allow: [User, Group]
+diff --git a/app-config.yaml b/app-config.yaml
+index 3b5de8b..f784d5b 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -9,3 +9,3 @@ backend:
+   # Used for enabling authentication, secret is shared by all backend plugins
+-  # See https://backstage.io/docs/tutorials/backend-to-backend-auth for
++  # See https://backstage.io/docs/auth/service-to-service-auth for
+   # information on the format
+@@ -32,4 +32,2 @@ backend:
+     connection: ':memory:'
+-  cache:
+-    store: memory
+   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
+@@ -40,3 +38,3 @@ integrations:
+       # This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
+-      # about setting up the GitHub integration here: https://backstage.io/docs/getting-started/configuration#setting-up-a-github-integration
++      # about setting up the GitHub integration here: https://backstage.io/docs/integrations/github/locations#configuration
+       token: ${GITHUB_TOKEN}
+@@ -50,5 +48,6 @@ proxy:
+   ### A typical reason to do this is to handle HTTPS and CORS for internal services.
+-  # '/test':
+-  #   target: 'https://example.com'
+-  #   changeOrigin: true
++  # endpoints:
++  #   '/test':
++  #     target: 'https://example.com'
++  #     changeOrigin: true
+ 
+@@ -67,3 +66,5 @@ auth:
+   # see https://backstage.io/docs/auth/ to learn about auth providers
+-  providers: {}
++  providers:
++    # See https://backstage.io/docs/auth/guest/provider
++    guest: {}
+ 
+@@ -104 +105,4 @@ catalog:
+     #     - allow: [User, Group]
++
++kubernetes:
++  # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
+diff --git a/backstage.json b/backstage.json
+index 5bf3c32..da642d4 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.11.0"
++  "version": "1.30.0-next.1"
+ }
+diff --git a/lerna.json b/lerna.json
+index 322929d..529a62f 100644
+--- a/lerna.json
++++ b/lerna.json
+@@ -3,4 +3,4 @@
+   "npmClient": "yarn",
+-  "useWorkspaces": true,
+-  "version": "0.1.0"
++  "version": "0.1.0",
++  "$schema": "node_modules/lerna/schemas/lerna-schema.json"
+ }
+diff --git a/package.json b/package.json
+index a7bb7c1..423e859 100644
+--- a/package.json
++++ b/package.json
+@@ -5,3 +5,3 @@
+   "engines": {
+-    "node": "16 || 18"
++    "node": "18 || 20"
+   },
+@@ -19,2 +19,4 @@
+     "test:all": "backstage-cli repo test --coverage",
++    "test:e2e": "playwright test",
++    "fix": "backstage-cli repo fix",
+     "lint": "backstage-cli repo lint --since origin/master",
+@@ -31,13 +33,15 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.22.2",
++    "@backstage/cli": "^0.27.0-next.1",
++    "@backstage/e2e-test-utils": "^0.1.1",
++    "@playwright/test": "^1.32.3",
+     "@spotify/prettier-config": "^12.0.0",
+-    "concurrently": "^6.0.0",
+-    "lerna": "^4.0.0",
+-    "node-gyp": "^9.0.0",
++    "concurrently": "^8.0.0",
++    "lerna": "^7.3.0",
++    "node-gyp": "^10.0.0",
+     "prettier": "^2.3.2",
+-    "typescript": "~4.6.4"
++    "typescript": "~5.4.0"
+   },
+   "resolutions": {
+-    "@types/react": "^17",
+-    "@types/react-dom": "^17"
++    "@types/react": "^18",
++    "@types/react-dom": "^18"
+   },
+diff --git a/packages/app/.eslintignore b/packages/app/.eslintignore
+new file mode 100644
+index 0000000..a48cf0d
+--- /dev/null
++++ b/packages/app/.eslintignore
+@@ -0,0 +1 @@
++public
+diff --git a/packages/app/cypress.json b/packages/app/cypress.json
+deleted file mode 100644
+index 0cb845a..0000000
+--- a/packages/app/cypress.json
++++ /dev/null
+@@ -1,6 +0,0 @@
+-{
+-  "baseUrl": "http://localhost:3001",
+-  "fixturesFolder": false,
+-  "pluginsFile": false,
+-  "retries": 3
+-}
+diff --git a/packages/app/cypress/.eslintrc.json b/packages/app/cypress/.eslintrc.json
+deleted file mode 100644
+index a467608..0000000
+--- a/packages/app/cypress/.eslintrc.json
++++ /dev/null
+@@ -1,12 +0,0 @@
+-{
+-  "plugins": ["cypress"],
+-  "extends": ["plugin:cypress/recommended"],
+-  "rules": {
+-    "jest/expect-expect": [
+-      "error",
+-      {
+-        "assertFunctionNames": ["expect", "cy.contains"]
+-      }
+-    ]
+-  }
+-}
+diff --git a/packages/app/cypress/integration/app.js b/packages/app/cypress/integration/app.js
+deleted file mode 100644
+index 43fb2e3..0000000
+--- a/packages/app/cypress/integration/app.js
++++ /dev/null
+@@ -1,6 +0,0 @@
+-describe('App', () => {
+-  it('should render the catalog', () => {
+-    cy.visit('/');
+-    cy.contains('My Company Catalog');
+-  });
+-});
+diff --git a/packages/app/e2e-tests/app.test.ts b/packages/app/e2e-tests/app.test.ts
+new file mode 100644
+index 0000000..839ff88
+--- /dev/null
++++ b/packages/app/e2e-tests/app.test.ts
+@@ -0,0 +1,27 @@
++/*
++ * Copyright 2020 The Backstage Authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++import { test, expect } from '@playwright/test';
++
++test('App should render the welcome page', async ({ page }) => {
++  await page.goto('/');
++
++  const enterButton = page.getByRole('button', { name: 'Enter' });
++  await expect(enterButton).toBeVisible();
++  await enterButton.click();
++
++  await expect(page.getByText('My Company Catalog')).toBeVisible();
++});
+diff --git a/packages/app/package.json b/packages/app/package.json
+index a810e10..cbf4ea3 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -13,34 +13,29 @@
+     "test": "backstage-cli package test",
+-    "lint": "backstage-cli package lint",
+-    "test:e2e": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:dev",
+-    "test:e2e:ci": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:run",
+-    "cy:dev": "cypress open",
+-    "cy:run": "cypress run --browser chrome"
++    "lint": "backstage-cli package lint"
+   },
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.2.0",
+-    "@backstage/catalog-model": "^1.2.0",
+-    "@backstage/cli": "^0.22.2",
+-    "@backstage/core-app-api": "^1.5.0",
+-    "@backstage/core-components": "^0.12.4",
+-    "@backstage/core-plugin-api": "^1.4.0",
+-    "@backstage/integration-react": "^1.1.10",
+-    "@backstage/plugin-api-docs": "^0.9.0",
+-    "@backstage/plugin-catalog": "^1.8.0",
+-    "@backstage/plugin-catalog-common": "^1.0.11",
+-    "@backstage/plugin-catalog-graph": "^0.2.27",
+-    "@backstage/plugin-catalog-import": "^0.9.5",
+-    "@backstage/plugin-catalog-react": "^1.3.0",
+-    "@backstage/plugin-github-actions": "^0.5.15",
+-    "@backstage/plugin-org": "^0.6.5",
+-    "@backstage/plugin-permission-react": "^0.4.10",
+-    "@backstage/plugin-scaffolder": "^1.11.0",
+-    "@backstage/plugin-search": "^1.1.0",
+-    "@backstage/plugin-search-react": "^1.5.0",
+-    "@backstage/plugin-tech-radar": "^0.6.1",
+-    "@backstage/plugin-techdocs": "^1.5.0",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.10",
+-    "@backstage/plugin-techdocs-react": "^1.1.3",
+-    "@backstage/plugin-user-settings": "^0.7.0",
+-    "@backstage/theme": "^0.2.17",
++    "@backstage/app-defaults": "^1.5.10-next.1",
++    "@backstage/catalog-model": "^1.5.0",
++    "@backstage/cli": "^0.27.0-next.1",
++    "@backstage/core-app-api": "^1.14.2-next.0",
++    "@backstage/core-components": "^0.14.10-next.0",
++    "@backstage/core-plugin-api": "^1.9.3",
++    "@backstage/integration-react": "^1.1.30-next.0",
++    "@backstage/plugin-api-docs": "^0.11.8-next.1",
++    "@backstage/plugin-catalog": "^1.21.2-next.1",
++    "@backstage/plugin-catalog-common": "^1.0.26-next.0",
++    "@backstage/plugin-catalog-graph": "^0.4.8-next.1",
++    "@backstage/plugin-catalog-import": "^0.12.2-next.1",
++    "@backstage/plugin-catalog-react": "^1.12.3-next.1",
++    "@backstage/plugin-kubernetes": "^0.11.13-next.1",
++    "@backstage/plugin-org": "^0.6.28-next.1",
++    "@backstage/plugin-permission-react": "^0.4.25-next.0",
++    "@backstage/plugin-scaffolder": "^1.23.1-next.1",
++    "@backstage/plugin-search": "^1.4.15-next.1",
++    "@backstage/plugin-search-react": "^1.7.14-next.1",
++    "@backstage/plugin-techdocs": "^1.10.8-next.1",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.13-next.0",
++    "@backstage/plugin-techdocs-react": "^1.2.7-next.0",
++    "@backstage/plugin-user-settings": "^0.8.11-next.1",
++    "@backstage/theme": "^0.5.6",
+     "@material-ui/core": "^4.12.2",
+@@ -48,4 +43,5 @@
+     "history": "^5.0.0",
+-    "react": "^17.0.2",
+-    "react-dom": "^17.0.2",
++    "react": "^18.0.2",
++    "react-dom": "^18.0.2",
++    "react-router": "^6.3.0",
+     "react-router-dom": "^6.3.0",
+@@ -54,12 +50,10 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.2.5",
+-    "@testing-library/jest-dom": "^5.10.1",
+-    "@testing-library/react": "^12.1.3",
++    "@backstage/test-utils": "^1.5.10-next.1",
++    "@playwright/test": "^1.32.3",
++    "@testing-library/jest-dom": "^6.0.0",
++    "@testing-library/react": "^14.0.0",
+     "@testing-library/user-event": "^14.0.0",
+-    "@types/node": "^16.11.26",
++    "@testing-library/dom": "^9.0.0",
+     "@types/react-dom": "*",
+-    "cross-env": "^7.0.0",
+-    "cypress": "^9.7.0",
+-    "eslint-plugin-cypress": "^2.10.3",
+-    "start-server-and-test": "^1.10.11"
++    "cross-env": "^7.0.0"
+   },
+diff --git a/packages/app/public/index.html b/packages/app/public/index.html
+index c6083b3..18da7c4 100644
+--- a/packages/app/public/index.html
++++ b/packages/app/public/index.html
+@@ -8,5 +8,4 @@
+       name="description"
+-      content="Backstage is an open platform for building developer portals"
++      content="Backstage is an open source framework for building developer portals"
+     />
+-    <link rel="apple-touch-icon" href="<%= publicPath %>/logo192.png" />
+     <!--
+@@ -44,3 +43,3 @@
+     />
+-    <title><%= config.getString('app.title') %></title>
++    <title><%= config.getOptionalString('app.title') ?? 'Backstage' %></title>
+   </head>
+diff --git a/packages/app/src/App.test.tsx b/packages/app/src/App.test.tsx
+index b94cac7..ec8ba1d 100644
+--- a/packages/app/src/App.test.tsx
++++ b/packages/app/src/App.test.tsx
+@@ -1,3 +1,3 @@
+ import React from 'react';
+-import { renderWithEffects } from '@backstage/test-utils';
++import { render, waitFor } from '@testing-library/react';
+ import App from './App';
+@@ -22,4 +22,7 @@ describe('App', () => {
+ 
+-    const rendered = await renderWithEffects(<App />);
+-    expect(rendered.baseElement).toBeInTheDocument();
++    const rendered = render(<App />);
++
++    await waitFor(() => {
++      expect(rendered.baseElement).toBeInTheDocument();
++    });
+   });
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index 056402f..e24c468 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -15,3 +15,2 @@ import { orgPlugin } from '@backstage/plugin-org';
+ import { SearchPage } from '@backstage/plugin-search';
+-import { TechRadarPage } from '@backstage/plugin-tech-radar';
+ import {
+@@ -29,3 +28,7 @@ import { Root } from './components/Root';
+ 
+-import { AlertDisplay, OAuthRequestDialog } from '@backstage/core-components';
++import {
++  AlertDisplay,
++  OAuthRequestDialog,
++  SignInPage,
++} from '@backstage/core-components';
+ import { createApp } from '@backstage/app-defaults';
+@@ -42,2 +45,3 @@ const app = createApp({
+       viewTechDoc: techdocsPlugin.routes.docRoot,
++      createFromTemplate: scaffolderPlugin.routes.selectedTemplate,
+     });
+@@ -48,2 +52,3 @@ const app = createApp({
+       registerComponent: catalogImportPlugin.routes.importPage,
++      viewTechDoc: techdocsPlugin.routes.docRoot,
+     });
+@@ -53,2 +58,5 @@ const app = createApp({
+   },
++  components: {
++    SignInPage: props => <SignInPage {...props} auto providers={['guest']} />,
++  },
+ });
+@@ -76,6 +84,2 @@ const routes = (
+     <Route path="/api-docs" element={<ApiExplorerPage />} />
+-    <Route
+-      path="/tech-radar"
+-      element={<TechRadarPage width={1500} height={800} />}
+-    />
+     <Route
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+index 6768b48..853d175 100644
+--- a/packages/app/src/components/Root/Root.tsx
++++ b/packages/app/src/components/Root/Root.tsx
+@@ -4,3 +4,2 @@ import HomeIcon from '@material-ui/icons/Home';
+ import ExtensionIcon from '@material-ui/icons/Extension';
+-import MapIcon from '@material-ui/icons/MyLocation';
+ import LibraryBooks from '@material-ui/icons/LibraryBooks';
+@@ -28,2 +27,4 @@ import MenuIcon from '@material-ui/icons/Menu';
+ import SearchIcon from '@material-ui/icons/Search';
++import { MyGroupsSidebarItem } from '@backstage/plugin-org';
++import GroupIcon from '@material-ui/icons/People';
+ 
+@@ -68,2 +69,7 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
+         <SidebarItem icon={HomeIcon} to="catalog" text="Home" />
++        <MyGroupsSidebarItem
++          singularTitle="My Group"
++          pluralTitle="My Groups"
++          icon={GroupIcon}
++        />
+         <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
+@@ -74,3 +80,3 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
+         <SidebarScrollWrapper>
+-          <SidebarItem icon={MapIcon} to="tech-radar" text="Tech Radar" />
++          {/* Items in this group will be scrollable if they run out of space */}
+         </SidebarScrollWrapper>
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 54a05ee..6164c76 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -27,7 +27,5 @@ import {
+   isOrphan,
++  hasRelationWarnings,
++  EntityRelationWarning,
+ } from '@backstage/plugin-catalog';
+-import {
+-  isGithubActionsAvailable,
+-  EntityGithubActionsContent,
+-} from '@backstage/plugin-github-actions';
+ import {
+@@ -58,2 +56,7 @@ import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
+ 
++import {
++  EntityKubernetesContent,
++  isKubernetesAvailable,
++} from '@backstage/plugin-kubernetes';
++
+ const techdocsContent = (
+@@ -70,5 +73,9 @@ const cicdContent = (
+   <EntitySwitch>
+-    <EntitySwitch.Case if={isGithubActionsAvailable}>
+-      <EntityGithubActionsContent />
+-    </EntitySwitch.Case>
++    {/*
++      Here you can add support for different CI/CD services, for example
++      using @backstage-community/plugin-github-actions as follows:
++      <EntitySwitch.Case if={isGithubActionsAvailable}>
++        <EntityGithubActionsContent />
++      </EntitySwitch.Case>
++     */}
+ 
+@@ -103,2 +110,10 @@ const entityWarningContent = (
+ 
++    <EntitySwitch>
++      <EntitySwitch.Case if={hasRelationWarnings}>
++        <Grid item xs={12}>
++          <EntityRelationWarning />
++        </Grid>
++      </EntitySwitch.Case>
++    </EntitySwitch>
++
+     <EntitySwitch>
+@@ -142,2 +157,10 @@ const serviceEntityPage = (
+ 
++    <EntityLayout.Route
++      path="/kubernetes"
++      title="Kubernetes"
++      if={isKubernetesAvailable}
++    >
++      <EntityKubernetesContent />
++    </EntityLayout.Route>
++
+     <EntityLayout.Route path="/api" title="API">
+@@ -180,2 +203,10 @@ const websiteEntityPage = (
+ 
++    <EntityLayout.Route
++      path="/kubernetes"
++      title="Kubernetes"
++      if={isKubernetesAvailable}
++    >
++      <EntityKubernetesContent />
++    </EntityLayout.Route>
++
+     <EntityLayout.Route path="/dependencies" title="Dependencies">
+@@ -292,5 +323,8 @@ const groupPage = (
+         </Grid>
+-        <Grid item xs={12}>
++        <Grid item xs={12} md={6}>
+           <EntityMembersListCard />
+         </Grid>
++        <Grid item xs={12} md={6}>
++          <EntityLinksCard />
++        </Grid>
+       </Grid>
+diff --git a/packages/app/src/index.tsx b/packages/app/src/index.tsx
+index b16aaf7..d875c77 100644
+--- a/packages/app/src/index.tsx
++++ b/packages/app/src/index.tsx
+@@ -2,5 +2,5 @@ import '@backstage/cli/asset-types';
+ import React from 'react';
+-import ReactDOM from 'react-dom';
++import ReactDOM from 'react-dom/client';
+ import App from './App';
+ 
+-ReactDOM.render(<App />, document.getElementById('root'));
++ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 51f7124..bef67b5 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -11,3 +11,10 @@
+ 
+-FROM node:16-bullseye-slim
++FROM node:18-bookworm-slim
++
++# Install isolate-vm dependencies, these are needed by the @backstage/plugin-scaffolder-backend.
++RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
++    --mount=type=cache,target=/var/lib/apt,sharing=locked \
++    apt-get update && \
++    apt-get install -y --no-install-recommends python3 g++ build-essential && \
++    yarn config set python /usr/bin/python3
+ 
+@@ -18,4 +25,3 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+     apt-get update && \
+-    apt-get install -y --no-install-recommends libsqlite3-dev python3 build-essential && \
+-    yarn config set python /usr/bin/python3
++    apt-get install -y --no-install-recommends libsqlite3-dev
+ 
+@@ -41,2 +47,5 @@ RUN --mount=type=cache,target=/home/node/.cache/yarn,sharing=locked,uid=1000,gid
+ 
++# This will include the examples, if you don't need these simply remove this line
++COPY --chown=node:node examples ./examples
++
+ # Then copy the rest of the backend bundle, along with any other files we might want.
+diff --git a/packages/backend/README.md b/packages/backend/README.md
+index aa042db..3607b0a 100644
+--- a/packages/backend/README.md
++++ b/packages/backend/README.md
+@@ -38,3 +38,3 @@ locations to the backend. These are places where the backend can find some
+ entity descriptor data to consume and serve. For more information, see
+-[Software Catalog Overview - Adding Components to the Catalog](https://backstage.io/docs/features/software-catalog/software-catalog-overview#adding-components-to-the-catalog).
++[Software Catalog Overview - Adding Components to the Catalog](https://backstage.io/docs/features/software-catalog/#adding-components-to-the-catalog).
+ 
+@@ -58,2 +58,2 @@ and
+ - [Backstage Readme](https://github.com/backstage/backstage/blob/master/README.md)
+-- [Backstage Documentation](https://github.com/backstage/backstage/blob/master/docs/README.md)
++- [Backstage Documentation](https://backstage.io/docs)
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index d3591f7..c5c3b5b 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,25 +18,31 @@
+   "dependencies": {
+-    "@backstage/backend-common": "^0.18.2",
+-    "@backstage/backend-tasks": "^0.4.3",
+-    "@backstage/catalog-client": "^1.3.1",
+-    "@backstage/catalog-model": "^1.2.0",
+-    "@backstage/config": "^1.0.6",
+-    "@backstage/plugin-app-backend": "^0.3.42",
+-    "@backstage/plugin-auth-backend": "^0.18.0",
+-    "@backstage/plugin-auth-node": "^0.2.11",
+-    "@backstage/plugin-catalog-backend": "^1.7.2",
+-    "@backstage/plugin-permission-common": "^0.7.3",
+-    "@backstage/plugin-permission-node": "^0.7.5",
+-    "@backstage/plugin-proxy-backend": "^0.2.36",
+-    "@backstage/plugin-scaffolder-backend": "^1.11.0",
+-    "@backstage/plugin-search-backend": "^1.2.3",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.3",
+-    "@backstage/plugin-search-backend-node": "^1.1.3",
+-    "@backstage/plugin-techdocs-backend": "^1.5.3",
++    "@backstage/backend-common": "^0.23.4-next.1",
++    "@backstage/backend-defaults": "^0.4.2-next.1",
++    "@backstage/backend-tasks": "^0.5.28-next.1",
++    "@backstage/config": "^1.2.0",
++    "@backstage/plugin-app-backend": "^0.3.72-next.1",
++    "@backstage/plugin-auth-backend": "^0.22.10-next.1",
++    "@backstage/plugin-auth-backend-module-github-provider": "^0.1.20-next.1",
++    "@backstage/plugin-auth-backend-module-guest-provider": "^0.1.9-next.1",
++    "@backstage/plugin-auth-node": "^0.4.18-next.1",
++    "@backstage/plugin-catalog-backend": "^1.24.1-next.1",
++    "@backstage/plugin-catalog-backend-module-logs": "^0.0.2-next.1",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.1.21-next.1",
++    "@backstage/plugin-kubernetes-backend": "^0.18.4-next.1",
++    "@backstage/plugin-permission-backend": "^0.5.47-next.1",
++    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.1.20-next.1",
++    "@backstage/plugin-permission-common": "^0.8.1-next.0",
++    "@backstage/plugin-permission-node": "^0.8.1-next.1",
++    "@backstage/plugin-proxy-backend": "^0.5.4-next.1",
++    "@backstage/plugin-scaffolder-backend": "^1.23.1-next.1",
++    "@backstage/plugin-search-backend": "^1.5.15-next.1",
++    "@backstage/plugin-search-backend-module-catalog": "^0.1.29-next.1",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.33-next.1",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.1.28-next.1",
++    "@backstage/plugin-search-backend-node": "^1.2.28-next.1",
++    "@backstage/plugin-techdocs-backend": "^1.10.10-next.1",
+     "app": "link:../app",
+-    "better-sqlite3": "^8.0.0",
+-    "dockerode": "^3.3.1",
+-    "express": "^4.17.1",
+-    "express-promise-router": "^4.1.0",
+-    "pg": "^8.3.0",
++    "better-sqlite3": "^9.0.0",
++    "node-gyp": "^10.0.0",
++    "pg": "^8.11.3",
+     "winston": "^3.2.1"
+@@ -44,4 +50,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.22.2",
+-    "@types/dockerode": "^3.3.0",
++    "@backstage/cli": "^0.27.0-next.1",
+     "@types/express": "^4.17.6",
+diff --git a/packages/backend/src/index.test.ts b/packages/backend/src/index.test.ts
+deleted file mode 100644
+index 7814b8c..0000000
+--- a/packages/backend/src/index.test.ts
++++ /dev/null
+@@ -1,8 +0,0 @@
+-import { PluginEnvironment } from './types';
+-
+-describe('test', () => {
+-  it('unbreaks the test runner', () => {
+-    const unbreaker = {} as PluginEnvironment;
+-    expect(unbreaker).toBeTruthy();
+-  });
+-});
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index c4736a5..cf2caae 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -8,108 +8,46 @@
+ 
+-import Router from 'express-promise-router';
+-import {
+-  createServiceBuilder,
+-  loadBackendConfig,
+-  getRootLogger,
+-  useHotMemoize,
+-  notFoundHandler,
+-  CacheManager,
+-  DatabaseManager,
+-  SingleHostDiscovery,
+-  UrlReaders,
+-  ServerTokenManager,
+-} from '@backstage/backend-common';
+-import { TaskScheduler } from '@backstage/backend-tasks';
+-import { Config } from '@backstage/config';
+-import app from './plugins/app';
+-import auth from './plugins/auth';
+-import catalog from './plugins/catalog';
+-import scaffolder from './plugins/scaffolder';
+-import proxy from './plugins/proxy';
+-import techdocs from './plugins/techdocs';
+-import search from './plugins/search';
+-import { PluginEnvironment } from './types';
+-import { ServerPermissionClient } from '@backstage/plugin-permission-node';
+-import { DefaultIdentityClient } from '@backstage/plugin-auth-node';
++import { createBackend } from '@backstage/backend-defaults';
+ 
+-function makeCreateEnv(config: Config) {
+-  const root = getRootLogger();
+-  const reader = UrlReaders.default({ logger: root, config });
+-  const discovery = SingleHostDiscovery.fromConfig(config);
+-  const cacheManager = CacheManager.fromConfig(config);
+-  const databaseManager = DatabaseManager.fromConfig(config, { logger: root });
+-  const tokenManager = ServerTokenManager.noop();
+-  const taskScheduler = TaskScheduler.fromConfig(config);
++const backend = createBackend();
+ 
+-  const identity = DefaultIdentityClient.create({
+-    discovery,
+-  });
+-  const permissions = ServerPermissionClient.fromConfig(config, {
+-    discovery,
+-    tokenManager,
+-  });
++backend.add(import('@backstage/plugin-app-backend/alpha'));
++backend.add(import('@backstage/plugin-proxy-backend/alpha'));
++backend.add(import('@backstage/plugin-scaffolder-backend/alpha'));
++backend.add(import('@backstage/plugin-techdocs-backend/alpha'));
+ 
+-  root.info(`Created UrlReader ${reader}`);
++// auth plugin
++backend.add(import('@backstage/plugin-auth-backend'));
++// See https://backstage.io/docs/backend-system/building-backends/migrating#the-auth-plugin
++backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
++// See https://backstage.io/docs/auth/guest/provider
+ 
+-  return (plugin: string): PluginEnvironment => {
+-    const logger = root.child({ type: 'plugin', plugin });
+-    const database = databaseManager.forPlugin(plugin);
+-    const cache = cacheManager.forPlugin(plugin);
+-    const scheduler = taskScheduler.forPlugin(plugin);
+-    return {
+-      logger,
+-      database,
+-      cache,
+-      config,
+-      reader,
+-      discovery,
+-      tokenManager,
+-      scheduler,
+-      permissions,
+-      identity,
+-    };
+-  };
+-}
++// catalog plugin
++backend.add(import('@backstage/plugin-catalog-backend/alpha'));
++backend.add(
++  import('@backstage/plugin-catalog-backend-module-scaffolder-entity-model'),
++);
+ 
+-async function main() {
+-  const config = await loadBackendConfig({
+-    argv: process.argv,
+-    logger: getRootLogger(),
+-  });
+-  const createEnv = makeCreateEnv(config);
++// See https://backstage.io/docs/features/software-catalog/configuration#subscribing-to-catalog-errors
++backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
+ 
+-  const catalogEnv = useHotMemoize(module, () => createEnv('catalog'));
+-  const scaffolderEnv = useHotMemoize(module, () => createEnv('scaffolder'));
+-  const authEnv = useHotMemoize(module, () => createEnv('auth'));
+-  const proxyEnv = useHotMemoize(module, () => createEnv('proxy'));
+-  const techdocsEnv = useHotMemoize(module, () => createEnv('techdocs'));
+-  const searchEnv = useHotMemoize(module, () => createEnv('search'));
+-  const appEnv = useHotMemoize(module, () => createEnv('app'));
++// permission plugin
++backend.add(import('@backstage/plugin-permission-backend/alpha'));
++backend.add(
++  import('@backstage/plugin-permission-backend-module-allow-all-policy'),
++);
+ 
+-  const apiRouter = Router();
+-  apiRouter.use('/catalog', await catalog(catalogEnv));
+-  apiRouter.use('/scaffolder', await scaffolder(scaffolderEnv));
+-  apiRouter.use('/auth', await auth(authEnv));
+-  apiRouter.use('/techdocs', await techdocs(techdocsEnv));
+-  apiRouter.use('/proxy', await proxy(proxyEnv));
+-  apiRouter.use('/search', await search(searchEnv));
++// search plugin
++backend.add(import('@backstage/plugin-search-backend/alpha'));
+ 
+-  // Add backends ABOVE this line; this 404 handler is the catch-all fallback
+-  apiRouter.use(notFoundHandler());
++// search engine
++// See https://backstage.io/docs/features/search/search-engines
++backend.add(import('@backstage/plugin-search-backend-module-pg/alpha'));
+ 
+-  const service = createServiceBuilder(module)
+-    .loadConfig(config)
+-    .addRouter('/api', apiRouter)
+-    .addRouter('', await app(appEnv));
++// search collators
++backend.add(import('@backstage/plugin-search-backend-module-catalog/alpha'));
++backend.add(import('@backstage/plugin-search-backend-module-techdocs/alpha'));
+ 
+-  await service.start().catch(err => {
+-    console.log(err);
+-    process.exit(1);
+-  });
+-}
++// kubernetes
++backend.add(import('@backstage/plugin-kubernetes-backend/alpha'));
+ 
+-module.hot?.accept();
+-main().catch(error => {
+-  console.error('Backend failed to start up', error);
+-  process.exit(1);
+-});
++backend.start();
+diff --git a/packages/backend/src/plugins/app.ts b/packages/backend/src/plugins/app.ts
+deleted file mode 100644
+index 7c37f68..0000000
+--- a/packages/backend/src/plugins/app.ts
++++ /dev/null
+@@ -1,14 +0,0 @@
+-import { createRouter } from '@backstage/plugin-app-backend';
+-import { Router } from 'express';
+-import { PluginEnvironment } from '../types';
+-
+-export default async function createPlugin(
+-  env: PluginEnvironment,
+-): Promise<Router> {
+-  return await createRouter({
+-    logger: env.logger,
+-    config: env.config,
+-    database: env.database,
+-    appPackageName: 'app',
+-  });
+-}
+diff --git a/packages/backend/src/plugins/auth.ts b/packages/backend/src/plugins/auth.ts
+deleted file mode 100644
+index 77eb6aa..0000000
+--- a/packages/backend/src/plugins/auth.ts
++++ /dev/null
+@@ -1,54 +0,0 @@
+-import {
+-  createRouter,
+-  providers,
+-  defaultAuthProviderFactories,
+-} from '@backstage/plugin-auth-backend';
+-import { Router } from 'express';
+-import { PluginEnvironment } from '../types';
+-
+-export default async function createPlugin(
+-  env: PluginEnvironment,
+-): Promise<Router> {
+-  return await createRouter({
+-    logger: env.logger,
+-    config: env.config,
+-    database: env.database,
+-    discovery: env.discovery,
+-    tokenManager: env.tokenManager,
+-    providerFactories: {
+-      ...defaultAuthProviderFactories,
+-
+-      // This replaces the default GitHub auth provider with a customized one.
+-      // The `signIn` option enables sign-in for this provider, using the
+-      // identity resolution logic that's provided in the `resolver` callback.
+-      //
+-      // This particular resolver makes all users share a single "guest" identity.
+-      // It should only be used for testing and trying out Backstage.
+-      //
+-      // If you want to use a production ready resolver you can switch to
+-      // the one that is commented out below, it looks up a user entity in the
+-      // catalog using the GitHub username of the authenticated user.
+-      // That resolver requires you to have user entities populated in the catalog,
+-      // for example using https://backstage.io/docs/integrations/github/org
+-      //
+-      // There are other resolvers to choose from, and you can also create
+-      // your own, see the auth documentation for more details:
+-      //
+-      //   https://backstage.io/docs/auth/identity-resolver
+-      github: providers.github.create({
+-        signIn: {
+-          resolver(_, ctx) {
+-            const userRef = 'user:default/guest'; // Must be a full entity reference
+-            return ctx.issueToken({
+-              claims: {
+-                sub: userRef, // The user's own identity
+-                ent: [userRef], // A list of identities that the user claims ownership through
+-              },
+-            });
+-          },
+-          // resolver: providers.github.resolvers.usernameMatchingUserEntityName(),
+-        },
+-      }),
+-    },
+-  });
+-}
+diff --git a/packages/backend/src/plugins/catalog.ts b/packages/backend/src/plugins/catalog.ts
+deleted file mode 100644
+index 876cb6b..0000000
+--- a/packages/backend/src/plugins/catalog.ts
++++ /dev/null
+@@ -1,14 +0,0 @@
+-import { CatalogBuilder } from '@backstage/plugin-catalog-backend';
+-import { ScaffolderEntitiesProcessor } from '@backstage/plugin-scaffolder-backend';
+-import { Router } from 'express';
+-import { PluginEnvironment } from '../types';
+-
+-export default async function createPlugin(
+-  env: PluginEnvironment,
+-): Promise<Router> {
+-  const builder = await CatalogBuilder.create(env);
+-  builder.addProcessor(new ScaffolderEntitiesProcessor());
+-  const { processingEngine, router } = await builder.build();
+-  await processingEngine.start();
+-  return router;
+-}
+diff --git a/packages/backend/src/plugins/proxy.ts b/packages/backend/src/plugins/proxy.ts
+deleted file mode 100644
+index 54ec393..0000000
+--- a/packages/backend/src/plugins/proxy.ts
++++ /dev/null
+@@ -1,13 +0,0 @@
+-import { createRouter } from '@backstage/plugin-proxy-backend';
+-import { Router } from 'express';
+-import { PluginEnvironment } from '../types';
+-
+-export default async function createPlugin(
+-  env: PluginEnvironment,
+-): Promise<Router> {
+-  return await createRouter({
+-    logger: env.logger,
+-    config: env.config,
+-    discovery: env.discovery,
+-  });
+-}
+diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
+deleted file mode 100644
+index ef46f07..0000000
+--- a/packages/backend/src/plugins/scaffolder.ts
++++ /dev/null
+@@ -1,21 +0,0 @@
+-import { CatalogClient } from '@backstage/catalog-client';
+-import { createRouter } from '@backstage/plugin-scaffolder-backend';
+-import { Router } from 'express';
+-import type { PluginEnvironment } from '../types';
+-
+-export default async function createPlugin(
+-  env: PluginEnvironment,
+-): Promise<Router> {
+-  const catalogClient = new CatalogClient({
+-    discoveryApi: env.discovery,
+-  });
+-
+-  return await createRouter({
+-    logger: env.logger,
+-    config: env.config,
+-    database: env.database,
+-    reader: env.reader,
+-    catalogClient,
+-    identity: env.identity,
+-  });
+-}
+diff --git a/packages/backend/src/plugins/search.ts b/packages/backend/src/plugins/search.ts
+deleted file mode 100644
+index e9469dc..0000000
+--- a/packages/backend/src/plugins/search.ts
++++ /dev/null
+@@ -1,66 +0,0 @@
+-import { useHotCleanup } from '@backstage/backend-common';
+-import { createRouter } from '@backstage/plugin-search-backend';
+-import {
+-  IndexBuilder,
+-  LunrSearchEngine,
+-} from '@backstage/plugin-search-backend-node';
+-import { PluginEnvironment } from '../types';
+-import { DefaultCatalogCollatorFactory } from '@backstage/plugin-catalog-backend';
+-import { DefaultTechDocsCollatorFactory } from '@backstage/plugin-techdocs-backend';
+-import { Router } from 'express';
+-
+-export default async function createPlugin(
+-  env: PluginEnvironment,
+-): Promise<Router> {
+-  // Initialize a connection to a search engine.
+-  const searchEngine = new LunrSearchEngine({
+-    logger: env.logger,
+-  });
+-  const indexBuilder = new IndexBuilder({
+-    logger: env.logger,
+-    searchEngine,
+-  });
+-
+-  const schedule = env.scheduler.createScheduledTaskRunner({
+-    frequency: { minutes: 10 },
+-    timeout: { minutes: 15 },
+-    // A 3 second delay gives the backend server a chance to initialize before
+-    // any collators are executed, which may attempt requests against the API.
+-    initialDelay: { seconds: 3 },
+-  });
+-
+-  // Collators are responsible for gathering documents known to plugins. This
+-  // collator gathers entities from the software catalog.
+-  indexBuilder.addCollator({
+-    schedule,
+-    factory: DefaultCatalogCollatorFactory.fromConfig(env.config, {
+-      discovery: env.discovery,
+-      tokenManager: env.tokenManager,
+-    }),
+-  });
+-
+-  // collator gathers entities from techdocs.
+-  indexBuilder.addCollator({
+-    schedule,
+-    factory: DefaultTechDocsCollatorFactory.fromConfig(env.config, {
+-      discovery: env.discovery,
+-      logger: env.logger,
+-      tokenManager: env.tokenManager,
+-    }),
+-  });
+-
+-  // The scheduler controls when documents are gathered from collators and sent
+-  // to the search engine for indexing.
+-  const { scheduler } = await indexBuilder.build();
+-  scheduler.start();
+-
+-  useHotCleanup(module, () => scheduler.stop());
+-
+-  return await createRouter({
+-    engine: indexBuilder.getSearchEngine(),
+-    types: indexBuilder.getDocumentTypes(),
+-    permissions: env.permissions,
+-    config: env.config,
+-    logger: env.logger,
+-  });
+-}
+diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
+deleted file mode 100644
+index be8bb0c..0000000
+--- a/packages/backend/src/plugins/techdocs.ts
++++ /dev/null
+@@ -1,51 +0,0 @@
+-import { DockerContainerRunner } from '@backstage/backend-common';
+-import {
+-  createRouter,
+-  Generators,
+-  Preparers,
+-  Publisher,
+-} from '@backstage/plugin-techdocs-backend';
+-import Docker from 'dockerode';
+-import { Router } from 'express';
+-import { PluginEnvironment } from '../types';
+-
+-export default async function createPlugin(
+-  env: PluginEnvironment,
+-): Promise<Router> {
+-  // Preparers are responsible for fetching source files for documentation.
+-  const preparers = await Preparers.fromConfig(env.config, {
+-    logger: env.logger,
+-    reader: env.reader,
+-  });
+-
+-  // Docker client (conditionally) used by the generators, based on techdocs.generators config.
+-  const dockerClient = new Docker();
+-  const containerRunner = new DockerContainerRunner({ dockerClient });
+-
+-  // Generators are used for generating documentation sites.
+-  const generators = await Generators.fromConfig(env.config, {
+-    logger: env.logger,
+-    containerRunner,
+-  });
+-
+-  // Publisher is used for
+-  // 1. Publishing generated files to storage
+-  // 2. Fetching files from storage and passing them to TechDocs frontend.
+-  const publisher = await Publisher.fromConfig(env.config, {
+-    logger: env.logger,
+-    discovery: env.discovery,
+-  });
+-
+-  // checks if the publisher is working and logs the result
+-  await publisher.getReadiness();
+-
+-  return await createRouter({
+-    preparers,
+-    generators,
+-    publisher,
+-    logger: env.logger,
+-    config: env.config,
+-    discovery: env.discovery,
+-    cache: env.cache,
+-  });
+-}
+diff --git a/packages/backend/src/types.ts b/packages/backend/src/types.ts
+deleted file mode 100644
+index 9cd2c74..0000000
+--- a/packages/backend/src/types.ts
++++ /dev/null
+@@ -1,25 +0,0 @@
+-import { Logger } from 'winston';
+-import { Config } from '@backstage/config';
+-import {
+-  PluginCacheManager,
+-  PluginDatabaseManager,
+-  PluginEndpointDiscovery,
+-  TokenManager,
+-  UrlReader,
+-} from '@backstage/backend-common';
+-import { PluginTaskScheduler } from '@backstage/backend-tasks';
+-import { PermissionEvaluator } from '@backstage/plugin-permission-common';
+-import { IdentityApi } from '@backstage/plugin-auth-node';
+-
+-export type PluginEnvironment = {
+-  logger: Logger;
+-  database: PluginDatabaseManager;
+-  cache: PluginCacheManager;
+-  config: Config;
+-  reader: UrlReader;
+-  discovery: PluginEndpointDiscovery;
+-  tokenManager: TokenManager;
+-  scheduler: PluginTaskScheduler;
+-  permissions: PermissionEvaluator;
+-  identity: IdentityApi;
+-};
+diff --git a/playwright.config.ts b/playwright.config.ts
+new file mode 100644
+index 0000000..733be13
+--- /dev/null
++++ b/playwright.config.ts
+@@ -0,0 +1,60 @@
++/*
++ * Copyright 2023 The Backstage Authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++import { defineConfig } from '@playwright/test';
++import { generateProjects } from '@backstage/e2e-test-utils/playwright';
++
++/**
++ * See https://playwright.dev/docs/test-configuration.
++ */
++export default defineConfig({
++  timeout: 60_000,
++
++  expect: {
++    timeout: 5_000,
++  },
++
++  // Run your local dev server before starting the tests
++  webServer: process.env.CI
++    ? []
++    : [
++        {
++          command: 'yarn dev',
++          port: 3000,
++          reuseExistingServer: true,
++          timeout: 60_000,
++        },
++      ],
++
++  forbidOnly: !!process.env.CI,
++
++  retries: process.env.CI ? 2 : 0,
++
++  reporter: [['html', { open: 'never', outputFolder: 'e2e-test-report' }]],
++
++  use: {
++    actionTimeout: 0,
++    baseURL:
++      process.env.PLAYWRIGHT_URL ??
++      (process.env.CI ? 'http://localhost:7007' : 'http://localhost:3000'),
++    screenshot: 'only-on-failure',
++    trace: 'on-first-retry',
++  },
++
++  outputDir: 'node_modules/.cache/e2e-test-results',
++
++  projects: generateProjects(), // Find all packages with e2e-test folders
++});
+diff --git a/plugins/README.md b/plugins/README.md
+index 58dc32c..d7865fd 100644
+--- a/plugins/README.md
++++ b/plugins/README.md
+@@ -6,3 +6,3 @@ separate folder of its own.
+ If you want to create a new plugin here, go to your project root directory, run
+-the command `yarn backstage-cli create`, and follow the on-screen instructions.
++the command `yarn new`, and follow the on-screen instructions.
+ 
+diff --git a/yarn.lock b/yarn.lock
+index 5ad7fe2..c37fc61 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -1 +1,3 @@
+-# intentionally left empty
++# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
++# yarn lockfile v1
++
