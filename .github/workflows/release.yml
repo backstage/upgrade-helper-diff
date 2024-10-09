@@ -105,9 +105,19 @@ jobs:
           if [ -z "$RELEASE_VERSION" ]; then
             jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
           else
-            jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\"}" < releases.json > _releases.json
+            jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\" }" < releases.json > _releases.json
           fi
           mv _releases.json releases.json
+      - name: Create new diffs for yarn plugin
+        run: |
+          for version in $(jq -r 'to_entries |.[] | .value.createApp // .key'  < releases-yarn-plugin.json); do
+            echo "Creating yarn-plugin diffs between version $version and $NEW_VERSION "
+            git diff -U1 origin/release/yarn-plugin/$version..origin/release/yarn-plugin/$NEW_VERSION > diffs-yarn-plugin/$version..$NEW_VERSION.diff
+          done
+      - name: Add new version to releases-yarn-plugin.json
+        run: |
+          jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\" }" < releases-yarn-plugin.json > _releases-yarn-plugin.json
+          mv _releases-yarn-plugin.json releases-yarn-plugin.json
       - name: Setup git bot user
         run: |
           git config user.name "github-actions[bot]"
