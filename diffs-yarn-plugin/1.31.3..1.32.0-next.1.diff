@@ -1,0 +1,9 @@
+diff --git a/backstage.json b/backstage.json
+index 5f445e5..df3ec52 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.31.3"
++  "version": "1.32.0-next.1"
+ }
