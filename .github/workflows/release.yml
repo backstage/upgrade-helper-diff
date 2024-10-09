@@ -50,14 +50,33 @@ jobs:
         run: |
           SKIP_DIFF="true" && [[ -z "$(git ls-remote --heads origin release/${VERSION})" ]] && SKIP_DIFF="false"
           echo "::set-output name=skip_create_diff::${SKIP_DIFF}"
-      - name: Add release
+      - name: Create branch for release ${VERSION}
+        if: steps.check_branch.outputs.skip_create_diff == 'false'
         run: |
           git checkout -b release/${VERSION}
           git add .
           git reset $BACKSTAGE_APP_NAME
           git commit -m "Release ${VERSION}"
           git push origin release/${VERSION}
-        if: steps.check_branch.outputs.skip_create_diff == 'false'
+      - id: check_yarn_plugin_branch
+        name: Check if yarn plugin branch already exists
+        run: |
+          SKIP_DIFF="true" && [[ -z "$(git ls-remote --heads origin release/yarn-plugin/${VERSION})" ]] && SKIP_DIFF="false"
+          echo "::set-output name=skip_create_diff::${SKIP_DIFF}"
+      - name: Install yarn plugin
+        run: |
+          yarn plugin import https://versions.backstage.io/v1/tags/next/yarn-plugin
+      - name: Run versions:bump to migrate to backstage:^ versions
+        run: |
+          npx @backstage/cli@latest versions:bump --release ${{ github.event.inputs.releaseVersion }}
+      - name: Create branch for release ${VERSION} with yarn plugin installed
+        if: steps.check_yarn_plugin_branch.outputs.skip_create_diff == 'false'
+        run: |
+          git checkout -b release/yarn-plugin/${VERSION}
+          git add .
+          git reset $BACKSTAGE_APP_NAME
+          git commit -m "Release ${VERSION}"
+          git push origin release/yarn-plugin/${VERSION}
       - run: echo "🍏 This job's status is ${{ job.status }}."
   diff:
     name: Create new diffs
