@@ -77,7 +77,7 @@ jobs:
         run: |
           git checkout -b release/yarn-plugin/${RELEASE_VERSION}
           git add .
-          git reset $BACKSTAGE_APP_NAME
+          git reset $BACKSTAGE_APP_NAME yarn.lock
           git commit -m "Release ${RELEASE_VERSION}"
           git push origin release/yarn-plugin/${RELEASE_VERSION}
       - run: echo "🍏 This job's status is ${{ job.status }}."
