@@ -16,6 +16,7 @@ jobs:
     env:
       BACKSTAGE_APP_NAME: backstagediffapp
       VERSION: ${{ github.event.inputs.version }}
+      RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
@@ -24,7 +25,7 @@ jobs:
         uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: 16
+          node-version: 20
       - name: Check out release base
         uses: actions/checkout@v2
         with:
@@ -50,14 +51,35 @@ jobs:
         run: |
           SKIP_DIFF="true" && [[ -z "$(git ls-remote --heads origin release/${VERSION})" ]] && SKIP_DIFF="false"
           echo "::set-output name=skip_create_diff::${SKIP_DIFF}"
-      - name: Add release
+      - name: Create branch for release ${VERSION}
+        if: steps.check_branch.outputs.skip_create_diff == 'false'
         run: |
           git checkout -b release/${VERSION}
           git add .
           git reset $BACKSTAGE_APP_NAME
           git commit -m "Release ${VERSION}"
           git push origin release/${VERSION}
-        if: steps.check_branch.outputs.skip_create_diff == 'false'
+      - id: check_yarn_plugin_branch
+        name: Check if yarn plugin branch already exists
+        run: |
+          SKIP_DIFF="true" && [[ -z "$(git ls-remote --heads origin release/yarn-plugin/${RELEASE_VERSION})" ]] && SKIP_DIFF="false"
+          echo "::set-output name=skip_create_diff::${SKIP_DIFF}"
+      - name: Install yarn plugin
+        run: |
+          yarn plugin import https://versions.backstage.io/v1/tags/next/yarn-plugin
+      - name: Run versions:bump to migrate to backstage:^ versions
+        run: |
+          npx @backstage/cli@latest versions:bump --release $RELEASE_VERSION
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+      - name: Create branch for release ${RELEASE_VERSION} with yarn plugin installed
+        if: steps.check_yarn_plugin_branch.outputs.skip_create_diff == 'false'
+        run: |
+          git checkout -b release/yarn-plugin/${RELEASE_VERSION}
+          git add .
+          git reset $BACKSTAGE_APP_NAME yarn.lock
+          git commit -m "Release ${RELEASE_VERSION}"
+          git push origin release/yarn-plugin/${RELEASE_VERSION}
       - run: echo "🍏 This job's status is ${{ job.status }}."
   diff:
     name: Create new diffs
@@ -84,9 +106,19 @@ jobs:
           if [ -z "$RELEASE_VERSION" ]; then
             jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
           else
-            jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\"}" < releases.json > _releases.json
+            jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\" }" < releases.json > _releases.json
           fi
           mv _releases.json releases.json
+      - name: Create new diffs for yarn plugin
+        run: |
+          for version in $(jq -r 'to_entries |.[] | .key'  < releases-yarn-plugin.json); do
+            echo "Creating yarn-plugin diffs between version $version and $RELEASE_VERSION"
+            git diff -U1 origin/release/yarn-plugin/$version..origin/release/yarn-plugin/$RELEASE_VERSION > diffs-yarn-plugin/$version..$RELEASE_VERSION.diff
+          done
+      - name: Add new version to releases-yarn-plugin.json
+        run: |
+          jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\" }" < releases-yarn-plugin.json > _releases-yarn-plugin.json
+          mv _releases-yarn-plugin.json releases-yarn-plugin.json
       - name: Setup git bot user
         run: |
           git config user.name "github-actions[bot]"
