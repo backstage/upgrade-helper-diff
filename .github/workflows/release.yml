@@ -69,6 +69,8 @@ jobs:
       - name: Run versions:bump to migrate to backstage:^ versions
         run: |
           npx @backstage/cli@latest versions:bump --release ${{ github.event.inputs.releaseVersion }}
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
       - name: Create branch for release ${VERSION} with yarn plugin installed
         if: steps.check_yarn_plugin_branch.outputs.skip_create_diff == 'false'
         run: |
