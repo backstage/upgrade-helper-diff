@@ -1,5 +1,5 @@
 diff --git a/.gitignore b/.gitignore
-index fbf8139..77ad56d 100644
+index fbf81390..77ad56d1 100644
 --- a/.gitignore
 +++ b/.gitignore
 @@ -17,3 +17,3 @@ node_modules/
@@ -9,7 +9,7 @@ index fbf8139..77ad56d 100644
  .pnp.*
 diff --git a/.yarn/releases/yarn-4.4.1.cjs b/.yarn/releases/yarn-4.4.1.cjs
 new file mode 100644
-index 0000000..e94c2cb
+index 00000000..e94c2cba
 --- /dev/null
 +++ b/.yarn/releases/yarn-4.4.1.cjs
 @@ -0,0 +1,925 @@
@@ -940,7 +940,7 @@ index 0000000..e94c2cb
 +*/
 diff --git a/.yarnrc.yml b/.yarnrc.yml
 new file mode 100644
-index 0000000..48f4a8f
+index 00000000..48f4a8f8
 --- /dev/null
 +++ b/.yarnrc.yml
 @@ -0,0 +1,3 @@
@@ -948,7 +948,7 @@ index 0000000..48f4a8f
 +
 +yarnPath: .yarn/releases/yarn-4.4.1.cjs
 diff --git a/backstage.json b/backstage.json
-index 5ae4d48..6dd6571 100644
+index 5ae4d487..6dd6571b 100644
 --- a/backstage.json
 +++ b/backstage.json
 @@ -1,3 +1,3 @@
@@ -958,7 +958,7 @@ index 5ae4d48..6dd6571 100644
  }
 diff --git a/lerna.json b/lerna.json
 deleted file mode 100644
-index 529a62f..0000000
+index 529a62fe..00000000
 --- a/lerna.json
 +++ /dev/null
 @@ -1,6 +0,0 @@
@@ -969,7 +969,7 @@ index 529a62f..0000000
 -  "$schema": "node_modules/lerna/schemas/lerna-schema.json"
 -}
 diff --git a/package.json b/package.json
-index 8f0c5ff..d5f824e 100644
+index 8f0c5ffa..d5f824ec 100644
 --- a/package.json
 +++ b/package.json
 @@ -8,3 +8,3 @@
@@ -994,7 +994,7 @@ index 8f0c5ff..d5f824e 100644
 +  "packageManager": "yarn@4.4.1"
  }
 diff --git a/packages/app/package.json b/packages/app/package.json
-index 1e3540e..e9aef99 100644
+index 1e3540ef..e9aef998 100644
 --- a/packages/app/package.json
 +++ b/packages/app/package.json
 @@ -16,29 +16,28 @@
@@ -1068,7 +1068,7 @@ index 1e3540e..e9aef99 100644
 -    "@testing-library/dom": "^9.0.0",
      "@types/react-dom": "*",
 diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
-index 22fe721..6a4c257 100644
+index 22fe7213..6a4c257a 100644
 --- a/packages/backend/Dockerfile
 +++ b/packages/backend/Dockerfile
 @@ -5,3 +5,3 @@
@@ -1114,7 +1114,7 @@ index 22fe721..6a4c257 100644
 +    yarn workspaces focus --all --production && rm -rf "$(yarn cache clean)"
  
 diff --git a/packages/backend/package.json b/packages/backend/package.json
-index 44e2e11..7c1a20c 100644
+index 44e2e11c..7c1a20c8 100644
 --- a/packages/backend/package.json
 +++ b/packages/backend/package.json
 @@ -18,25 +18,25 @@

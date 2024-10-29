@@ -1,5 +1,5 @@
 diff --git a/.gitignore b/.gitignore
-index fbf8139..77ad56d 100644
+index fbf81390..77ad56d1 100644
 --- a/.gitignore
 +++ b/.gitignore
 @@ -17,3 +17,3 @@ node_modules/
@@ -9,7 +9,7 @@ index fbf8139..77ad56d 100644
  .pnp.*
 diff --git a/.yarn/releases/yarn-4.4.1.cjs b/.yarn/releases/yarn-4.4.1.cjs
 new file mode 100644
-index 0000000..e94c2cb
+index 00000000..e94c2cba
 --- /dev/null
 +++ b/.yarn/releases/yarn-4.4.1.cjs
 @@ -0,0 +1,925 @@
@@ -940,7 +940,7 @@ index 0000000..e94c2cb
 +*/
 diff --git a/.yarnrc.yml b/.yarnrc.yml
 new file mode 100644
-index 0000000..48f4a8f
+index 00000000..48f4a8f8
 --- /dev/null
 +++ b/.yarnrc.yml
 @@ -0,0 +1,3 @@
@@ -948,7 +948,7 @@ index 0000000..48f4a8f
 +
 +yarnPath: .yarn/releases/yarn-4.4.1.cjs
 diff --git a/app-config.production.yaml b/app-config.production.yaml
-index 8f0751c..5d426f5 100644
+index 8f0751cd..5d426f53 100644
 --- a/app-config.production.yaml
 +++ b/app-config.production.yaml
 @@ -15,3 +15,3 @@ backend:
@@ -984,7 +984,7 @@ index 8f0751c..5d426f5 100644
 +      rules:
 +        - allow: [User, Group]
 diff --git a/app-config.yaml b/app-config.yaml
-index 08d2abf..ca52ec5 100644
+index 08d2abff..ca52ec53 100644
 --- a/app-config.yaml
 +++ b/app-config.yaml
 @@ -38,3 +38,3 @@ integrations:
@@ -1010,7 +1010,7 @@ index 08d2abf..ca52ec5 100644
 +  # setting this to `false` will disable permissions
 +  enabled: true
 diff --git a/backstage.json b/backstage.json
-index 6590048..6dd6571 100644
+index 65900481..6dd6571b 100644
 --- a/backstage.json
 +++ b/backstage.json
 @@ -1,3 +1,3 @@
@@ -1020,7 +1020,7 @@ index 6590048..6dd6571 100644
  }
 diff --git a/lerna.json b/lerna.json
 deleted file mode 100644
-index 529a62f..0000000
+index 529a62fe..00000000
 --- a/lerna.json
 +++ /dev/null
 @@ -1,6 +0,0 @@
@@ -1031,7 +1031,7 @@ index 529a62f..0000000
 -  "$schema": "node_modules/lerna/schemas/lerna-schema.json"
 -}
 diff --git a/package.json b/package.json
-index 4467ffb..d5f824e 100644
+index 4467ffb7..d5f824ec 100644
 --- a/package.json
 +++ b/package.json
 @@ -8,3 +8,3 @@
@@ -1062,7 +1062,7 @@ index 4467ffb..d5f824e 100644
 +  "packageManager": "yarn@4.4.1"
  }
 diff --git a/packages/app/e2e-tests/app.test.ts b/packages/app/e2e-tests/app.test.ts
-index d45bc0d..839ff88 100644
+index d45bc0db..839ff883 100644
 --- a/packages/app/e2e-tests/app.test.ts
 +++ b/packages/app/e2e-tests/app.test.ts
 @@ -21,2 +21,6 @@ test('App should render the welcome page', async ({ page }) => {
@@ -1073,7 +1073,7 @@ index d45bc0d..839ff88 100644
 +
    await expect(page.getByText('My Company Catalog')).toBeVisible();
 diff --git a/packages/app/package.json b/packages/app/package.json
-index 3de62ca..e9aef99 100644
+index 3de62ca1..e9aef998 100644
 --- a/packages/app/package.json
 +++ b/packages/app/package.json
 @@ -16,30 +16,28 @@
@@ -1148,7 +1148,7 @@ index 3de62ca..e9aef99 100644
 -    "@testing-library/dom": "^9.0.0",
      "@types/react-dom": "*",
 diff --git a/packages/app/public/index.html b/packages/app/public/index.html
-index fc758ee..18da7c4 100644
+index fc758eee..18da7c47 100644
 --- a/packages/app/public/index.html
 +++ b/packages/app/public/index.html
 @@ -8,3 +8,3 @@
@@ -1162,7 +1162,7 @@ index fc758ee..18da7c4 100644
 +    <title><%= config.getOptionalString('app.title') ?? 'Backstage' %></title>
    </head>
 diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
-index 8d62f29..e24c468 100644
+index 8d62f29c..e24c4689 100644
 --- a/packages/app/src/App.tsx
 +++ b/packages/app/src/App.tsx
 @@ -15,3 +15,2 @@ import { orgPlugin } from '@backstage/plugin-org';
@@ -1192,7 +1192,7 @@ index 8d62f29..e24c468 100644
 -    />
      <Route
 diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
-index 6768b48..853d175 100644
+index 6768b48d..853d175b 100644
 --- a/packages/app/src/components/Root/Root.tsx
 +++ b/packages/app/src/components/Root/Root.tsx
 @@ -4,3 +4,2 @@ import HomeIcon from '@material-ui/icons/Home';
@@ -1218,7 +1218,7 @@ index 6768b48..853d175 100644
 +          {/* Items in this group will be scrollable if they run out of space */}
          </SidebarScrollWrapper>
 diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
-index 7c6a71e..6164c76 100644
+index 7c6a71e0..6164c760 100644
 --- a/packages/app/src/components/catalog/EntityPage.tsx
 +++ b/packages/app/src/components/catalog/EntityPage.tsx
 @@ -30,6 +30,2 @@ import {
@@ -1272,7 +1272,7 @@ index 7c6a71e..6164c76 100644
 +
      <EntityLayout.Route path="/dependencies" title="Dependencies">
 diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
-index 18548e9..6a4c257 100644
+index 18548e93..6a4c257a 100644
 --- a/packages/backend/Dockerfile
 +++ b/packages/backend/Dockerfile
 @@ -5,3 +5,3 @@
@@ -1321,7 +1321,7 @@ index 18548e9..6a4c257 100644
 +COPY --chown=node:node examples ./examples
  
 diff --git a/packages/backend/package.json b/packages/backend/package.json
-index 5492486..7c1a20c 100644
+index 5492486b..7c1a20c8 100644
 --- a/packages/backend/package.json
 +++ b/packages/backend/package.json
 @@ -18,37 +18,32 @@
@@ -1390,7 +1390,7 @@ index 5492486..7c1a20c 100644
    },
 diff --git a/packages/backend/src/index.test.ts b/packages/backend/src/index.test.ts
 deleted file mode 100644
-index 7814b8c..0000000
+index 7814b8ca..00000000
 --- a/packages/backend/src/index.test.ts
 +++ /dev/null
 @@ -1,8 +0,0 @@
@@ -1403,7 +1403,7 @@ index 7814b8c..0000000
 -  });
 -});
 diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
-index 04c4ff9..f57d4c5 100644
+index 04c4ff93..f57d4c5f 100644
 --- a/packages/backend/src/index.ts
 +++ b/packages/backend/src/index.ts
 @@ -8,108 +8,47 @@
@@ -1552,7 +1552,7 @@ index 04c4ff9..f57d4c5 100644
 +backend.start();
 diff --git a/packages/backend/src/plugins/app.ts b/packages/backend/src/plugins/app.ts
 deleted file mode 100644
-index 7c37f68..0000000
+index 7c37f684..00000000
 --- a/packages/backend/src/plugins/app.ts
 +++ /dev/null
 @@ -1,14 +0,0 @@
@@ -1572,7 +1572,7 @@ index 7c37f68..0000000
 -}
 diff --git a/packages/backend/src/plugins/auth.ts b/packages/backend/src/plugins/auth.ts
 deleted file mode 100644
-index 77eb6aa..0000000
+index 77eb6aae..00000000
 --- a/packages/backend/src/plugins/auth.ts
 +++ /dev/null
 @@ -1,54 +0,0 @@
@@ -1632,7 +1632,7 @@ index 77eb6aa..0000000
 -}
 diff --git a/packages/backend/src/plugins/catalog.ts b/packages/backend/src/plugins/catalog.ts
 deleted file mode 100644
-index 4decdca..0000000
+index 4decdca1..00000000
 --- a/packages/backend/src/plugins/catalog.ts
 +++ /dev/null
 @@ -1,14 +0,0 @@
@@ -1652,7 +1652,7 @@ index 4decdca..0000000
 -}
 diff --git a/packages/backend/src/plugins/proxy.ts b/packages/backend/src/plugins/proxy.ts
 deleted file mode 100644
-index 54ec393..0000000
+index 54ec3937..00000000
 --- a/packages/backend/src/plugins/proxy.ts
 +++ /dev/null
 @@ -1,13 +0,0 @@
@@ -1671,7 +1671,7 @@ index 54ec393..0000000
 -}
 diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
 deleted file mode 100644
-index a12fee2..0000000
+index a12fee22..00000000
 --- a/packages/backend/src/plugins/scaffolder.ts
 +++ /dev/null
 @@ -1,22 +0,0 @@
@@ -1699,7 +1699,7 @@ index a12fee2..0000000
 -}
 diff --git a/packages/backend/src/plugins/search.ts b/packages/backend/src/plugins/search.ts
 deleted file mode 100644
-index 467ac60..0000000
+index 467ac60a..00000000
 --- a/packages/backend/src/plugins/search.ts
 +++ /dev/null
 @@ -1,66 +0,0 @@
@@ -1771,7 +1771,7 @@ index 467ac60..0000000
 -}
 diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
 deleted file mode 100644
-index be8bb0c..0000000
+index be8bb0c0..00000000
 --- a/packages/backend/src/plugins/techdocs.ts
 +++ /dev/null
 @@ -1,51 +0,0 @@
@@ -1828,7 +1828,7 @@ index be8bb0c..0000000
 -}
 diff --git a/packages/backend/src/types.ts b/packages/backend/src/types.ts
 deleted file mode 100644
-index 9cd2c74..0000000
+index 9cd2c74b..00000000
 --- a/packages/backend/src/types.ts
 +++ /dev/null
 @@ -1,25 +0,0 @@
@@ -1858,7 +1858,7 @@ index 9cd2c74..0000000
 -  identity: IdentityApi;
 -};
 diff --git a/playwright.config.ts b/playwright.config.ts
-index 37c7fb1..733be13 100644
+index 37c7fb14..733be130 100644
 --- a/playwright.config.ts
 +++ b/playwright.config.ts
 @@ -34,3 +34,3 @@ export default defineConfig({
@@ -1867,7 +1867,7 @@ index 37c7fb1..733be13 100644
 +          command: 'yarn dev',
            port: 3000,
 diff --git a/tsconfig.json b/tsconfig.json
-index ba3f901..2aa745d 100644
+index ba3f9017..2aa745d3 100644
 --- a/tsconfig.json
 +++ b/tsconfig.json
 @@ -4,3 +4,5 @@
@@ -1877,7 +1877,7 @@ index ba3f901..2aa745d 100644
 +    "plugins/*/config.d.ts",
      "plugins/*/dev",
 diff --git a/yarn.lock b/yarn.lock
-index 5ad7fe2..c37fc61 100644
+index 5ad7fe23..c37fc613 100644
 --- a/yarn.lock
 +++ b/yarn.lock
 @@ -1 +1,3 @@
