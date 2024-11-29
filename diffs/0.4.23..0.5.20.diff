@@ -1,5 +1,5 @@
 diff --git a/.dockerignore b/.dockerignore
-index 63c9c34..05edb62 100644
+index 63c9c342..05edb626 100644
 --- a/.dockerignore
 +++ b/.dockerignore
 @@ -1,5 +1,8 @@
@@ -15,13 +15,13 @@ index 63c9c34..05edb62 100644
 +*.local.yaml
 diff --git a/.eslintignore b/.eslintignore
 new file mode 100644
-index 0000000..e5b1994
+index 00000000..e5b19947
 --- /dev/null
 +++ b/.eslintignore
 @@ -0,0 +1 @@
 +playwright.config.ts
 diff --git a/.gitignore b/.gitignore
-index d16a8d3..77ad56d 100644
+index d16a8d3f..77ad56d1 100644
 --- a/.gitignore
 +++ b/.gitignore
 @@ -17,2 +17,11 @@ node_modules/
@@ -46,7 +46,7 @@ index d16a8d3..77ad56d 100644
 +e2e-test-report/
 diff --git a/.yarn/releases/yarn-4.4.1.cjs b/.yarn/releases/yarn-4.4.1.cjs
 new file mode 100644
-index 0000000..e94c2cb
+index 00000000..e94c2cba
 --- /dev/null
 +++ b/.yarn/releases/yarn-4.4.1.cjs
 @@ -0,0 +1,925 @@
@@ -977,7 +977,7 @@ index 0000000..e94c2cb
 +*/
 diff --git a/.yarnrc.yml b/.yarnrc.yml
 new file mode 100644
-index 0000000..48f4a8f
+index 00000000..48f4a8f8
 --- /dev/null
 +++ b/.yarnrc.yml
 @@ -0,0 +1,3 @@
@@ -985,7 +985,7 @@ index 0000000..48f4a8f
 +
 +yarnPath: .yarn/releases/yarn-4.4.1.cjs
 diff --git a/app-config.production.yaml b/app-config.production.yaml
-index 5e36c23..5d426f5 100644
+index 5e36c231..5d426f53 100644
 --- a/app-config.production.yaml
 +++ b/app-config.production.yaml
 @@ -1,3 +1,3 @@
@@ -1048,7 +1048,7 @@ index 5e36c23..5d426f5 100644
 +      rules:
 +        - allow: [User, Group]
 diff --git a/app-config.yaml b/app-config.yaml
-index 64a661d..ca52ec5 100644
+index 64a661d3..ca52ec53 100644
 --- a/app-config.yaml
 +++ b/app-config.yaml
 @@ -9,3 +9,3 @@ backend:
@@ -1166,7 +1166,7 @@ index 64a661d..ca52ec5 100644
 +  # setting this to `false` will disable permissions
 +  enabled: true
 diff --git a/backstage.json b/backstage.json
-index 3666530..b1ca6e4 100644
+index 36665309..b1ca6e42 100644
 --- a/backstage.json
 +++ b/backstage.json
 @@ -1,3 +1,3 @@
@@ -1176,7 +1176,7 @@ index 3666530..b1ca6e4 100644
  }
 diff --git a/examples/entities.yaml b/examples/entities.yaml
 new file mode 100644
-index 0000000..447e8b1
+index 00000000..447e8b1f
 --- /dev/null
 +++ b/examples/entities.yaml
 @@ -0,0 +1,41 @@
@@ -1223,7 +1223,7 @@ index 0000000..447e8b1
 +    };
 diff --git a/examples/org.yaml b/examples/org.yaml
 new file mode 100644
-index 0000000..a10e81f
+index 00000000..a10e81fc
 --- /dev/null
 +++ b/examples/org.yaml
 @@ -0,0 +1,17 @@
@@ -1246,7 +1246,7 @@ index 0000000..a10e81f
 +  children: []
 diff --git a/examples/template/content/catalog-info.yaml b/examples/template/content/catalog-info.yaml
 new file mode 100644
-index 0000000..d4ccca4
+index 00000000..d4ccca42
 --- /dev/null
 +++ b/examples/template/content/catalog-info.yaml
 @@ -0,0 +1,8 @@
@@ -1260,14 +1260,14 @@ index 0000000..d4ccca4
 +  lifecycle: experimental
 diff --git a/examples/template/content/index.js b/examples/template/content/index.js
 new file mode 100644
-index 0000000..071ce5a
+index 00000000..071ce5aa
 --- /dev/null
 +++ b/examples/template/content/index.js
 @@ -0,0 +1 @@
 +console.log('Hello from ${{ values.name }}!');
 diff --git a/examples/template/content/package.json b/examples/template/content/package.json
 new file mode 100644
-index 0000000..86f968a
+index 00000000..86f968a7
 --- /dev/null
 +++ b/examples/template/content/package.json
 @@ -0,0 +1,5 @@
@@ -1278,7 +1278,7 @@ index 0000000..86f968a
 +}
 diff --git a/examples/template/template.yaml b/examples/template/template.yaml
 new file mode 100644
-index 0000000..33f262b
+index 00000000..33f262b4
 --- /dev/null
 +++ b/examples/template/template.yaml
 @@ -0,0 +1,74 @@
@@ -1358,7 +1358,7 @@ index 0000000..33f262b
 +        entityRef: ${{ steps['register'].output.entityRef }}
 diff --git a/lerna.json b/lerna.json
 deleted file mode 100644
-index 322929d..0000000
+index 322929db..00000000
 --- a/lerna.json
 +++ /dev/null
 @@ -1,6 +0,0 @@
@@ -1369,7 +1369,7 @@ index 322929d..0000000
 -  "version": "0.1.0"
 -}
 diff --git a/package.json b/package.json
-index 625a333..ba1dbc8 100644
+index 625a3330..ba1dbc82 100644
 --- a/package.json
 +++ b/package.json
 @@ -5,9 +5,10 @@
@@ -1430,7 +1430,7 @@ index 625a333..ba1dbc8 100644
  }
 diff --git a/packages/README.md b/packages/README.md
 new file mode 100644
-index 0000000..6327fa0
+index 00000000..6327fa0a
 --- /dev/null
 +++ b/packages/README.md
 @@ -0,0 +1,9 @@
@@ -1445,14 +1445,14 @@ index 0000000..6327fa0
 +libraries, utilities, and similar.
 diff --git a/packages/app/.eslintignore b/packages/app/.eslintignore
 new file mode 100644
-index 0000000..a48cf0d
+index 00000000..a48cf0de
 --- /dev/null
 +++ b/packages/app/.eslintignore
 @@ -0,0 +1 @@
 +public
 diff --git a/packages/app/cypress.json b/packages/app/cypress.json
 deleted file mode 100644
-index 5de7ebf..0000000
+index 5de7ebff..00000000
 --- a/packages/app/cypress.json
 +++ /dev/null
 @@ -1,5 +0,0 @@
@@ -1463,7 +1463,7 @@ index 5de7ebf..0000000
 -}
 diff --git a/packages/app/cypress/.eslintrc.json b/packages/app/cypress/.eslintrc.json
 deleted file mode 100644
-index 2b3a458..0000000
+index 2b3a458b..00000000
 --- a/packages/app/cypress/.eslintrc.json
 +++ /dev/null
 @@ -1,21 +0,0 @@
@@ -1490,7 +1490,7 @@ index 2b3a458..0000000
 -}
 diff --git a/packages/app/cypress/integration/app.js b/packages/app/cypress/integration/app.js
 deleted file mode 100644
-index 43fb2e3..0000000
+index 43fb2e32..00000000
 --- a/packages/app/cypress/integration/app.js
 +++ /dev/null
 @@ -1,6 +0,0 @@
@@ -1502,7 +1502,7 @@ index 43fb2e3..0000000
 -});
 diff --git a/packages/app/e2e-tests/app.test.ts b/packages/app/e2e-tests/app.test.ts
 new file mode 100644
-index 0000000..839ff88
+index 00000000..839ff883
 --- /dev/null
 +++ b/packages/app/e2e-tests/app.test.ts
 @@ -0,0 +1,27 @@
@@ -1534,7 +1534,7 @@ index 0000000..839ff88
 +  await expect(page.getByText('My Company Catalog')).toBeVisible();
 +});
 diff --git a/packages/app/package.json b/packages/app/package.json
-index bb1da11..f446dae 100644
+index bb1da115..f446dae9 100644
 --- a/packages/app/package.json
 +++ b/packages/app/package.json
 @@ -8,25 +8,34 @@
@@ -1639,7 +1639,7 @@ index bb1da11..f446dae 100644
 +    "cross-env": "^7.0.0"
    },
 diff --git a/packages/app/public/index.html b/packages/app/public/index.html
-index a936c73..18da7c4 100644
+index a936c736..18da7c47 100644
 --- a/packages/app/public/index.html
 +++ b/packages/app/public/index.html
 @@ -8,5 +8,4 @@
@@ -1680,7 +1680,7 @@ index a936c73..18da7c4 100644
 +      To create a production bundle, use `yarn build`.
      -->
 diff --git a/packages/app/src/App.test.tsx b/packages/app/src/App.test.tsx
-index b94cac7..ec8ba1d 100644
+index b94cac73..ec8ba1d7 100644
 --- a/packages/app/src/App.test.tsx
 +++ b/packages/app/src/App.test.tsx
 @@ -1,3 +1,3 @@
@@ -1699,7 +1699,7 @@ index b94cac7..ec8ba1d 100644
 +    });
    });
 diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
-index f4ff424..e24c468 100644
+index f4ff4249..e24c4689 100644
 --- a/packages/app/src/App.tsx
 +++ b/packages/app/src/App.tsx
 @@ -1,3 +1,3 @@
@@ -1793,7 +1793,7 @@ index f4ff424..e24c468 100644
 -
 -export default App;
 diff --git a/packages/app/src/components/Root/LogoFull.tsx b/packages/app/src/components/Root/LogoFull.tsx
-index c7b1c84..47e3b73 100644
+index c7b1c846..47e3b731 100644
 --- a/packages/app/src/components/Root/LogoFull.tsx
 +++ b/packages/app/src/components/Root/LogoFull.tsx
 @@ -1,17 +1 @@
@@ -1815,7 +1815,7 @@ index c7b1c84..47e3b73 100644
 -
  import React from 'react';
 diff --git a/packages/app/src/components/Root/LogoIcon.tsx b/packages/app/src/components/Root/LogoIcon.tsx
-index 073cf6e..7eae8c7 100644
+index 073cf6ed..7eae8c7a 100644
 --- a/packages/app/src/components/Root/LogoIcon.tsx
 +++ b/packages/app/src/components/Root/LogoIcon.tsx
 @@ -1,17 +1 @@
@@ -1837,7 +1837,7 @@ index 073cf6e..7eae8c7 100644
 -
  import React from 'react';
 diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
-index 90738c4..853d175 100644
+index 90738c44..853d175b 100644
 --- a/packages/app/src/components/Root/Root.tsx
 +++ b/packages/app/src/components/Root/Root.tsx
 @@ -1,22 +1,5 @@
@@ -1912,7 +1912,7 @@ index 90738c4..853d175 100644
 +          {/* Items in this group will be scrollable if they run out of space */}
          </SidebarScrollWrapper>
 diff --git a/packages/app/src/components/Root/index.ts b/packages/app/src/components/Root/index.ts
-index dff706f..3528881 100644
+index dff706f0..35288815 100644
 --- a/packages/app/src/components/Root/index.ts
 +++ b/packages/app/src/components/Root/index.ts
 @@ -1,17 +1 @@
@@ -1934,7 +1934,7 @@ index dff706f..3528881 100644
 -
  export { Root } from './Root';
 diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
-index 84d0944..6164c76 100644
+index 84d09441..6164c760 100644
 --- a/packages/app/src/components/catalog/EntityPage.tsx
 +++ b/packages/app/src/components/catalog/EntityPage.tsx
 @@ -1,16 +1 @@
@@ -2063,7 +2063,7 @@ index 84d0944..6164c76 100644
 +        <Grid item md={8}>
            <EntityHasComponentsCard variant="gridItem" />
 diff --git a/packages/app/src/components/search/SearchPage.tsx b/packages/app/src/components/search/SearchPage.tsx
-index cd4603e..1788dde 100644
+index cd4603ec..1788dde1 100644
 --- a/packages/app/src/components/search/SearchPage.tsx
 +++ b/packages/app/src/components/search/SearchPage.tsx
 @@ -1,3 +1,3 @@
@@ -2121,7 +2121,7 @@ index cd4603e..1788dde 100644
 +              <TechDocsSearchResultListItem icon={<DocsIcon />} />
              </SearchResult>
 diff --git a/packages/app/src/index.tsx b/packages/app/src/index.tsx
-index b16aaf7..d875c77 100644
+index b16aaf7c..d875c774 100644
 --- a/packages/app/src/index.tsx
 +++ b/packages/app/src/index.tsx
 @@ -2,5 +2,5 @@ import '@backstage/cli/asset-types';
@@ -2133,7 +2133,7 @@ index b16aaf7..d875c77 100644
 -ReactDOM.render(<App />, document.getElementById('root'));
 +ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
 diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
-index dd35d4d..09024eb 100644
+index dd35d4dd..09024eb4 100644
 --- a/packages/backend/Dockerfile
 +++ b/packages/backend/Dockerfile
 @@ -5,5 +5,5 @@
@@ -2212,7 +2212,7 @@ index dd35d4d..09024eb 100644
 -CMD ["node", "packages/backend", "--config", "app-config.yaml"]
 +CMD ["node", "packages/backend", "--config", "app-config.yaml", "--config", "app-config.production.yaml"]
 diff --git a/packages/backend/README.md b/packages/backend/README.md
-index 02426ef..3607b0a 100644
+index 02426ef9..3607b0a0 100644
 --- a/packages/backend/README.md
 +++ b/packages/backend/README.md
 @@ -18,4 +18,2 @@ To run the example backend, first go to the project root and run
@@ -2245,7 +2245,7 @@ index 02426ef..3607b0a 100644
 -- [Backstage Documentation](https://github.com/backstage/backstage/blob/master/docs/README.md)
 +- [Backstage Documentation](https://backstage.io/docs)
 diff --git a/packages/backend/package.json b/packages/backend/package.json
-index 10f5a4d..7958e0b 100644
+index 10f5a4d5..7958e0bd 100644
 --- a/packages/backend/package.json
 +++ b/packages/backend/package.json
 @@ -15,29 +15,32 @@
@@ -2317,7 +2317,7 @@ index 10f5a4d..7958e0b 100644
    },
 diff --git a/packages/backend/src/index.test.ts b/packages/backend/src/index.test.ts
 deleted file mode 100644
-index 7814b8c..0000000
+index 7814b8ca..00000000
 --- a/packages/backend/src/index.test.ts
 +++ /dev/null
 @@ -1,8 +0,0 @@
@@ -2330,7 +2330,7 @@ index 7814b8c..0000000
 -  });
 -});
 diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
-index 70bc66b..f57d4c5 100644
+index 70bc66bc..f57d4c5f 100644
 --- a/packages/backend/src/index.ts
 +++ b/packages/backend/src/index.ts
 @@ -8,102 +8,47 @@
@@ -2474,7 +2474,7 @@ index 70bc66b..f57d4c5 100644
 +backend.start();
 diff --git a/packages/backend/src/plugins/app.ts b/packages/backend/src/plugins/app.ts
 deleted file mode 100644
-index 14e19a1..0000000
+index 14e19a19..00000000
 --- a/packages/backend/src/plugins/app.ts
 +++ /dev/null
 @@ -1,16 +0,0 @@
@@ -2496,7 +2496,7 @@ index 14e19a1..0000000
 -}
 diff --git a/packages/backend/src/plugins/auth.ts b/packages/backend/src/plugins/auth.ts
 deleted file mode 100644
-index 015c864..0000000
+index 015c8646..00000000
 --- a/packages/backend/src/plugins/auth.ts
 +++ /dev/null
 @@ -1,19 +0,0 @@
@@ -2521,7 +2521,7 @@ index 015c864..0000000
 -}
 diff --git a/packages/backend/src/plugins/catalog.ts b/packages/backend/src/plugins/catalog.ts
 deleted file mode 100644
-index 876cb6b..0000000
+index 876cb6bc..00000000
 --- a/packages/backend/src/plugins/catalog.ts
 +++ /dev/null
 @@ -1,14 +0,0 @@
@@ -2541,7 +2541,7 @@ index 876cb6b..0000000
 -}
 diff --git a/packages/backend/src/plugins/proxy.ts b/packages/backend/src/plugins/proxy.ts
 deleted file mode 100644
-index 506f6d9..0000000
+index 506f6d98..00000000
 --- a/packages/backend/src/plugins/proxy.ts
 +++ /dev/null
 @@ -1,11 +0,0 @@
@@ -2558,7 +2558,7 @@ index 506f6d9..0000000
 -}
 diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
 deleted file mode 100644
-index a460fd8..0000000
+index a460fd8a..00000000
 --- a/packages/backend/src/plugins/scaffolder.ts
 +++ /dev/null
 @@ -1,21 +0,0 @@
@@ -2585,7 +2585,7 @@ index a460fd8..0000000
 -}
 diff --git a/packages/backend/src/plugins/search.ts b/packages/backend/src/plugins/search.ts
 deleted file mode 100644
-index c359cb4..0000000
+index c359cb49..00000000
 --- a/packages/backend/src/plugins/search.ts
 +++ /dev/null
 @@ -1,58 +0,0 @@
@@ -2649,7 +2649,7 @@ index c359cb4..0000000
 -}
 diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
 deleted file mode 100644
-index 054c64d..0000000
+index 054c64db..00000000
 --- a/packages/backend/src/plugins/techdocs.ts
 +++ /dev/null
 @@ -1,55 +0,0 @@
@@ -2710,7 +2710,7 @@ index 054c64d..0000000
 -}
 diff --git a/packages/backend/src/types.ts b/packages/backend/src/types.ts
 deleted file mode 100644
-index 0862b0e..0000000
+index 0862b0e8..00000000
 --- a/packages/backend/src/types.ts
 +++ /dev/null
 @@ -1,23 +0,0 @@
@@ -2739,7 +2739,7 @@ index 0862b0e..0000000
 -};
 diff --git a/playwright.config.ts b/playwright.config.ts
 new file mode 100644
-index 0000000..733be13
+index 00000000..733be130
 --- /dev/null
 +++ b/playwright.config.ts
 @@ -0,0 +1,60 @@
@@ -2805,7 +2805,7 @@ index 0000000..733be13
 +});
 diff --git a/plugins/README.md b/plugins/README.md
 new file mode 100644
-index 0000000..d7865fd
+index 00000000..d7865fdb
 --- /dev/null
 +++ b/plugins/README.md
 @@ -0,0 +1,9 @@
@@ -2819,7 +2819,7 @@ index 0000000..d7865fd
 +
 +You can also check out existing plugins on [the plugin marketplace](https://backstage.io/plugins)!
 diff --git a/tsconfig.json b/tsconfig.json
-index ba3f901..2aa745d 100644
+index ba3f9017..2aa745d3 100644
 --- a/tsconfig.json
 +++ b/tsconfig.json
 @@ -4,3 +4,5 @@
@@ -2830,7 +2830,7 @@ index ba3f901..2aa745d 100644
      "plugins/*/dev",
 diff --git a/yarn.lock b/yarn.lock
 new file mode 100644
-index 0000000..c37fc61
+index 00000000..c37fc613
 --- /dev/null
 +++ b/yarn.lock
 @@ -0,0 +1,3 @@
