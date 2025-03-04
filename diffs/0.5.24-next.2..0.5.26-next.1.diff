@@ -1,0 +1,189 @@
+diff --git a/app-config.yaml b/app-config.yaml
+index ca52ec53..fc6918ac 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -105,2 +105,5 @@ catalog:
+     #     - allow: [User, Group]
++  # Experimental: Always use the search method in UrlReaderProcessor.
++  # New adopters are encouraged to enable it as this behavior will be the default in a future release.
++  useUrlReadersSearch: true
+ 
+diff --git a/backstage.json b/backstage.json
+index 5754e1f3..657c429f 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.35.0-next.2"
++  "version": "1.37.0-next.1"
+ }
+diff --git a/package.json b/package.json
+index 987a91bf..c48f9f43 100644
+--- a/package.json
++++ b/package.json
+@@ -8,3 +8,3 @@
+   "scripts": {
+-    "dev": "yarn workspaces foreach -A --include backend --include app --parallel -j 2 -v -i run start",
++    "dev": "yarn workspaces foreach -A --include backend --include app --parallel --jobs unlimited -v -i run start",
+     "start": "yarn workspace app start",
+@@ -24,3 +24,3 @@
+     "prettier:check": "prettier --check .",
+-    "new": "backstage-cli new --scope internal"
++    "new": "backstage-cli new"
+   },
+@@ -33,3 +33,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.29.5-next.1",
++    "@backstage/cli": "^0.30.1-next.0",
+     "@backstage/e2e-test-utils": "^0.1.1",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 91cd8b72..1c8fc485 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -16,26 +16,26 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.5.16-next.0",
+-    "@backstage/catalog-model": "^1.7.3-next.0",
+-    "@backstage/cli": "^0.29.5-next.1",
+-    "@backstage/core-app-api": "^1.15.4-next.0",
+-    "@backstage/core-components": "^0.16.3-next.0",
+-    "@backstage/core-plugin-api": "^1.10.3-next.0",
+-    "@backstage/integration-react": "^1.2.3-next.0",
+-    "@backstage/plugin-api-docs": "^0.12.3-next.1",
+-    "@backstage/plugin-catalog": "^1.26.1-next.1",
+-    "@backstage/plugin-catalog-common": "^1.1.3-next.0",
+-    "@backstage/plugin-catalog-graph": "^0.4.15-next.1",
+-    "@backstage/plugin-catalog-import": "^0.12.9-next.1",
+-    "@backstage/plugin-catalog-react": "^1.15.1-next.1",
+-    "@backstage/plugin-kubernetes": "^0.12.3-next.1",
+-    "@backstage/plugin-org": "^0.6.35-next.1",
+-    "@backstage/plugin-permission-react": "^0.4.30-next.0",
+-    "@backstage/plugin-scaffolder": "^1.27.4-next.2",
+-    "@backstage/plugin-search": "^1.4.22-next.1",
+-    "@backstage/plugin-search-react": "^1.8.5-next.0",
+-    "@backstage/plugin-techdocs": "^1.12.1-next.1",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.20-next.1",
+-    "@backstage/plugin-techdocs-react": "^1.2.13-next.0",
+-    "@backstage/plugin-user-settings": "^0.8.18-next.1",
+-    "@backstage/theme": "^0.6.3",
++    "@backstage/app-defaults": "^1.5.18-next.0",
++    "@backstage/catalog-model": "^1.7.3",
++    "@backstage/cli": "^0.30.1-next.0",
++    "@backstage/core-app-api": "^1.15.5",
++    "@backstage/core-components": "^0.16.5-next.0",
++    "@backstage/core-plugin-api": "^1.10.4",
++    "@backstage/integration-react": "^1.2.4",
++    "@backstage/plugin-api-docs": "^0.12.5-next.1",
++    "@backstage/plugin-catalog": "^1.28.0-next.1",
++    "@backstage/plugin-catalog-common": "^1.1.3",
++    "@backstage/plugin-catalog-graph": "^0.4.17-next.1",
++    "@backstage/plugin-catalog-import": "^0.12.11-next.1",
++    "@backstage/plugin-catalog-react": "^1.16.0-next.1",
++    "@backstage/plugin-kubernetes": "^0.12.5-next.1",
++    "@backstage/plugin-org": "^0.6.37-next.1",
++    "@backstage/plugin-permission-react": "^0.4.31",
++    "@backstage/plugin-scaffolder": "^1.29.0-next.1",
++    "@backstage/plugin-search": "^1.4.24-next.1",
++    "@backstage/plugin-search-react": "^1.8.7-next.1",
++    "@backstage/plugin-techdocs": "^1.12.4-next.1",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.22-next.1",
++    "@backstage/plugin-techdocs-react": "^1.2.15-next.1",
++    "@backstage/plugin-user-settings": "^0.8.20-next.1",
++    "@backstage/theme": "^0.6.4",
+     "@material-ui/core": "^4.12.2",
+@@ -48,3 +48,3 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.7.4-next.0",
++    "@backstage/test-utils": "^1.7.5",
+     "@playwright/test": "^1.32.3",
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index fc3797c9..d91381d4 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,26 +18,26 @@
+   "dependencies": {
+-    "@backstage/backend-defaults": "^0.7.0-next.1",
+-    "@backstage/config": "^1.3.2-next.0",
+-    "@backstage/plugin-app-backend": "^0.4.4-next.1",
+-    "@backstage/plugin-auth-backend": "^0.24.2-next.1",
+-    "@backstage/plugin-auth-backend-module-github-provider": "^0.2.4-next.1",
+-    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.4-next.1",
+-    "@backstage/plugin-auth-node": "^0.5.6-next.1",
+-    "@backstage/plugin-catalog-backend": "^1.30.0-next.1",
+-    "@backstage/plugin-catalog-backend-module-logs": "^0.1.6-next.1",
+-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.4-next.1",
+-    "@backstage/plugin-kubernetes-backend": "^0.19.2-next.1",
+-    "@backstage/plugin-permission-backend": "^0.5.53-next.1",
+-    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.4-next.1",
+-    "@backstage/plugin-permission-common": "^0.8.4-next.0",
+-    "@backstage/plugin-permission-node": "^0.8.7-next.1",
+-    "@backstage/plugin-proxy-backend": "^0.5.10-next.1",
+-    "@backstage/plugin-scaffolder-backend": "^1.29.0-next.2",
+-    "@backstage/plugin-scaffolder-backend-module-github": "^0.5.5-next.2",
+-    "@backstage/plugin-search-backend": "^1.8.1-next.1",
+-    "@backstage/plugin-search-backend-module-catalog": "^0.3.0-next.1",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.40-next.1",
+-    "@backstage/plugin-search-backend-module-techdocs": "^0.3.5-next.1",
+-    "@backstage/plugin-search-backend-node": "^1.3.7-next.1",
+-    "@backstage/plugin-techdocs-backend": "^1.11.5-next.2",
++    "@backstage/backend-defaults": "^0.8.2-next.1",
++    "@backstage/config": "^1.3.2",
++    "@backstage/plugin-app-backend": "^0.5.0-next.1",
++    "@backstage/plugin-auth-backend": "^0.24.4-next.1",
++    "@backstage/plugin-auth-backend-module-github-provider": "^0.3.1-next.1",
++    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.6-next.1",
++    "@backstage/plugin-auth-node": "^0.6.1-next.1",
++    "@backstage/plugin-catalog-backend": "^1.32.0-next.1",
++    "@backstage/plugin-catalog-backend-module-logs": "^0.1.8-next.1",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.6-next.1",
++    "@backstage/plugin-kubernetes-backend": "^0.19.4-next.1",
++    "@backstage/plugin-permission-backend": "^0.5.55-next.1",
++    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.6-next.1",
++    "@backstage/plugin-permission-common": "^0.8.4",
++    "@backstage/plugin-permission-node": "^0.8.9-next.1",
++    "@backstage/plugin-proxy-backend": "^0.6.0-next.1",
++    "@backstage/plugin-scaffolder-backend": "^1.30.1-next.1",
++    "@backstage/plugin-scaffolder-backend-module-github": "^0.6.1-next.1",
++    "@backstage/plugin-search-backend": "^1.8.3-next.1",
++    "@backstage/plugin-search-backend-module-catalog": "^0.3.2-next.1",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.42-next.1",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.3.7-next.1",
++    "@backstage/plugin-search-backend-node": "^1.3.9-next.1",
++    "@backstage/plugin-techdocs-backend": "^1.11.7-next.1",
+     "app": "link:../app",
+@@ -48,3 +48,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.29.5-next.1"
++    "@backstage/cli": "^0.30.1-next.0"
+   },
+diff --git a/yarn.lock b/yarn.lock
+index c37fc613..46a911dd 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -3 +3,26 @@
+ 
++
++"@google-cloud/storage@^7.0.0":
++  version "7.14.0"
++  resolved "https://registry.yarnpkg.com/@google-cloud/storage/-/storage-7.14.0.tgz#eda9715f68507949214af804c906eba6d168a214"
++  integrity sha512-H41bPL2cMfSi4EEnFzKvg7XSb7T67ocSXrmF7MPjfgFB0L6CKGzfIYJheAZi1iqXjz6XaCT1OBf6HCG5vDBTOQ==
++
++"@octokit/types@npm:^13.0.0":
++  version "13.6.2"
++  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
++  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
++
++"@octokit/types@npm:^13.1.0":
++  version "13.6.2"
++  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
++  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
++
++"@octokit/types@npm:^13.5.0":
++  version "13.6.2"
++  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
++  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
++
++"@octokit/openapi-types@^22.2.0":
++  version "22.2.0"
++  resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-22.2.0.tgz#75aa7dcd440821d99def6a60b5f014207ae4968e"
++  integrity sha512-QBhVjcUa9W7Wwhm6DBFu6ZZ+1/t/oYxqc2tp81Pi41YNuJinbFRx8B133qVOrAaBbF7D/m0Et6f9/pZt9Rc+tg==
