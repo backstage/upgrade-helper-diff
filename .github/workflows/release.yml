@@ -69,7 +69,7 @@ jobs:
           yarn plugin import https://versions.backstage.io/v1/tags/next/yarn-plugin
       - name: Run versions:bump to migrate to backstage:^ versions
         run: |
-          npx @backstage/cli@latest versions:bump --release $RELEASE_VERSION
+          yarn backstage-cli versions:bump --release $RELEASE_VERSION
         env:
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
       - name: Create branch for release ${RELEASE_VERSION} with yarn plugin installed
