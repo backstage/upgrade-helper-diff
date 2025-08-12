@@ -1,0 +1,178 @@
+diff --git a/backstage.json b/backstage.json
+index 57ef892b..ef328219 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.41.0-next.1"
++  "version": "1.42.0-next.3"
+ }
+diff --git a/examples/template/template.yaml b/examples/template/template.yaml
+index cfba98e8..f04c3241 100644
+--- a/examples/template/template.yaml
++++ b/examples/template/template.yaml
+@@ -56,3 +56,2 @@ spec:
+       input:
+-        allowedHosts: ['github.com']
+         description: This is ${{ parameters.name }}
+diff --git a/package.json b/package.json
+index ee6636f1..fc0c52d6 100644
+--- a/package.json
++++ b/package.json
+@@ -31,3 +31,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.33.1-next.1",
++    "@backstage/cli": "^0.34.0-next.2",
+     "@backstage/e2e-test-utils": "^0.1.1",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index afea9cfe..3adfd34d 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -16,27 +16,27 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.6.4-next.1",
+-    "@backstage/canon": "^0.6.0-next.0",
+-    "@backstage/catalog-model": "^1.7.5-next.0",
+-    "@backstage/cli": "^0.33.1-next.1",
+-    "@backstage/core-app-api": "^1.17.2-next.0",
+-    "@backstage/core-components": "^0.17.4-next.1",
+-    "@backstage/core-plugin-api": "^1.10.9-next.0",
+-    "@backstage/integration-react": "^1.2.9-next.1",
+-    "@backstage/plugin-api-docs": "^0.12.9-next.1",
+-    "@backstage/plugin-catalog": "^1.31.1-next.1",
+-    "@backstage/plugin-catalog-common": "^1.1.5-next.0",
+-    "@backstage/plugin-catalog-graph": "^0.4.21-next.1",
+-    "@backstage/plugin-catalog-import": "^0.13.3-next.1",
+-    "@backstage/plugin-catalog-react": "^1.19.1-next.1",
+-    "@backstage/plugin-kubernetes": "^0.12.9-next.1",
+-    "@backstage/plugin-org": "^0.6.41-next.1",
+-    "@backstage/plugin-permission-react": "^0.4.36-next.0",
+-    "@backstage/plugin-scaffolder": "^1.32.1-next.1",
+-    "@backstage/plugin-search": "^1.4.28-next.1",
+-    "@backstage/plugin-search-react": "^1.9.2-next.1",
+-    "@backstage/plugin-techdocs": "^1.13.2-next.1",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.26-next.1",
+-    "@backstage/plugin-techdocs-react": "^1.3.1-next.1",
+-    "@backstage/plugin-user-settings": "^0.8.24-next.1",
+-    "@backstage/theme": "^0.6.7-next.0",
++    "@backstage/app-defaults": "^1.6.5-next.0",
++    "@backstage/catalog-model": "^1.7.5",
++    "@backstage/cli": "^0.34.0-next.2",
++    "@backstage/core-app-api": "^1.18.0",
++    "@backstage/core-components": "^0.17.5-next.2",
++    "@backstage/core-plugin-api": "^1.10.9",
++    "@backstage/integration-react": "^1.2.9",
++    "@backstage/plugin-api-docs": "^0.12.10-next.3",
++    "@backstage/plugin-catalog": "^1.31.2-next.2",
++    "@backstage/plugin-catalog-common": "^1.1.5",
++    "@backstage/plugin-catalog-graph": "^0.4.22-next.3",
++    "@backstage/plugin-catalog-import": "^0.13.4-next.2",
++    "@backstage/plugin-catalog-react": "^1.20.0-next.2",
++    "@backstage/plugin-kubernetes": "^0.12.10-next.3",
++    "@backstage/plugin-org": "^0.6.42-next.3",
++    "@backstage/plugin-permission-react": "^0.4.36",
++    "@backstage/plugin-scaffolder": "^1.34.0-next.3",
++    "@backstage/plugin-search": "^1.4.29-next.2",
++    "@backstage/plugin-search-react": "^1.9.3-next.1",
++    "@backstage/plugin-techdocs": "^1.14.0-next.2",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.27-next.0",
++    "@backstage/plugin-techdocs-react": "^1.3.2-next.0",
++    "@backstage/plugin-user-settings": "^0.8.25-next.2",
++    "@backstage/theme": "^0.6.8-next.0",
++    "@backstage/ui": "^0.7.0-next.3",
+     "@material-ui/core": "^4.12.2",
+@@ -49,3 +49,3 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.7.10-next.1",
++    "@backstage/test-utils": "^1.7.11-next.0",
+     "@playwright/test": "^1.32.3",
+diff --git a/packages/app/src/index.tsx b/packages/app/src/index.tsx
+index 69d6401c..46f31902 100644
+--- a/packages/app/src/index.tsx
++++ b/packages/app/src/index.tsx
+@@ -3,3 +3,3 @@ import ReactDOM from 'react-dom/client';
+ import App from './App';
+-import '@backstage/canon/css/styles.css';
++import '@backstage/ui/css/styles.css';
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 3d5d431b..a97398ee 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,28 +18,28 @@
+   "dependencies": {
+-    "@backstage/backend-defaults": "^0.11.1-next.1",
+-    "@backstage/config": "^1.3.3-next.0",
+-    "@backstage/plugin-app-backend": "^0.5.4-next.0",
+-    "@backstage/plugin-auth-backend": "^0.25.2-next.0",
+-    "@backstage/plugin-auth-backend-module-github-provider": "^0.3.5-next.0",
+-    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.10-next.0",
+-    "@backstage/plugin-auth-node": "^0.6.5-next.0",
+-    "@backstage/plugin-catalog-backend": "^3.0.0-next.1",
+-    "@backstage/plugin-catalog-backend-module-logs": "^0.1.12-next.1",
+-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.10-next.0",
+-    "@backstage/plugin-kubernetes-backend": "^0.19.8-next.0",
+-    "@backstage/plugin-permission-backend": "^0.7.2-next.0",
+-    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.10-next.0",
+-    "@backstage/plugin-permission-common": "^0.9.1-next.0",
+-    "@backstage/plugin-permission-node": "^0.10.2-next.0",
+-    "@backstage/plugin-proxy-backend": "^0.6.4-next.0",
+-    "@backstage/plugin-scaffolder-backend": "^2.0.1-next.1",
+-    "@backstage/plugin-scaffolder-backend-module-github": "^0.8.1-next.1",
+-    "@backstage/plugin-search-backend": "^2.0.4-next.1",
+-    "@backstage/plugin-search-backend-module-catalog": "^0.3.6-next.0",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.46-next.0",
+-    "@backstage/plugin-search-backend-module-techdocs": "^0.4.4-next.1",
+-    "@backstage/plugin-search-backend-node": "^1.3.13-next.0",
+-    "@backstage/plugin-techdocs-backend": "^2.0.4-next.1",
++    "@backstage/backend-defaults": "^0.11.2-next.0",
++    "@backstage/config": "^1.3.3",
++    "@backstage/plugin-app-backend": "^0.5.5-next.0",
++    "@backstage/plugin-auth-backend": "^0.25.3-next.0",
++    "@backstage/plugin-auth-backend-module-github-provider": "^0.3.6-next.0",
++    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.11-next.0",
++    "@backstage/plugin-auth-node": "^0.6.6-next.0",
++    "@backstage/plugin-catalog-backend": "^3.0.1-next.1",
++    "@backstage/plugin-catalog-backend-module-logs": "^0.1.13-next.0",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.11-next.0",
++    "@backstage/plugin-kubernetes-backend": "^0.20.0-next.1",
++    "@backstage/plugin-permission-backend": "^0.7.3-next.0",
++    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.11-next.0",
++    "@backstage/plugin-permission-common": "^0.9.1",
++    "@backstage/plugin-permission-node": "^0.10.3-next.0",
++    "@backstage/plugin-proxy-backend": "^0.6.5-next.1",
++    "@backstage/plugin-scaffolder-backend": "^2.2.0-next.1",
++    "@backstage/plugin-scaffolder-backend-module-github": "^0.8.2-next.1",
++    "@backstage/plugin-search-backend": "^2.0.5-next.0",
++    "@backstage/plugin-search-backend-module-catalog": "^0.3.7-next.1",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.47-next.0",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.4.5-next.0",
++    "@backstage/plugin-search-backend-node": "^1.3.14-next.0",
++    "@backstage/plugin-techdocs-backend": "^2.0.5-next.1",
+     "app": "link:../app",
+-    "better-sqlite3": "^9.0.0",
++    "better-sqlite3": "^12.0.0",
+     "node-gyp": "^10.0.0",
+@@ -48,3 +48,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.33.1-next.1"
++    "@backstage/cli": "^0.34.0-next.2"
+   },
+diff --git a/playwright.config.ts b/playwright.config.ts
+index 37c7fb14..0dc740b4 100644
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -34,3 +34,3 @@ export default defineConfig({
+         {
+-          command: 'yarn start',
++          command: 'yarn start app',
+           port: 3000,
+@@ -39,2 +39,8 @@ export default defineConfig({
+         },
++        {
++          command: 'yarn start backend',
++          port: 7007,
++          reuseExistingServer: true,
++          timeout: 60_000,
++        },
+       ],
