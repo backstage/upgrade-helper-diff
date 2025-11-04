@@ -23,6 +23,8 @@ jobs:
       # First check out master and run the script that figures out which version of create-app we should use
       - name: Check out repository code
         uses: actions/checkout@v5
+        with:
+          sparse-checkout: .
       - uses: actions/setup-node@v2
         with:
           node-version: 20
