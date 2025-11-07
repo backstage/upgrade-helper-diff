@@ -19,19 +19,13 @@ jobs:
       RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-
-      # First check out master and run the script that figures out which version of create-app we should use
-      - name: Check out repository code
-        uses: actions/checkout@v5
-        with:
-          sparse-checkout: .
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 20
       - name: Check out release base
         uses: actions/checkout@v5
         with:
           ref: "release-base"
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 20
       - name: Setup global git bot user
         run: |
           git config --global user.name "github-actions[bot]"
@@ -95,14 +89,45 @@ jobs:
       - name: Check out diffs branch
         uses: actions/checkout@v5
         with:
-          ref: "master"
-          fetch-depth: 0
+          ref: "release-diff-base"
+      - name: Checkout new branch for release ${NEW_VERSION}
+        run: git checkout -b release-diff/legacy/v${NEW_VERSION}
+      - name: Setup git bot user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Create new diffs
         run: |
-          for version in $(jq -r 'to_entries |.[] | .value.createApp // .key'  < releases.json); do
+          for version in $(curl -s https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | jq -r 'to_entries | .[] | .value.createApp // .key'); do
             echo "Creating diffs between version $version and $NEW_VERSION"
             git diff -U1 origin/release/$version..origin/release/$NEW_VERSION > diffs/$version..$NEW_VERSION.diff
           done
+      - name: Create new branch with diff files for release ${NEW_VERSION}
+        run: |
+          git add .
+          git commit -m "Add release ${NEW_VERSION}"
+          git push origin release-diff/legacy/v${NEW_VERSION}
+      - name: Check out diffs branch again for yarn plugin
+        uses: actions/checkout@v5
+        with:
+          ref: "release-diff-base"
+      - name: Checkout new branch for release ${RELEASE_VERSION} with yarn plugin
+        run: git checkout -b release-diff/v${RELEASE_VERSION}
+      - name: Create new diffs for yarn plugin
+        run: |
+          for version in $(curl -s https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases-yarn-plugin.json | jq -r 'to_entries | .[] | .value.createApp // .key'); do
+            echo "Creating yarn-plugin diffs between version $version and $RELEASE_VERSION"
+            git diff -U1 origin/release/yarn-plugin/$version..origin/release/yarn-plugin/$RELEASE_VERSION > diffs/$version..$RELEASE_VERSION.diff
+          done
+      - name: Push the changes
+        run: |
+          git add .
+          git commit -m "Add release ${NEW_VERSION}"
+          git push origin release-diff/v${RELEASE_VERSION}
+      - name: Check out default branch
+        uses: actions/checkout@v5
+        with:
+          ref: "master"
       - name: Add new version to release.json
         run: |
           if [ -z "$RELEASE_VERSION" ]; then
@@ -111,20 +136,10 @@ jobs:
             jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\" }" < releases.json > _releases.json
           fi
           mv _releases.json releases.json
-      - name: Create new diffs for yarn plugin
-        run: |
-          for version in $(jq -r 'to_entries |.[] | .key'  < releases-yarn-plugin.json); do
-            echo "Creating yarn-plugin diffs between version $version and $RELEASE_VERSION"
-            git diff -U1 origin/release/yarn-plugin/$version..origin/release/yarn-plugin/$RELEASE_VERSION > diffs-yarn-plugin/$version..$RELEASE_VERSION.diff
-          done
       - name: Add new version to releases-yarn-plugin.json
         run: |
           jq ".\"$RELEASE_VERSION\" = { createApp: \"$NEW_VERSION\" }" < releases-yarn-plugin.json > _releases-yarn-plugin.json
           mv _releases-yarn-plugin.json releases-yarn-plugin.json
-      - name: Setup git bot user
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Push the changes
         run: |
           git add .
