@@ -1,0 +1,129 @@
+diff --git a/package.json b/package.json
+index c951505..7e2239a 100644
+--- a/package.json
++++ b/package.json
+@@ -5,3 +5,3 @@
+   "engines": {
+-    "node": "12 || 14"
++    "node": "14 || 16"
+   },
+@@ -36,4 +36,4 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.7.11",
+-    "@spotify/prettier-config": "^7.0.0",
++    "@backstage/cli": "^0.7.13",
++    "@spotify/prettier-config": "^11.0.0",
+     "concurrently": "^6.0.0",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 5f00b27..295f9ab 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -6,19 +6,19 @@
+   "dependencies": {
+-    "@backstage/catalog-model": "^0.9.2",
+-    "@backstage/cli": "^0.7.11",
+-    "@backstage/core-app-api": "^0.1.12",
+-    "@backstage/core-components": "^0.4.1",
+-    "@backstage/core-plugin-api": "^0.1.7",
+-    "@backstage/integration-react": "^0.1.8",
+-    "@backstage/plugin-api-docs": "^0.6.7",
+-    "@backstage/plugin-catalog": "^0.6.14",
+-    "@backstage/plugin-catalog-import": "^0.5.20",
+-    "@backstage/plugin-catalog-react": "^0.4.5",
+-    "@backstage/plugin-github-actions": "^0.4.17",
+-    "@backstage/plugin-org": "^0.3.22",
+-    "@backstage/plugin-scaffolder": "^0.11.3",
+-    "@backstage/plugin-search": "^0.4.10",
+-    "@backstage/plugin-tech-radar": "^0.4.6",
+-    "@backstage/plugin-techdocs": "^0.11.1",
+-    "@backstage/plugin-user-settings": "^0.3.4",
++    "@backstage/catalog-model": "^0.9.3",
++    "@backstage/cli": "^0.7.13",
++    "@backstage/core-app-api": "^0.1.14",
++    "@backstage/core-components": "^0.5.0",
++    "@backstage/core-plugin-api": "^0.1.8",
++    "@backstage/integration-react": "^0.1.10",
++    "@backstage/plugin-api-docs": "^0.6.9",
++    "@backstage/plugin-catalog": "^0.6.16",
++    "@backstage/plugin-catalog-import": "^0.6.0",
++    "@backstage/plugin-catalog-react": "^0.5.0",
++    "@backstage/plugin-github-actions": "^0.4.19",
++    "@backstage/plugin-org": "^0.3.24",
++    "@backstage/plugin-scaffolder": "^0.11.5",
++    "@backstage/plugin-search": "^0.4.12",
++    "@backstage/plugin-tech-radar": "^0.4.8",
++    "@backstage/plugin-techdocs": "^0.11.3",
++    "@backstage/plugin-user-settings": "^0.3.6",
+     "@backstage/test-utils": "^0.1.17",
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 5062bdf..af1a53f 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -6,5 +6,2 @@
+   "private": true,
+-  "engines": {
+-    "node": "12 || 14"
+-  },
+   "scripts": {
+@@ -20,14 +17,14 @@
+     "app": "0.0.0",
+-    "@backstage/backend-common": "^0.9.2",
+-    "@backstage/catalog-model": "^0.9.2",
+-    "@backstage/catalog-client": "^0.3.19",
+-    "@backstage/config": "^0.1.9",
++    "@backstage/backend-common": "^0.9.4",
++    "@backstage/catalog-model": "^0.9.3",
++    "@backstage/catalog-client": "^0.4.0",
++    "@backstage/config": "^0.1.10",
+     "@backstage/plugin-app-backend": "^0.3.16",
+-    "@backstage/plugin-auth-backend": "^0.3.24",
+-    "@backstage/plugin-catalog-backend": "^0.13.7",
++    "@backstage/plugin-auth-backend": "^0.4.1",
++    "@backstage/plugin-catalog-backend": "^0.14.0",
+     "@backstage/plugin-proxy-backend": "^0.2.12",
+-    "@backstage/plugin-scaffolder-backend": "^0.15.4",
++    "@backstage/plugin-scaffolder-backend": "^0.15.6",
+     "@backstage/plugin-search-backend": "^0.2.6",
+     "@backstage/plugin-search-backend-node": "^0.4.2",
+-    "@backstage/plugin-techdocs-backend": "^0.10.1",
++    "@backstage/plugin-techdocs-backend": "^0.10.3",
+     "@gitbeaker/node": "^30.2.0",
+@@ -42,3 +39,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.7.11",
++    "@backstage/cli": "^0.7.13",
+     "@types/dockerode": "^3.2.1",
+diff --git a/packages/backend/src/plugins/catalog.ts b/packages/backend/src/plugins/catalog.ts
+index 3145e58..d1ded51 100644
+--- a/packages/backend/src/plugins/catalog.ts
++++ b/packages/backend/src/plugins/catalog.ts
+@@ -1,5 +1,2 @@
+-import {
+-  CatalogBuilder,
+-  createRouter,
+-} from '@backstage/plugin-catalog-backend';
++import { CatalogBuilder } from '@backstage/plugin-catalog-backend';
+ import { Router } from 'express';
+@@ -11,20 +8,5 @@ export default async function createPlugin(
+   const builder = await CatalogBuilder.create(env);
+-  const {
+-    entitiesCatalog,
+-    locationsCatalog,
+-    locationService,
+-    processingEngine,
+-    locationAnalyzer,
+-  } = await builder.build();
+-
++  const { processingEngine, router } = await builder.build();
+   await processingEngine.start();
+-
+-  return await createRouter({
+-    entitiesCatalog,
+-    locationsCatalog,
+-    locationService,
+-    locationAnalyzer,
+-    logger: env.logger,
+-    config: env.config,
+-  });
++  return router;
+ }
