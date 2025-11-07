@@ -1,0 +1,1881 @@
+diff --git a/.dockerignore b/.dockerignore
+new file mode 100644
+index 0000000..63c9c34
+--- /dev/null
++++ b/.dockerignore
+@@ -0,0 +1,5 @@
++.git
++node_modules
++packages
++!packages/backend/dist
++plugins
+diff --git a/.gitignore b/.gitignore
+index 4adebc5..d16a8d3 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1 +1,4 @@
++# macOS
++.DS_Store
++
+ # Logs
+diff --git a/.prettierignore b/.prettierignore
+new file mode 100644
+index 0000000..dfb0f1c
+--- /dev/null
++++ b/.prettierignore
+@@ -0,0 +1,4 @@
++dist
++dist-types
++coverage
++.vscode
+diff --git a/README.md b/README.md
+index b2594d1..8c7c437 100644
+--- a/README.md
++++ b/README.md
+@@ -3 +3,8 @@
+ This is your newly scaffolded Backstage App, Good Luck!
++
++To start the app, run:
++
++```sh
++yarn install
++yarn dev
++```
+diff --git a/app-config.production.yaml b/app-config.production.yaml
+index 92f4574..5e36c23 100644
+--- a/app-config.production.yaml
++++ b/app-config.production.yaml
+@@ -2,7 +2,7 @@ app:
+   # Should be the same as backend.baseUrl when using the `app-backend` plugin
+-  baseUrl: http://localhost:7000
++  baseUrl: http://localhost:7007
+ 
+ backend:
+-  baseUrl: http://localhost:7000
++  baseUrl: http://localhost:7007
+   listen:
+-    port: 7000
++    port: 7007
+diff --git a/app-config.yaml b/app-config.yaml
+index a6bbd13..1a622a2 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -8,7 +8,14 @@ organization:
+ backend:
+-  baseUrl: http://localhost:7000
++  # Used for enabling authentication, secret is shared by all backend plugins
++  # See backend-to-backend-auth.md in the docs for information on the format
++  # auth:
++  #   keys:
++  #     - secret: ${BACKEND_SECRET}
++  baseUrl: http://localhost:7007
+   listen:
+-    port: 7000
++    port: 7007
+   csp:
+     connect-src: ["'self'", 'http:', 'https:']
++    # Content-Security-Policy directives follow the Helmet format: https://helmetjs.github.io/#reference
++    # Default Helmet Content-Security-Policy values can be removed by setting the key to false
+   cors:
+@@ -20,2 +27,4 @@ backend:
+     connection: ':memory:'
++  cache:
++    store: memory
+   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
+@@ -25,4 +34,3 @@ integrations:
+     - host: github.com
+-      token:
+-        $env: GITHUB_TOKEN
++      token: ${GITHUB_TOKEN}
+     ### Example for how to add your GitHub Enterprise instance using the API:
+@@ -30,4 +38,3 @@ integrations:
+     #   apiBaseUrl: https://ghe.example.net/api/v3
+-    #   token:
+-    #     $env: GHE_TOKEN
++    #   token: ${GHE_TOKEN}
+ 
+@@ -38,13 +45,15 @@ proxy:
+ 
++# Reference documentation http://backstage.io/docs/features/techdocs/configuration
++# Note: After experimenting with basic setup, use CI/CD to generate docs
++# and an external cloud storage when deploying TechDocs for production use-case.
++# https://backstage.io/docs/features/techdocs/how-to-guides#how-to-migrate-from-techdocs-basic-to-recommended-deployment-approach
+ techdocs:
+-  requestUrl: http://localhost:7000/api/techdocs
+-  storageUrl: http://localhost:7000/api/techdocs/static/docs
+-  builder: 'local'
+-  generators:
+-    techdocs: 'docker'
++  builder: 'local' # Alternatives - 'external'
++  generator:
++    runIn: 'docker' # Alternatives - 'local'
+   publisher:
+-    type: 'local'
++    type: 'local' # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
+ 
+ auth:
+-  # see https://backstage.io/docs/tutorials/quickstart-app-auth to know more about enabling auth providers
++  # see https://backstage.io/docs/auth/ to learn about auth providers
+   providers: {}
+@@ -52,6 +61,3 @@ auth:
+ scaffolder:
+-  github:
+-    token:
+-      $env: GITHUB_TOKEN
+-    visibility: public # or 'internal' or 'private'
++  # see https://backstage.io/docs/features/software-templates/configuration for software template options
+ 
+@@ -59,3 +65,3 @@ catalog:
+   rules:
+-    - allow: [Component, API, Group, User, Template, Location]
++    - allow: [Component, System, API, Group, User, Resource, Location]
+   locations:
+@@ -65,2 +71,6 @@ catalog:
+ 
++    # Backstage example systems
++    - type: url
++      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-systems.yaml
++
+     # Backstage example APIs
+@@ -69,9 +79,13 @@ catalog:
+ 
+-    # Backstage example templates
++    # Backstage example resources
+     - type: url
+-      target: https://github.com/backstage/backstage/blob/master/plugins/scaffolder-backend/sample-templates/react-ssr-template/template.yaml
+-      rules:
+-        - allow: [Template]
++      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-resources.yaml
++
++    # Backstage example organization groups
++    - type: url
++      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/acme/org.yaml
++
++    # Backstage example templates
+     - type: url
+-      target: https://github.com/backstage/backstage/blob/master/plugins/scaffolder-backend/sample-templates/springboot-grpc-template/template.yaml
++      target: https://github.com/backstage/software-templates/blob/main/scaffolder-templates/react-ssr-template/template.yaml
+       rules:
+@@ -79,3 +93,3 @@ catalog:
+     - type: url
+-      target: https://github.com/backstage/backstage/blob/master/plugins/scaffolder-backend/sample-templates/create-react-app/template.yaml
++      target: https://github.com/backstage/software-templates/blob/main/scaffolder-templates/springboot-grpc-template/template.yaml
+       rules:
+@@ -87,3 +101,3 @@ catalog:
+     - type: url
+-      target: https://github.com/backstage/backstage/blob/master/plugins/scaffolder-backend/sample-templates/docs-template/template.yaml
++      target: https://github.com/backstage/software-templates/blob/main/scaffolder-templates/docs-template/template.yaml
+       rules:
+diff --git a/backstage.json b/backstage.json
+new file mode 100644
+index 0000000..e91ab70
+--- /dev/null
++++ b/backstage.json
+@@ -0,0 +1,3 @@
++{
++  "version": "0.4.14"
++}
+diff --git a/catalog-info.yaml b/catalog-info.yaml
+index 41794b4..adeb66d 100644
+--- a/catalog-info.yaml
++++ b/catalog-info.yaml
+@@ -7,4 +7,4 @@ metadata:
+   # annotations:
+-    # github.com/project-slug: backstage/backstage
+-    # backstage.io/techdocs-ref: github:https://github.com/backstage/backstage.git
++  #   github.com/project-slug: backstage/backstage
++  #   backstage.io/techdocs-ref: dir:.
+ spec:
+diff --git a/package.json b/package.json
+index 0763f93..2454755 100644
+--- a/package.json
++++ b/package.json
+@@ -5,5 +5,6 @@
+   "engines": {
+-    "node": "12 || 14"
++    "node": "14 || 16"
+   },
+   "scripts": {
++    "dev": "concurrently \"yarn start\" \"yarn start-backend\"",
+     "start": "yarn workspace app start",
+@@ -16,3 +17,3 @@
+     "diff": "lerna run diff --",
+-    "test": "lerna run test --since origin/master -- --coverage",
++    "test": "backstage-cli test",
+     "test:all": "lerna run test -- --coverage",
+@@ -20,3 +21,4 @@
+     "lint:all": "lerna run lint --",
+-    "create-plugin": "backstage-cli create-plugin --scope internal --no-private",
++    "prettier:check": "prettier --check .",
++    "create-plugin": "backstage-cli create-plugin --scope internal",
+     "remove-plugin": "backstage-cli remove-plugin"
+@@ -30,6 +32,8 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.5.0",
+-    "@spotify/prettier-config": "^7.0.0",
+-    "lerna": "^3.20.2",
+-    "prettier": "^1.19.1"
++    "@backstage/cli": "^0.12.0",
++    "@spotify/prettier-config": "^12.0.0",
++    "concurrently": "^6.0.0",
++    "lerna": "^4.0.0",
++    "prettier": "^2.3.2",
++    "typescript": "~4.5.4"
+   },
+@@ -37,3 +41,3 @@
+   "lint-staged": {
+-    "*.{js,jsx,ts,tsx}": [
++    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+       "eslint --fix",
+@@ -44,7 +48,2 @@
+     ]
+-  },
+-  "jest": {
+-    "transformModules": [
+-      "@asyncapi/react-component"
+-    ]
+   }
+diff --git a/packages/app/cypress/integration/app.js b/packages/app/cypress/integration/app.js
+index efcd5b8..43fb2e3 100644
+--- a/packages/app/cypress/integration/app.js
++++ b/packages/app/cypress/integration/app.js
+@@ -3,3 +3,3 @@ describe('App', () => {
+     cy.visit('/');
+-    cy.contains('My Company Service Catalog');
++    cy.contains('My Company Catalog');
+   });
+diff --git a/packages/app/package.json b/packages/app/package.json
+index a03ef27..8ce600d 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -6,22 +6,26 @@
+   "dependencies": {
+-    "@material-ui/core": "^4.11.0",
++    "@backstage/app-defaults": "^0.1.5",
++    "@backstage/catalog-model": "^0.9.10",
++    "@backstage/cli": "^0.12.0",
++    "@backstage/core-app-api": "^0.5.0",
++    "@backstage/core-components": "^0.8.5",
++    "@backstage/core-plugin-api": "^0.6.0",
++    "@backstage/integration-react": "^0.1.19",
++    "@backstage/plugin-api-docs": "^0.7.0",
++    "@backstage/plugin-catalog": "^0.7.9",
++    "@backstage/plugin-catalog-import": "^0.7.10",
++    "@backstage/plugin-catalog-react": "^0.6.12",
++    "@backstage/plugin-github-actions": "^0.4.32",
++    "@backstage/plugin-org": "^0.4.0",
++    "@backstage/plugin-scaffolder": "^0.12.0",
++    "@backstage/plugin-search": "^0.5.6",
++    "@backstage/plugin-tech-radar": "^0.5.3",
++    "@backstage/plugin-techdocs": "^0.13.0",
++    "@backstage/plugin-user-settings": "^0.3.17",
++    "@backstage/theme": "^0.2.14",
++    "@material-ui/core": "^4.12.2",
+     "@material-ui/icons": "^4.9.1",
+-    "@backstage/cli": "^0.5.0",
+-    "@backstage/core": "^0.5.0",
+-    "@backstage/plugin-api-docs": "^0.4.3",
+-    "@backstage/plugin-catalog": "^0.2.14",
+-    "@backstage/plugin-catalog-import": "^0.3.6",
+-    "@backstage/plugin-scaffolder": "^0.4.1",
+-    "@backstage/plugin-techdocs": "^0.5.4",
+-    "@backstage/catalog-model": "^0.7.0",
+-    "@backstage/plugin-circleci": "^0.2.6",
+-    "@backstage/plugin-tech-radar": "^0.3.3",
+-    "@backstage/plugin-github-actions": "^0.3.0",
+-    "@backstage/plugin-user-settings": "^0.2.4",
+-    "@backstage/plugin-search": "^0.2.6",
+-    "@backstage/test-utils": "^0.1.6",
+-    "@backstage/theme": "^0.2.2",
+     "history": "^5.0.0",
+-    "react": "^16.13.1",
+-    "react-dom": "^16.13.1",
++    "react": "^17.0.2",
++    "react-dom": "^17.0.2",
+     "react-router": "6.0.0-beta.0",
+@@ -31,2 +35,3 @@
+   "devDependencies": {
++    "@backstage/test-utils": "^0.2.3",
+     "@testing-library/jest-dom": "^5.10.1",
+@@ -35,6 +40,6 @@
+     "@types/jest": "^26.0.7",
+-    "@types/node": "^12.0.0",
+-    "@types/react-dom": "^16.9.8",
++    "@types/node": "^14.14.32",
++    "@types/react-dom": "*",
+     "cross-env": "^7.0.0",
+-    "cypress": "^4.2.0",
++    "cypress": "^7.3.0",
+     "eslint-plugin-cypress": "^2.10.3",
+@@ -45,7 +50,7 @@
+     "build": "backstage-cli app:build",
+-    "test": "backstage-cli test",
+-    "lint": "backstage-cli lint",
+     "clean": "backstage-cli clean",
++    "test": "backstage-cli test",
+     "test:e2e": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:dev",
+     "test:e2e:ci": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:run",
++    "lint": "backstage-cli lint",
+     "cy:dev": "cypress open",
+diff --git a/packages/app/public/index.html b/packages/app/public/index.html
+index ea9208c..a936c73 100644
+--- a/packages/app/public/index.html
++++ b/packages/app/public/index.html
+@@ -44,10 +44,23 @@
+     />
+-    <style>
+-      #root {
+-        min-height: 100%;
++    <title><%= config.getString('app.title') %></title>
++    <% if (config.has('app.googleAnalyticsTrackingId')) { %>
++    <script
++      async
++      src="https://www.googletagmanager.com/gtag/js?id=<%= config.getString('app.googleAnalyticsTrackingId') %>"
++    ></script>
++    <script>
++      window.dataLayer = window.dataLayer || [];
++      function gtag() {
++        dataLayer.push(arguments);
+       }
+-    </style>
+-    <title><%= app.title %></title>
++      gtag('js', new Date());
++
++      gtag(
++        'config',
++        '<%= config.getString("app.googleAnalyticsTrackingId") %>',
++      );
++    </script>
++    <% } %>
+   </head>
+-  <body style="margin: 0;">
++  <body>
+     <noscript>You need to enable JavaScript to run this app.</noscript>
+diff --git a/packages/app/src/App.test.tsx b/packages/app/src/App.test.tsx
+index 21a2eaa..b94cac7 100644
+--- a/packages/app/src/App.test.tsx
++++ b/packages/app/src/App.test.tsx
+@@ -6,5 +6,5 @@ describe('App', () => {
+   it('should render', async () => {
+-    Object.defineProperty(process.env, 'APP_CONFIG', {
+-      configurable: true,
+-      value: [
++    process.env = {
++      NODE_ENV: 'test',
++      APP_CONFIG: [
+         {
+@@ -12,5 +12,5 @@ describe('App', () => {
+             app: { title: 'Test' },
+-            backend: { baseUrl: 'http://localhost:7000' },
++            backend: { baseUrl: 'http://localhost:7007' },
+             techdocs: {
+-              storageUrl: 'http://localhost:7000/api/techdocs/static/docs',
++              storageUrl: 'http://localhost:7007/api/techdocs/static/docs',
+             },
+@@ -19,4 +19,4 @@ describe('App', () => {
+         },
+-      ],
+-    });
++      ] as any,
++    };
+ 
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index 6deedcd..78949b0 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -1,22 +1,32 @@
+ import React from 'react';
++import { Navigate, Route } from 'react-router';
++import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
+ import {
+-  createApp,
+-  AlertDisplay,
+-  OAuthRequestDialog,
+-  SidebarPage,
+-  createRouteRef,
+-  FlatRoutes,
+-} from '@backstage/core';
++  CatalogEntityPage,
++  CatalogIndexPage,
++  catalogPlugin,
++} from '@backstage/plugin-catalog';
++import {
++  CatalogImportPage,
++  catalogImportPlugin,
++} from '@backstage/plugin-catalog-import';
++import { ScaffolderPage, scaffolderPlugin } from '@backstage/plugin-scaffolder';
++import { orgPlugin } from '@backstage/plugin-org';
++import { SearchPage } from '@backstage/plugin-search';
++import { TechRadarPage } from '@backstage/plugin-tech-radar';
++import {
++  DefaultTechDocsHome,
++  TechDocsIndexPage,
++  techdocsPlugin,
++  TechDocsReaderPage,
++} from '@backstage/plugin-techdocs';
++import { UserSettingsPage } from '@backstage/plugin-user-settings';
+ import { apis } from './apis';
+-import * as plugins from './plugins';
+-import { AppSidebar } from './sidebar';
+-import { Route, Navigate } from 'react-router';
+-import { Router as CatalogRouter } from '@backstage/plugin-catalog';
+-import { Router as DocsRouter } from '@backstage/plugin-techdocs';
+-import { Router as ImportComponentRouter } from '@backstage/plugin-catalog-import';
+-import { Router as TechRadarRouter } from '@backstage/plugin-tech-radar';
+-import { SearchPage as SearchRouter } from '@backstage/plugin-search';
+-import { Router as SettingsRouter } from '@backstage/plugin-user-settings';
++import { entityPage } from './components/catalog/EntityPage';
++import { searchPage } from './components/search/SearchPage';
++import { Root } from './components/Root';
+ 
+-import { EntityPage } from './components/catalog/EntityPage';
++import { AlertDisplay, OAuthRequestDialog } from '@backstage/core-components';
++import { createApp } from '@backstage/app-defaults';
++import { FlatRoutes } from '@backstage/core-app-api';
+ 
+@@ -24,3 +34,17 @@ const app = createApp({
+   apis,
+-  plugins: Object.values(plugins),
++  bindRoutes({ bind }) {
++    bind(catalogPlugin.externalRoutes, {
++      createComponent: scaffolderPlugin.routes.root,
++      viewTechDoc: techdocsPlugin.routes.docRoot,
++    });
++    bind(apiDocsPlugin.externalRoutes, {
++      registerApi: catalogImportPlugin.routes.importPage,
++    });
++    bind(scaffolderPlugin.externalRoutes, {
++      registerComponent: catalogImportPlugin.routes.importPage,
++    });
++    bind(orgPlugin.externalRoutes, {
++      catalogIndex: catalogPlugin.routes.catalogIndex,
++    });
++  },
+ });
+@@ -29,9 +53,33 @@ const AppProvider = app.getProvider();
+ const AppRouter = app.getRouter();
+-const deprecatedAppRoutes = app.getRoutes();
+-
+-const catalogRouteRef = createRouteRef({
+-  path: '/catalog',
+-  title: 'Service Catalog',
+-});
+ 
++const routes = (
++  <FlatRoutes>
++    <Navigate key="/" to="catalog" />
++    <Route path="/catalog" element={<CatalogIndexPage />} />
++    <Route
++      path="/catalog/:namespace/:kind/:name"
++      element={<CatalogEntityPage />}
++    >
++      {entityPage}
++    </Route>
++    <Route path="/docs" element={<TechDocsIndexPage />}>
++      <DefaultTechDocsHome />
++    </Route>
++    <Route
++      path="/docs/:namespace/:kind/:name/*"
++      element={<TechDocsReaderPage />}
++    />
++    <Route path="/create" element={<ScaffolderPage />} />
++    <Route path="/api-docs" element={<ApiExplorerPage />} />
++    <Route
++      path="/tech-radar"
++      element={<TechRadarPage width={1500} height={800} />}
++    />
++    <Route path="/catalog-import" element={<CatalogImportPage />} />
++    <Route path="/search" element={<SearchPage />}>
++      {searchPage}
++    </Route>
++    <Route path="/settings" element={<UserSettingsPage />} />
++  </FlatRoutes>
++);
+ 
+@@ -42,27 +90,3 @@ const App = () => (
+     <AppRouter>
+-      <SidebarPage>
+-        <AppSidebar />
+-        <FlatRoutes>
+-          <Navigate key="/" to="/catalog" />
+-          <Route
+-            path="/catalog"
+-            element={<CatalogRouter EntityPage={EntityPage} />}
+-          />
+-          <Route path="/docs" element={<DocsRouter />} />
+-          <Route
+-            path="/tech-radar"
+-            element={<TechRadarRouter width={1500} height={800} />}
+-          />
+-          <Route
+-            path="/catalog-import"
+-            element={<ImportComponentRouter catalogRouteRef={catalogRouteRef} />}
+-          />
+-          <Route
+-            path="/search"
+-            element={<SearchRouter/>}
+-          />
+-          <Route path="/settings" element={<SettingsRouter />} />
+-          {deprecatedAppRoutes}
+-        </FlatRoutes>
+-      </SidebarPage>
++      <Root>{routes}</Root>
+     </AppRouter>
+diff --git a/packages/app/src/apis.ts b/packages/app/src/apis.ts
+index 24b22a8..c89753a 100644
+--- a/packages/app/src/apis.ts
++++ b/packages/app/src/apis.ts
+@@ -1 +1,19 @@
+-export const apis = [];
++import {
++  ScmIntegrationsApi,
++  scmIntegrationsApiRef,
++  ScmAuth,
++} from '@backstage/integration-react';
++import {
++  AnyApiFactory,
++  configApiRef,
++  createApiFactory,
++} from '@backstage/core-plugin-api';
++
++export const apis: AnyApiFactory[] = [
++  createApiFactory({
++    api: scmIntegrationsApiRef,
++    deps: { configApi: configApiRef },
++    factory: ({ configApi }) => ScmIntegrationsApi.fromConfig(configApi),
++  }),
++  ScmAuth.createDefaultApiFactory(),
++];
+diff --git a/packages/app/src/LogoFull.tsx b/packages/app/src/components/Root/LogoFull.tsx
+similarity index 99%
+rename from packages/app/src/LogoFull.tsx
+rename to packages/app/src/components/Root/LogoFull.tsx
+index 2fb7674..c7b1c84 100644
+--- a/packages/app/src/LogoFull.tsx
++++ b/packages/app/src/components/Root/LogoFull.tsx
+@@ -1,3 +1,3 @@
+ /*
+- * Copyright 2020 Spotify AB
++ * Copyright 2020 The Backstage Authors
+  *
+diff --git a/packages/app/src/LogoIcon.tsx b/packages/app/src/components/Root/LogoIcon.tsx
+similarity index 98%
+rename from packages/app/src/LogoIcon.tsx
+rename to packages/app/src/components/Root/LogoIcon.tsx
+index 507e47d..073cf6e 100644
+--- a/packages/app/src/LogoIcon.tsx
++++ b/packages/app/src/components/Root/LogoIcon.tsx
+@@ -1,3 +1,3 @@
+ /*
+- * Copyright 2020 Spotify AB
++ * Copyright 2020 The Backstage Authors
+  *
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+new file mode 100644
+index 0000000..7e98c7d
+--- /dev/null
++++ b/packages/app/src/components/Root/Root.tsx
+@@ -0,0 +1,116 @@
++/*
++ * Copyright 2020 The Backstage Authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++import React, { useContext, PropsWithChildren } from 'react';
++import { Link, makeStyles } from '@material-ui/core';
++import HomeIcon from '@material-ui/icons/Home';
++import ExtensionIcon from '@material-ui/icons/Extension';
++import MapIcon from '@material-ui/icons/MyLocation';
++import LibraryBooks from '@material-ui/icons/LibraryBooks';
++import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
++import LogoFull from './LogoFull';
++import LogoIcon from './LogoIcon';
++import { NavLink } from 'react-router-dom';
++import {
++  Settings as SidebarSettings,
++  UserSettingsSignInAvatar,
++} from '@backstage/plugin-user-settings';
++import {
++  SidebarSearchModal,
++  SearchContextProvider,
++} from '@backstage/plugin-search';
++import {
++  Sidebar,
++  sidebarConfig,
++  SidebarContext,
++  SidebarDivider,
++  SidebarGroup,
++  SidebarItem,
++  SidebarPage,
++  SidebarScrollWrapper,
++  SidebarSpace,
++} from '@backstage/core-components';
++import MenuIcon from '@material-ui/icons/Menu';
++import SearchIcon from '@material-ui/icons/Search';
++
++const useSidebarLogoStyles = makeStyles({
++  root: {
++    width: sidebarConfig.drawerWidthClosed,
++    height: 3 * sidebarConfig.logoHeight,
++    display: 'flex',
++    flexFlow: 'row nowrap',
++    alignItems: 'center',
++    marginBottom: -14,
++  },
++  link: {
++    width: sidebarConfig.drawerWidthClosed,
++    marginLeft: 24,
++  },
++});
++
++const SidebarLogo = () => {
++  const classes = useSidebarLogoStyles();
++  const { isOpen } = useContext(SidebarContext);
++
++  return (
++    <div className={classes.root}>
++      <Link
++        component={NavLink}
++        to="/"
++        underline="none"
++        className={classes.link}
++      >
++        {isOpen ? <LogoFull /> : <LogoIcon />}
++      </Link>
++    </div>
++  );
++};
++
++export const Root = ({ children }: PropsWithChildren<{}>) => (
++  <SidebarPage>
++    <Sidebar>
++      <SidebarLogo />
++      <SidebarGroup label="Search" icon={<SearchIcon />} to="/search">
++        <SearchContextProvider>
++          <SidebarSearchModal />
++        </SearchContextProvider>{' '}
++      </SidebarGroup>
++      <SidebarDivider />
++      <SidebarGroup label="Menu" icon={<MenuIcon />}>
++        {/* Global nav, not org-specific */}
++        <SidebarItem icon={HomeIcon} to="catalog" text="Home" />
++        <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
++        <SidebarItem icon={LibraryBooks} to="docs" text="Docs" />
++        <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
++        {/* End global nav */}
++        <SidebarDivider />
++        <SidebarScrollWrapper>
++          <SidebarItem icon={MapIcon} to="tech-radar" text="Tech Radar" />
++        </SidebarScrollWrapper>
++      </SidebarGroup>
++      <SidebarSpace />
++      <SidebarDivider />
++      <SidebarGroup
++        label="Settings"
++        icon={<UserSettingsSignInAvatar />}
++        to="/settings"
++      >
++        <SidebarSettings />
++      </SidebarGroup>
++    </Sidebar>
++    {children}
++  </SidebarPage>
++);
+diff --git a/packages/app/src/components/Root/index.ts b/packages/app/src/components/Root/index.ts
+new file mode 100644
+index 0000000..dff706f
+--- /dev/null
++++ b/packages/app/src/components/Root/index.ts
+@@ -0,0 +1,17 @@
++/*
++ * Copyright 2020 The Backstage Authors
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++export { Root } from './Root';
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index b5e384f..d3b4b78 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -1,3 +1,3 @@
+ /*
+- * Copyright 2020 Spotify AB
++ * Copyright 2020 The Backstage Authors
+  *
+@@ -15,59 +15,102 @@
+  */
+-import { ApiEntity, Entity } from '@backstage/catalog-model';
+-import { WarningPanel } from '@backstage/core';
++import React from 'react';
++import { Button, Grid } from '@material-ui/core';
+ import {
+-  ApiDefinitionCard,
+-  ConsumedApisCard, 
+-  ConsumingComponentsCard, 
+-  ProvidedApisCard, 
+-  ProvidingComponentsCard
++  EntityApiDefinitionCard,
++  EntityConsumedApisCard,
++  EntityConsumingComponentsCard,
++  EntityHasApisCard,
++  EntityProvidedApisCard,
++  EntityProvidingComponentsCard,
+ } from '@backstage/plugin-api-docs';
+ import {
+-  AboutCard, EntityPageLayout,
+-  useEntity
++  EntityAboutCard,
++  EntityDependsOnComponentsCard,
++  EntityDependsOnResourcesCard,
++  EntitySystemDiagramCard,
++  EntityHasComponentsCard,
++  EntityHasResourcesCard,
++  EntityHasSubcomponentsCard,
++  EntityHasSystemsCard,
++  EntityLayout,
++  EntityLinksCard,
++  EntitySwitch,
++  EntityOrphanWarning,
++  EntityProcessingErrorsPanel,
++  isComponentType,
++  isKind,
++  hasCatalogProcessingErrors,
++  isOrphan,
+ } from '@backstage/plugin-catalog';
+ import {
+-  isPluginApplicableToEntity as isCircleCIAvailable, Router as CircleCIRouter
+-} from '@backstage/plugin-circleci';
+-import {
+-  isPluginApplicableToEntity as isGitHubActionsAvailable, Router as GitHubActionsRouter
++  isGithubActionsAvailable,
++  EntityGithubActionsContent,
+ } from '@backstage/plugin-github-actions';
+-import { EmbeddedDocsRouter as DocsRouter } from '@backstage/plugin-techdocs';
+-import { Grid } from '@material-ui/core';
+-import React from 'react';
+-
++import {
++  EntityUserProfileCard,
++  EntityGroupProfileCard,
++  EntityMembersListCard,
++  EntityOwnershipCard,
++} from '@backstage/plugin-org';
++import { EntityTechdocsContent } from '@backstage/plugin-techdocs';
++import { EmptyState } from '@backstage/core-components';
+ 
+-const CICDSwitcher = ({ entity }: { entity: Entity }) => {
+-  // This component is just an example of how you can implement your company's logic in entity page.
++const cicdContent = (
++  // This is an example of how you can implement your company's logic in entity page.
+   // You can for example enforce that all components of type 'service' should use GitHubActions
+-  switch (true) {
+-    case isGitHubActionsAvailable(entity):
+-      return <GitHubActionsRouter entity={entity} />;
+-    case isCircleCIAvailable(entity):
+-      return <CircleCIRouter entity={entity} />;
+-    default:
+-      return (
+-        <WarningPanel title="CI/CD switcher:">
+-          No CI/CD is available for this entity. Check corresponding
+-          annotations!
+-        </WarningPanel>
+-      );
+-  }
+-};
+-
+-const OverviewContent = ({ entity }: { entity: Entity }) => (
+-  <Grid container spacing={3} alignItems="stretch">
+-    <Grid item>
+-      <AboutCard entity={entity} variant="gridItem" />
+-    </Grid>
+-  </Grid>
++  <EntitySwitch>
++    <EntitySwitch.Case if={isGithubActionsAvailable}>
++      <EntityGithubActionsContent />
++    </EntitySwitch.Case>
++
++    <EntitySwitch.Case>
++      <EmptyState
++        title="No CI/CD available for this entity"
++        missing="info"
++        description="You need to add an annotation to your component if you want to enable CI/CD for it. You can read more about annotations in Backstage by clicking the button below."
++        action={
++          <Button
++            variant="contained"
++            color="primary"
++            href="https://backstage.io/docs/features/software-catalog/well-known-annotations"
++          >
++            Read more
++          </Button>
++        }
++      />
++    </EntitySwitch.Case>
++  </EntitySwitch>
++);
++
++const entityWarningContent = (
++  <>
++    <EntitySwitch>
++      <EntitySwitch.Case if={isOrphan}>
++        <Grid item xs={12}>
++          <EntityOrphanWarning />
++        </Grid>
++      </EntitySwitch.Case>
++    </EntitySwitch>
++
++    <EntitySwitch>
++      <EntitySwitch.Case if={hasCatalogProcessingErrors}>
++        <Grid item xs={12}>
++          <EntityProcessingErrorsPanel />
++        </Grid>
++      </EntitySwitch.Case>
++    </EntitySwitch>
++  </>
+ );
+ 
+-const ComponentApisContent = ({ entity }: { entity: Entity }) => (
++const overviewContent = (
+   <Grid container spacing={3} alignItems="stretch">
++    {entityWarningContent}
+     <Grid item md={6}>
+-      <ProvidedApisCard entity={entity} />
++      <EntityAboutCard variant="gridItem" />
+     </Grid>
+-    <Grid item md={6}>
+-      <ConsumedApisCard entity={entity} />
++    <Grid item md={4} xs={12}>
++      <EntityLinksCard />
++    </Grid>
++    <Grid item md={8} xs={12}>
++      <EntityHasSubcomponentsCard variant="gridItem" />
+     </Grid>
+@@ -76,123 +119,219 @@ const ComponentApisContent = ({ entity }: { entity: Entity }) => (
+ 
+-const ServiceEntityPage = ({ entity }: { entity: Entity }) => (
+-  <EntityPageLayout>
+-    <EntityPageLayout.Content
+-      path="/"
+-      title="Overview"
+-      element={<OverviewContent entity={entity} />}
+-    />
+-    <EntityPageLayout.Content
+-      path="/ci-cd/*"
+-      title="CI/CD"
+-      element={<CICDSwitcher entity={entity} />}
+-    />
+-    <EntityPageLayout.Content
+-      path="/api/*"
+-      title="API"
+-      element={<ComponentApisContent entity={entity} />}
+-    />
+-    <EntityPageLayout.Content
+-      path="/docs/*"
+-      title="Docs"
+-      element={<DocsRouter entity={entity} />}
+-    />
+-  </EntityPageLayout>
++const serviceEntityPage = (
++  <EntityLayout>
++    <EntityLayout.Route path="/" title="Overview">
++      {overviewContent}
++    </EntityLayout.Route>
++
++    <EntityLayout.Route path="/ci-cd" title="CI/CD">
++      {cicdContent}
++    </EntityLayout.Route>
++
++    <EntityLayout.Route path="/api" title="API">
++      <Grid container spacing={3} alignItems="stretch">
++        <Grid item md={6}>
++          <EntityProvidedApisCard />
++        </Grid>
++        <Grid item md={6}>
++          <EntityConsumedApisCard />
++        </Grid>
++      </Grid>
++    </EntityLayout.Route>
++
++    <EntityLayout.Route path="/dependencies" title="Dependencies">
++      <Grid container spacing={3} alignItems="stretch">
++        <Grid item md={6}>
++          <EntityDependsOnComponentsCard variant="gridItem" />
++        </Grid>
++        <Grid item md={6}>
++          <EntityDependsOnResourcesCard variant="gridItem" />
++        </Grid>
++      </Grid>
++    </EntityLayout.Route>
++
++    <EntityLayout.Route path="/docs" title="Docs">
++      <EntityTechdocsContent />
++    </EntityLayout.Route>
++  </EntityLayout>
++);
++
++const websiteEntityPage = (
++  <EntityLayout>
++    <EntityLayout.Route path="/" title="Overview">
++      {overviewContent}
++    </EntityLayout.Route>
++
++    <EntityLayout.Route path="/ci-cd" title="CI/CD">
++      {cicdContent}
++    </EntityLayout.Route>
++
++    <EntityLayout.Route path="/dependencies" title="Dependencies">
++      <Grid container spacing={3} alignItems="stretch">
++        <Grid item md={6}>
++          <EntityDependsOnComponentsCard variant="gridItem" />
++        </Grid>
++        <Grid item md={6}>
++          <EntityDependsOnResourcesCard variant="gridItem" />
++        </Grid>
++      </Grid>
++    </EntityLayout.Route>
++
++    <EntityLayout.Route path="/docs" title="Docs">
++      <EntityTechdocsContent />
++    </EntityLayout.Route>
++  </EntityLayout>
++);
++
++/**
++ * NOTE: This page is designed to work on small screens such as mobile devices.
++ * This is based on Material UI Grid. If breakpoints are used, each grid item must set the `xs` prop to a column size or to `true`,
++ * since this does not default. If no breakpoints are used, the items will equitably share the available space.
++ * https://material-ui.com/components/grid/#basic-grid.
++ */
++
++const defaultEntityPage = (
++  <EntityLayout>
++    <EntityLayout.Route path="/" title="Overview">
++      {overviewContent}
++    </EntityLayout.Route>
++
++    <EntityLayout.Route path="/docs" title="Docs">
++      <EntityTechdocsContent />
++    </EntityLayout.Route>
++  </EntityLayout>
+ );
+ 
+-const WebsiteEntityPage = ({ entity }: { entity: Entity }) => (
+-  <EntityPageLayout>
+-    <EntityPageLayout.Content
+-      path="/"
+-      title="Overview"
+-      element={<OverviewContent entity={entity} />}
+-    />
+-    <EntityPageLayout.Content
+-      path="/ci-cd/*"
+-      title="CI/CD"
+-      element={<CICDSwitcher entity={entity} />}
+-    />
+-    <EntityPageLayout.Content
+-      path="/docs/*"
+-      title="Docs"
+-      element={<DocsRouter entity={entity} />}
+-    />
+-  </EntityPageLayout>
++const componentPage = (
++  <EntitySwitch>
++    <EntitySwitch.Case if={isComponentType('service')}>
++      {serviceEntityPage}
++    </EntitySwitch.Case>
++
++    <EntitySwitch.Case if={isComponentType('website')}>
++      {websiteEntityPage}
++    </EntitySwitch.Case>
++
++    <EntitySwitch.Case>{defaultEntityPage}</EntitySwitch.Case>
++  </EntitySwitch>
+ );
+ 
+-const DefaultEntityPage = ({ entity }: { entity: Entity }) => (
+-  <EntityPageLayout>
+-    <EntityPageLayout.Content
+-      path="/*"
+-      title="Overview"
+-      element={<OverviewContent entity={entity} />}
+-    />
+-    <EntityPageLayout.Content
+-      path="/docs/*"
+-      title="Docs"
+-      element={<DocsRouter entity={entity} />}
+-    />
+-  </EntityPageLayout>
++const apiPage = (
++  <EntityLayout>
++    <EntityLayout.Route path="/" title="Overview">
++      <Grid container spacing={3}>
++        {entityWarningContent}
++        <Grid item md={6}>
++          <EntityAboutCard />
++        </Grid>
++        <Grid item md={4} xs={12}>
++          <EntityLinksCard />
++        </Grid>
++        <Grid container item md={12}>
++          <Grid item md={6}>
++            <EntityProvidingComponentsCard />
++          </Grid>
++          <Grid item md={6}>
++            <EntityConsumingComponentsCard />
++          </Grid>
++        </Grid>
++      </Grid>
++    </EntityLayout.Route>
++
++    <EntityLayout.Route path="/definition" title="Definition">
++      <Grid container spacing={3}>
++        <Grid item xs={12}>
++          <EntityApiDefinitionCard />
++        </Grid>
++      </Grid>
++    </EntityLayout.Route>
++  </EntityLayout>
+ );
+ 
+-export const ComponentEntityPage = ({ entity }: { entity: Entity }) => {
+-  switch (entity?.spec?.type) {
+-    case 'service':
+-      return <ServiceEntityPage entity={entity} />;
+-    case 'website':
+-      return <WebsiteEntityPage entity={entity} />;
+-    default:
+-      return <DefaultEntityPage entity={entity} />;
+-  }
+-};
+-
+-const ApiOverviewContent = ({ entity }: { entity: Entity }) => (
+-  <Grid container spacing={3}>
+-    <Grid item md={6}>
+-      <AboutCard entity={entity} />
+-    </Grid>
+-    <Grid container item md={12}>
+-      <Grid item md={6}>
+-        <ProvidingComponentsCard entity={entity} />
++const userPage = (
++  <EntityLayout>
++    <EntityLayout.Route path="/" title="Overview">
++      <Grid container spacing={3}>
++        {entityWarningContent}
++        <Grid item xs={12} md={6}>
++          <EntityUserProfileCard variant="gridItem" />
++        </Grid>
++        <Grid item xs={12} md={6}>
++          <EntityOwnershipCard variant="gridItem" />
++        </Grid>
+       </Grid>
+-      <Grid item md={6}>
+-        <ConsumingComponentsCard entity={entity} />
++    </EntityLayout.Route>
++  </EntityLayout>
++);
++
++const groupPage = (
++  <EntityLayout>
++    <EntityLayout.Route path="/" title="Overview">
++      <Grid container spacing={3}>
++        {entityWarningContent}
++        <Grid item xs={12} md={6}>
++          <EntityGroupProfileCard variant="gridItem" />
++        </Grid>
++        <Grid item xs={12} md={6}>
++          <EntityOwnershipCard variant="gridItem" />
++        </Grid>
++        <Grid item xs={12}>
++          <EntityMembersListCard />
++        </Grid>
+       </Grid>
+-    </Grid>
+-  </Grid>
++    </EntityLayout.Route>
++  </EntityLayout>
+ );
+ 
+-const ApiDefinitionContent = ({ entity }: { entity: ApiEntity }) => (
+-  <Grid container spacing={3}>
+-    <Grid item xs={12}>
+-      <ApiDefinitionCard apiEntity={entity} />
+-    </Grid>
+-  </Grid>
++const systemPage = (
++  <EntityLayout>
++    <EntityLayout.Route path="/" title="Overview">
++      <Grid container spacing={3} alignItems="stretch">
++        {entityWarningContent}
++        <Grid item md={6}>
++          <EntityAboutCard variant="gridItem" />
++        </Grid>
++        <Grid item md={6}>
++          <EntityHasComponentsCard variant="gridItem" />
++        </Grid>
++        <Grid item md={6}>
++          <EntityHasApisCard variant="gridItem" />
++        </Grid>
++        <Grid item md={6}>
++          <EntityHasResourcesCard variant="gridItem" />
++        </Grid>
++      </Grid>
++    </EntityLayout.Route>
++    <EntityLayout.Route path="/diagram" title="Diagram">
++      <EntitySystemDiagramCard />
++    </EntityLayout.Route>
++  </EntityLayout>
+ );
+ 
+-const ApiEntityPage = ({ entity }: { entity: Entity }) => (
+-  <EntityPageLayout>
+-    <EntityPageLayout.Content
+-      path="/*"
+-      title="Overview"
+-      element={<ApiOverviewContent entity={entity} />}
+-    />
+-    <EntityPageLayout.Content
+-      path="/definition/*"
+-      title="Definition"
+-      element={<ApiDefinitionContent entity={entity as ApiEntity} />}
+-    />
+-  </EntityPageLayout>
++const domainPage = (
++  <EntityLayout>
++    <EntityLayout.Route path="/" title="Overview">
++      <Grid container spacing={3} alignItems="stretch">
++        {entityWarningContent}
++        <Grid item md={6}>
++          <EntityAboutCard variant="gridItem" />
++        </Grid>
++        <Grid item md={6}>
++          <EntityHasSystemsCard variant="gridItem" />
++        </Grid>
++      </Grid>
++    </EntityLayout.Route>
++  </EntityLayout>
+ );
+ 
+-export const EntityPage = () => {
+-  const { entity } = useEntity();
+-
+-  switch (entity?.kind?.toLowerCase()) {
+-    case 'component':
+-      return <ComponentEntityPage entity={entity} />;
+-    case 'api':
+-      return <ApiEntityPage entity={entity} />;
+-    default:
+-      return <DefaultEntityPage entity={entity} />;
+-  }
+-};
++export const entityPage = (
++  <EntitySwitch>
++    <EntitySwitch.Case if={isKind('component')} children={componentPage} />
++    <EntitySwitch.Case if={isKind('api')} children={apiPage} />
++    <EntitySwitch.Case if={isKind('group')} children={groupPage} />
++    <EntitySwitch.Case if={isKind('user')} children={userPage} />
++    <EntitySwitch.Case if={isKind('system')} children={systemPage} />
++    <EntitySwitch.Case if={isKind('domain')} children={domainPage} />
++
++    <EntitySwitch.Case>{defaultEntityPage}</EntitySwitch.Case>
++  </EntitySwitch>
++);
+diff --git a/packages/app/src/components/search/SearchPage.tsx b/packages/app/src/components/search/SearchPage.tsx
+new file mode 100644
+index 0000000..cf380b6
+--- /dev/null
++++ b/packages/app/src/components/search/SearchPage.tsx
+@@ -0,0 +1,119 @@
++import React from 'react';
++import { makeStyles, Theme, Grid, List, Paper } from '@material-ui/core';
++
++import { CatalogResultListItem } from '@backstage/plugin-catalog';
++import { DocsResultListItem } from '@backstage/plugin-techdocs';
++
++import {
++  SearchBar,
++  SearchFilter,
++  SearchResult,
++  SearchType,
++  DefaultResultListItem,
++} from '@backstage/plugin-search';
++import {
++  CatalogIcon,
++  Content,
++  DocsIcon,
++  Header,
++  Page,
++} from '@backstage/core-components';
++
++const useStyles = makeStyles((theme: Theme) => ({
++  bar: {
++    padding: theme.spacing(1, 0),
++  },
++  filters: {
++    padding: theme.spacing(2),
++    marginTop: theme.spacing(2),
++  },
++  filter: {
++    '& + &': {
++      marginTop: theme.spacing(2.5),
++    },
++  },
++}));
++
++const SearchPage = () => {
++  const classes = useStyles();
++
++  return (
++    <Page themeId="home">
++      <Header title="Search" />
++      <Content>
++        <Grid container direction="row">
++          <Grid item xs={12}>
++            <Paper className={classes.bar}>
++              <SearchBar />
++            </Paper>
++          </Grid>
++          <Grid item xs={3}>
++            <SearchType.Accordion
++              name="Result Type"
++              defaultValue="software-catalog"
++              types={[
++                {
++                  value: 'software-catalog',
++                  name: 'Software Catalog',
++                  icon: <CatalogIcon />,
++                },
++                {
++                  value: 'techdocs',
++                  name: 'Documentation',
++                  icon: <DocsIcon />,
++                },
++              ]}
++            />
++            <Paper className={classes.filters}>
++              <SearchFilter.Select
++                className={classes.filter}
++                name="kind"
++                values={['Component', 'Template']}
++              />
++              <SearchFilter.Checkbox
++                className={classes.filter}
++                name="lifecycle"
++                values={['experimental', 'production']}
++              />
++            </Paper>
++          </Grid>
++          <Grid item xs={9}>
++            <SearchResult>
++              {({ results }) => (
++                <List>
++                  {results.map(({ type, document }) => {
++                    switch (type) {
++                      case 'software-catalog':
++                        return (
++                          <CatalogResultListItem
++                            key={document.location}
++                            result={document}
++                          />
++                        );
++                      case 'techdocs':
++                        return (
++                          <DocsResultListItem
++                            key={document.location}
++                            result={document}
++                          />
++                        );
++                      default:
++                        return (
++                          <DefaultResultListItem
++                            key={document.location}
++                            result={document}
++                          />
++                        );
++                    }
++                  })}
++                </List>
++              )}
++            </SearchResult>
++          </Grid>
++        </Grid>
++      </Content>
++    </Page>
++  );
++};
++
++export const searchPage = <SearchPage />;
+diff --git a/packages/app/src/plugins.ts b/packages/app/src/plugins.ts
+deleted file mode 100644
+index 28b42d5..0000000
+--- a/packages/app/src/plugins.ts
++++ /dev/null
+@@ -1,10 +0,0 @@
+-export { plugin as ApiDocs } from '@backstage/plugin-api-docs';
+-export { plugin as CatalogPlugin } from '@backstage/plugin-catalog';
+-export { plugin as CatalogImport } from '@backstage/plugin-catalog-import';
+-export { plugin as Circleci } from '@backstage/plugin-circleci';
+-export { plugin as GithubActions } from '@backstage/plugin-github-actions';
+-export { plugin as ScaffolderPlugin } from '@backstage/plugin-scaffolder';
+-export { plugin as TechDocsPlugin } from '@backstage/plugin-techdocs';
+-export { plugin as TechRadar } from '@backstage/plugin-tech-radar';
+-export { plugin as UserSettings } from '@backstage/plugin-user-settings';
+-
+diff --git a/packages/app/src/sidebar.tsx b/packages/app/src/sidebar.tsx
+deleted file mode 100644
+index 9f7973c..0000000
+--- a/packages/app/src/sidebar.tsx
++++ /dev/null
+@@ -1,75 +0,0 @@
+-import React, { useContext } from 'react';
+-import HomeIcon from '@material-ui/icons/Home';
+-import LibraryBooks from '@material-ui/icons/LibraryBooks';
+-import ExtensionIcon from '@material-ui/icons/Extension';
+-import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
+-import MapIcon from '@material-ui/icons/MyLocation';
+-import { Link, makeStyles } from '@material-ui/core';
+-import { NavLink } from 'react-router-dom';
+-import LogoFull from './LogoFull';
+-import LogoIcon from './LogoIcon';
+-import { Settings as SidebarSettings } from '@backstage/plugin-user-settings';
+-
+-import {
+-  Sidebar,
+-  SidebarItem,
+-  SidebarDivider,
+-  sidebarConfig,
+-  SidebarContext,
+-  SidebarSpace,
+-} from '@backstage/core';
+-import { SidebarSearch } from '@backstage/plugin-search';
+-
+-
+-const useSidebarLogoStyles = makeStyles({
+-  root: {
+-    width: sidebarConfig.drawerWidthClosed,
+-    height: 3 * sidebarConfig.logoHeight,
+-    display: 'flex',
+-    flexFlow: 'row nowrap',
+-    alignItems: 'center',
+-    marginBottom: -14,
+-  },
+-  link: {
+-    width: sidebarConfig.drawerWidthClosed,
+-    marginLeft: 24,
+-  },
+-});
+-
+-const SidebarLogo = () => {
+-  const classes = useSidebarLogoStyles();
+-  const { isOpen } = useContext(SidebarContext);
+-
+-  return (
+-    <div className={classes.root}>
+-      <Link
+-        component={NavLink}
+-        to="/"
+-        underline="none"
+-        className={classes.link}
+-      >
+-        {isOpen ? <LogoFull /> : <LogoIcon />}
+-      </Link>
+-    </div>
+-  );
+-};
+-
+-export const AppSidebar = () => (
+-  <Sidebar>
+-    <SidebarLogo />
+-    <SidebarSearch />
+-    <SidebarDivider />
+-    {/* Global nav, not org-specific */}
+-    <SidebarItem icon={HomeIcon} to="./" text="Home" />
+-    <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
+-    <SidebarItem icon={LibraryBooks} to="/docs" text="Docs" />
+-    <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
+-    <SidebarDivider />
+-    <SidebarItem icon={MapIcon} to="tech-radar" text="Tech Radar" />
+-    {/* End global nav */}
+-    <SidebarDivider />
+-    <SidebarSpace />
+-    <SidebarDivider />
+-    <SidebarSettings />
+-  </Sidebar>
+-);
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 5051471..31231a3 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -1,4 +1,15 @@
+-FROM node:12-buster
++# This dockerfile builds an image for the backend package.
++# It should be executed with the root of the repo as docker context.
++#
++# Before building this image, be sure to have run the following commands in the repo root:
++#
++# yarn install
++# yarn tsc
++# yarn build
++#
++# Once the commands have been run, you can build the image using `yarn build-image`
+ 
+-WORKDIR /usr/src/app
++FROM node:14-buster-slim
++
++WORKDIR /app
+ 
+@@ -7,3 +18,4 @@ WORKDIR /usr/src/app
+ # and along with yarn.lock and the root package.json, that's enough to run yarn install.
+-ADD yarn.lock package.json skeleton.tar ./
++COPY yarn.lock package.json packages/backend/dist/skeleton.tar.gz ./
++RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
+ 
+@@ -11,6 +23,6 @@ RUN yarn install --frozen-lockfile --production --network-timeout 300000 && rm -
+ 
+-# This will copy the contents of the dist-workspace when running the build-image command.
+-# Do not use this Dockerfile outside of that command, as it will copy in the source code instead.
+-COPY . .
++# Then copy the rest of the backend bundle, along with any other files we might want.
++COPY packages/backend/dist/bundle.tar.gz app-config.yaml ./
++RUN tar xzf bundle.tar.gz && rm bundle.tar.gz
+ 
+-CMD ["node", "packages/backend", "--config", "app-config.yaml", "--config", "app-config.production.yaml"]
++CMD ["node", "packages/backend", "--config", "app-config.yaml"]
+diff --git a/packages/backend/README.md b/packages/backend/README.md
+index 81e0f80..02426ef 100644
+--- a/packages/backend/README.md
++++ b/packages/backend/README.md
+@@ -38,3 +38,3 @@ the backend without using the auth or sentry features.
+ 
+-The backend starts up on port 7000 per default.
++The backend starts up on port 7007 per default.
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 60b48d2..5d64224 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -6,8 +6,5 @@
+   "private": true,
+-  "engines": {
+-    "node": "12 || 14"
+-  },
+   "scripts": {
+-    "build": "backstage-cli backend:build",
+-    "build-image": "backstage-cli backend:build-image --build --tag backstage",
++    "build": "backstage-cli backend:bundle",
++    "build-image": "docker build ../.. -f Dockerfile --tag backstage",
+     "start": "backstage-cli backend:dev",
+@@ -20,18 +17,24 @@
+     "app": "0.0.0",
+-    "@backstage/backend-common": "^0.5.1",
+-    "@backstage/catalog-model": "^0.7.0",
+-    "@backstage/config": "^0.1.2",
+-    "@backstage/plugin-app-backend": "^0.3.5",
+-    "@backstage/plugin-auth-backend": "^0.2.12",
+-    "@backstage/plugin-catalog-backend": "^0.5.5",
+-    "@backstage/plugin-proxy-backend": "^0.2.4",
+-    "@backstage/plugin-scaffolder-backend": "^0.5.2",
+-    "@backstage/plugin-techdocs-backend": "^0.5.4",
+-    "@gitbeaker/node": "^28.0.2",
+-    "@octokit/rest": "^18.0.12",
+-    "dockerode": "^3.2.1",
++    "@backstage/backend-common": "^0.10.4",
++    "@backstage/backend-tasks": "^0.1.4",
++    "@backstage/catalog-model": "^0.9.10",
++    "@backstage/catalog-client": "^0.5.5",
++    "@backstage/config": "^0.1.13",
++    "@backstage/plugin-app-backend": "^0.3.22",
++    "@backstage/plugin-auth-backend": "^0.7.0",
++    "@backstage/plugin-catalog-backend": "^0.21.0",
++    "@backstage/plugin-permission-common": "^0.4.0",
++    "@backstage/plugin-permission-node": "^0.4.0",
++    "@backstage/plugin-proxy-backend": "^0.2.16",
++    "@backstage/plugin-scaffolder-backend": "^0.15.21",
++    "@backstage/plugin-search-backend": "^0.3.1",
++    "@backstage/plugin-search-backend-node": "^0.4.4",
++    "@backstage/plugin-techdocs-backend": "^0.13.0",
++    "@gitbeaker/node": "^34.6.0",
++    "@octokit/rest": "^18.5.3",
++    "dockerode": "^3.3.1",
+     "express": "^4.17.1",
+-    "express-promise-router": "^3.0.3",
++    "express-promise-router": "^4.1.0",
+     "knex": "^0.21.6",
+-    "sqlite3": "^5.0.0",
++    "sqlite3": "^5.0.1",
+     "winston": "^3.2.1"
+@@ -39,4 +42,4 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.5.0",
+-    "@types/dockerode": "^3.2.1",
++    "@backstage/cli": "^0.12.0",
++    "@types/dockerode": "^3.3.0",
+     "@types/express": "^4.17.6",
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 80dc623..70bc66b 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -15,6 +15,9 @@ import {
+   notFoundHandler,
+-  SingleConnectionDatabaseManager,
++  CacheManager,
++  DatabaseManager,
+   SingleHostDiscovery,
+   UrlReaders,
++  ServerTokenManager,
+ } from '@backstage/backend-common';
++import { TaskScheduler } from '@backstage/backend-tasks';
+ import { Config } from '@backstage/config';
+@@ -26,3 +29,5 @@ import proxy from './plugins/proxy';
+ import techdocs from './plugins/techdocs';
++import search from './plugins/search';
+ import { PluginEnvironment } from './types';
++import { ServerPermissionClient } from '@backstage/plugin-permission-node';
+ 
+@@ -32,2 +37,10 @@ function makeCreateEnv(config: Config) {
+   const discovery = SingleHostDiscovery.fromConfig(config);
++  const cacheManager = CacheManager.fromConfig(config);
++  const databaseManager = DatabaseManager.fromConfig(config);
++  const tokenManager = ServerTokenManager.noop();
++  const taskScheduler = TaskScheduler.fromConfig(config);
++  const permissions = ServerPermissionClient.fromConfig(config, {
++    discovery,
++    tokenManager,
++  });
+ 
+@@ -35,4 +48,2 @@ function makeCreateEnv(config: Config) {
+ 
+-  const databaseManager = SingleConnectionDatabaseManager.fromConfig(config);
+-
+   return (plugin: string): PluginEnvironment => {
+@@ -40,3 +51,15 @@ function makeCreateEnv(config: Config) {
+     const database = databaseManager.forPlugin(plugin);
+-    return { logger, database, config, reader, discovery };
++    const cache = cacheManager.forPlugin(plugin);
++    const scheduler = taskScheduler.forPlugin(plugin);
++    return {
++      logger,
++      database,
++      cache,
++      config,
++      reader,
++      discovery,
++      tokenManager,
++      scheduler,
++      permissions,
++    };
+   };
+@@ -56,2 +79,3 @@ async function main() {
+   const techdocsEnv = useHotMemoize(module, () => createEnv('techdocs'));
++  const searchEnv = useHotMemoize(module, () => createEnv('search'));
+   const appEnv = useHotMemoize(module, () => createEnv('app'));
+@@ -64,2 +88,5 @@ async function main() {
+   apiRouter.use('/proxy', await proxy(proxyEnv));
++  apiRouter.use('/search', await search(searchEnv));
++
++  // Add backends ABOVE this line; this 404 handler is the catch-all fallback
+   apiRouter.use(notFoundHandler());
+diff --git a/packages/backend/src/plugins/app.ts b/packages/backend/src/plugins/app.ts
+index 5131694..14e19a1 100644
+--- a/packages/backend/src/plugins/app.ts
++++ b/packages/backend/src/plugins/app.ts
+@@ -1,2 +1,3 @@
+ import { createRouter } from '@backstage/plugin-app-backend';
++import { Router } from 'express';
+ import { PluginEnvironment } from '../types';
+@@ -6,3 +7,4 @@ export default async function createPlugin({
+   config,
+-}: PluginEnvironment) {
++  database,
++}: PluginEnvironment): Promise<Router> {
+   return await createRouter({
+@@ -10,2 +12,3 @@ export default async function createPlugin({
+     config,
++    database,
+     appPackageName: 'app',
+diff --git a/packages/backend/src/plugins/auth.ts b/packages/backend/src/plugins/auth.ts
+index fe19855..5216510 100644
+--- a/packages/backend/src/plugins/auth.ts
++++ b/packages/backend/src/plugins/auth.ts
+@@ -1,2 +1,3 @@
+ import { createRouter } from '@backstage/plugin-auth-backend';
++import { Router } from 'express';
+ import { PluginEnvironment } from '../types';
+@@ -8,3 +9,3 @@ export default async function createPlugin({
+   discovery,
+-}: PluginEnvironment) {
++}: PluginEnvironment): Promise<Router> {
+   return await createRouter({ logger, config, database, discovery });
+diff --git a/packages/backend/src/plugins/catalog.ts b/packages/backend/src/plugins/catalog.ts
+index 10ac116..876cb6b 100644
+--- a/packages/backend/src/plugins/catalog.ts
++++ b/packages/backend/src/plugins/catalog.ts
+@@ -1,28 +1,14 @@
+-import { useHotCleanup } from '@backstage/backend-common';
+-import {
+-  CatalogBuilder,
+-  createRouter,
+-  runPeriodically,
+-} from '@backstage/plugin-catalog-backend';
++import { CatalogBuilder } from '@backstage/plugin-catalog-backend';
++import { ScaffolderEntitiesProcessor } from '@backstage/plugin-scaffolder-backend';
++import { Router } from 'express';
+ import { PluginEnvironment } from '../types';
+ 
+-export default async function createPlugin(env: PluginEnvironment) {
+-  const builder = new CatalogBuilder(env);
+-  const {
+-    entitiesCatalog,
+-    locationsCatalog,
+-    higherOrderOperation,
+-  } = await builder.build();
+-
+-  useHotCleanup(
+-    module,
+-    runPeriodically(() => higherOrderOperation.refreshAllLocations(), 100000),
+-  );
+-
+-  return await createRouter({
+-    entitiesCatalog,
+-    locationsCatalog,
+-    higherOrderOperation,
+-    logger: env.logger,
+-  });
++export default async function createPlugin(
++  env: PluginEnvironment,
++): Promise<Router> {
++  const builder = await CatalogBuilder.create(env);
++  builder.addProcessor(new ScaffolderEntitiesProcessor());
++  const { processingEngine, router } = await builder.build();
++  await processingEngine.start();
++  return router;
+ }
+diff --git a/packages/backend/src/plugins/proxy.ts b/packages/backend/src/plugins/proxy.ts
+index 388d3fc..506f6d9 100644
+--- a/packages/backend/src/plugins/proxy.ts
++++ b/packages/backend/src/plugins/proxy.ts
+@@ -1,3 +1,3 @@
+-// @ts-ignore
+ import { createRouter } from '@backstage/plugin-proxy-backend';
++import { Router } from 'express';
+ import { PluginEnvironment } from '../types';
+@@ -8,3 +8,3 @@ export default async function createPlugin({
+   discovery,
+-}: PluginEnvironment) {
++}: PluginEnvironment): Promise<Router> {
+   return await createRouter({ logger, config, discovery });
+diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
+index c8bd3e5..6be2e97 100644
+--- a/packages/backend/src/plugins/scaffolder.ts
++++ b/packages/backend/src/plugins/scaffolder.ts
+@@ -1,13 +1,7 @@
+-import {
+-  CookieCutter,
+-  createRouter,
+-  Preparers,
+-  Publishers,
+-  CreateReactAppTemplater,
+-  Templaters,
+-  CatalogEntityClient,
+-} from '@backstage/plugin-scaffolder-backend';
+-import { SingleHostDiscovery } from '@backstage/backend-common';
+-import type { PluginEnvironment } from '../types';
++import { DockerContainerRunner } from '@backstage/backend-common';
++import { CatalogClient } from '@backstage/catalog-client';
++import { createRouter } from '@backstage/plugin-scaffolder-backend';
+ import Docker from 'dockerode';
++import { Router } from 'express';
++import type { PluginEnvironment } from '../types';
+ 
+@@ -16,26 +10,17 @@ export default async function createPlugin({
+   config,
+-}: PluginEnvironment) {
+-  const cookiecutterTemplater = new CookieCutter();
+-  const craTemplater = new CreateReactAppTemplater();
+-  const templaters = new Templaters();
+-
+-  templaters.register('cookiecutter', cookiecutterTemplater);
+-  templaters.register('cra', craTemplater);
+-
+-  const preparers = await Preparers.fromConfig(config, { logger });
+-  const publishers = await Publishers.fromConfig(config, { logger });
+-
++  database,
++  reader,
++  discovery,
++}: PluginEnvironment): Promise<Router> {
+   const dockerClient = new Docker();
+-
+-  const discovery = SingleHostDiscovery.fromConfig(config);
+-  const entityClient = new CatalogEntityClient({ discovery });
++  const containerRunner = new DockerContainerRunner({ dockerClient });
++  const catalogClient = new CatalogClient({ discoveryApi: discovery });
+ 
+   return await createRouter({
+-    preparers,
+-    templaters,
+-    publishers,
++    containerRunner,
+     logger,
+     config,
+-    dockerClient,
+-    entityClient,
++    database,
++    catalogClient,
++    reader,
+   });
+diff --git a/packages/backend/src/plugins/search.ts b/packages/backend/src/plugins/search.ts
+new file mode 100644
+index 0000000..f23b0c7
+--- /dev/null
++++ b/packages/backend/src/plugins/search.ts
+@@ -0,0 +1,54 @@
++import { useHotCleanup } from '@backstage/backend-common';
++import { createRouter } from '@backstage/plugin-search-backend';
++import {
++  IndexBuilder,
++  LunrSearchEngine,
++} from '@backstage/plugin-search-backend-node';
++import { PluginEnvironment } from '../types';
++import { DefaultCatalogCollator } from '@backstage/plugin-catalog-backend';
++import { DefaultTechDocsCollator } from '@backstage/plugin-techdocs-backend';
++
++export default async function createPlugin({
++  logger,
++  discovery,
++  config,
++  tokenManager,
++}: PluginEnvironment) {
++  // Initialize a connection to a search engine.
++  const searchEngine = new LunrSearchEngine({ logger });
++  const indexBuilder = new IndexBuilder({ logger, searchEngine });
++
++  // Collators are responsible for gathering documents known to plugins. This
++  // collator gathers entities from the software catalog.
++  indexBuilder.addCollator({
++    defaultRefreshIntervalSeconds: 600,
++    collator: DefaultCatalogCollator.fromConfig(config, {
++      discovery,
++      tokenManager,
++    }),
++  });
++
++  // collator gathers entities from techdocs.
++  indexBuilder.addCollator({
++    defaultRefreshIntervalSeconds: 600,
++    collator: DefaultTechDocsCollator.fromConfig(config, {
++      discovery,
++      logger,
++      tokenManager,
++    }),
++  });
++
++  // The scheduler controls when documents are gathered from collators and sent
++  // to the search engine for indexing.
++  const { scheduler } = await indexBuilder.build();
++
++  // A 3 second delay gives the backend server a chance to initialize before
++  // any collators are executed, which may attempt requests against the API.
++  setTimeout(() => scheduler.start(), 3000);
++  useHotCleanup(module, () => scheduler.stop());
++
++  return await createRouter({
++    engine: indexBuilder.getSearchEngine(),
++    logger,
++  });
++}
+diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
+index 5c7ec50..054c64d 100644
+--- a/packages/backend/src/plugins/techdocs.ts
++++ b/packages/backend/src/plugins/techdocs.ts
+@@ -1,9 +1,11 @@
++import { DockerContainerRunner } from '@backstage/backend-common';
+ import {
+   createRouter,
+-  Preparers,
+   Generators,
++  Preparers,
+   Publisher,
+ } from '@backstage/plugin-techdocs-backend';
+-import { PluginEnvironment } from '../types';
+ import Docker from 'dockerode';
++import { Router } from 'express';
++import { PluginEnvironment } from '../types';
+ 
+@@ -14,3 +16,4 @@ export default async function createPlugin({
+   reader,
+-}: PluginEnvironment) {
++  cache,
++}: PluginEnvironment): Promise<Router> {
+   // Preparers are responsible for fetching source files for documentation.
+@@ -21,2 +24,6 @@ export default async function createPlugin({
+ 
++  // Docker client (conditionally) used by the generators, based on techdocs.generators config.
++  const dockerClient = new Docker();
++  const containerRunner = new DockerContainerRunner({ dockerClient });
++
+   // Generators are used for generating documentation sites.
+@@ -24,2 +31,3 @@ export default async function createPlugin({
+     logger,
++    containerRunner,
+   });
+@@ -34,4 +42,4 @@ export default async function createPlugin({
+ 
+-  // Docker client (conditionally) used by the generators, based on techdocs.generators config.
+-  const dockerClient = new Docker();
++  // checks if the publisher is working and logs the result
++  await publisher.getReadiness();
+ 
+@@ -41,3 +49,2 @@ export default async function createPlugin({
+     publisher,
+-    dockerClient,
+     logger,
+@@ -45,2 +52,3 @@ export default async function createPlugin({
+     discovery,
++    cache,
+   });
+diff --git a/packages/backend/src/types.ts b/packages/backend/src/types.ts
+index 757a0e5..0862b0e 100644
+--- a/packages/backend/src/types.ts
++++ b/packages/backend/src/types.ts
+@@ -3,6 +3,10 @@ import { Config } from '@backstage/config';
+ import {
++  PluginCacheManager,
+   PluginDatabaseManager,
+   PluginEndpointDiscovery,
++  TokenManager,
+   UrlReader,
+ } from '@backstage/backend-common';
++import { PluginTaskScheduler } from '@backstage/backend-tasks';
++import { PermissionAuthorizer } from '@backstage/plugin-permission-common';
+ 
+@@ -11,5 +15,9 @@ export type PluginEnvironment = {
+   database: PluginDatabaseManager;
++  cache: PluginCacheManager;
+   config: Config;
+-  reader: UrlReader
++  reader: UrlReader;
+   discovery: PluginEndpointDiscovery;
++  tokenManager: TokenManager;
++  scheduler: PluginTaskScheduler;
++  permissions: PermissionAuthorizer;
+ };
