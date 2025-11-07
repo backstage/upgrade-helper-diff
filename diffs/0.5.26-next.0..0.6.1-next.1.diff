@@ -1,0 +1,156 @@
+diff --git a/backstage.json b/backstage.json
+index 4ffc4e09..cdb06be0 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.37.0-next.0"
++  "version": "1.38.0-next.1"
+ }
+diff --git a/package.json b/package.json
+index 1444fc99..e5714870 100644
+--- a/package.json
++++ b/package.json
+@@ -33,3 +33,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.30.0",
++    "@backstage/cli": "^0.32.0-next.1",
+     "@backstage/e2e-test-utils": "^0.1.1",
+@@ -38,3 +38,3 @@
+     "prettier": "^2.3.2",
+-    "typescript": "~5.4.0"
++    "typescript": "~5.8.0"
+   },
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 007e3e38..d55fde06 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -16,25 +16,26 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.5.17",
++    "@backstage/app-defaults": "^1.6.1-next.0",
++    "@backstage/canon": "^0.2.1-next.1",
+     "@backstage/catalog-model": "^1.7.3",
+-    "@backstage/cli": "^0.30.0",
+-    "@backstage/core-app-api": "^1.15.5",
+-    "@backstage/core-components": "^0.16.4",
+-    "@backstage/core-plugin-api": "^1.10.4",
+-    "@backstage/integration-react": "^1.2.4",
+-    "@backstage/plugin-api-docs": "^0.12.5-next.0",
+-    "@backstage/plugin-catalog": "^1.28.0-next.0",
++    "@backstage/cli": "^0.32.0-next.1",
++    "@backstage/core-app-api": "^1.16.0",
++    "@backstage/core-components": "^0.17.1-next.0",
++    "@backstage/core-plugin-api": "^1.10.5",
++    "@backstage/integration-react": "^1.2.6-next.0",
++    "@backstage/plugin-api-docs": "^0.12.6-next.1",
++    "@backstage/plugin-catalog": "^1.29.0-next.1",
+     "@backstage/plugin-catalog-common": "^1.1.3",
+-    "@backstage/plugin-catalog-graph": "^0.4.17-next.0",
+-    "@backstage/plugin-catalog-import": "^0.12.11-next.0",
+-    "@backstage/plugin-catalog-react": "^1.16.0-next.0",
+-    "@backstage/plugin-kubernetes": "^0.12.5-next.0",
+-    "@backstage/plugin-org": "^0.6.37-next.0",
+-    "@backstage/plugin-permission-react": "^0.4.31",
+-    "@backstage/plugin-scaffolder": "^1.29.0-next.0",
+-    "@backstage/plugin-search": "^1.4.24-next.0",
+-    "@backstage/plugin-search-react": "^1.8.7-next.0",
+-    "@backstage/plugin-techdocs": "^1.12.4-next.0",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.22-next.0",
+-    "@backstage/plugin-techdocs-react": "^1.2.15-next.0",
+-    "@backstage/plugin-user-settings": "^0.8.20-next.0",
++    "@backstage/plugin-catalog-graph": "^0.4.18-next.1",
++    "@backstage/plugin-catalog-import": "^0.12.12-next.1",
++    "@backstage/plugin-catalog-react": "^1.16.1-next.1",
++    "@backstage/plugin-kubernetes": "^0.12.6-next.1",
++    "@backstage/plugin-org": "^0.6.38-next.1",
++    "@backstage/plugin-permission-react": "^0.4.32",
++    "@backstage/plugin-scaffolder": "^1.30.0-next.1",
++    "@backstage/plugin-search": "^1.4.25-next.1",
++    "@backstage/plugin-search-react": "^1.8.8-next.0",
++    "@backstage/plugin-techdocs": "^1.12.5-next.1",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.23-next.0",
++    "@backstage/plugin-techdocs-react": "^1.2.16-next.0",
++    "@backstage/plugin-user-settings": "^0.8.21-next.1",
+     "@backstage/theme": "^0.6.4",
+@@ -48,3 +49,3 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.7.5",
++    "@backstage/test-utils": "^1.7.6",
+     "@playwright/test": "^1.32.3",
+diff --git a/packages/app/src/index.tsx b/packages/app/src/index.tsx
+index d875c774..604afbe3 100644
+--- a/packages/app/src/index.tsx
++++ b/packages/app/src/index.tsx
+@@ -4,2 +4,3 @@ import ReactDOM from 'react-dom/client';
+ import App from './App';
++import '@backstage/canon/css/styles.css';
+ 
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 13ff70d9..68d6c2fd 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -10,2 +10,5 @@
+ # Once the commands have been run, you can build the image using `yarn build-image`
++#
++# Alternatively, there is also a multi-stage Dockerfile documented here:
++# https://backstage.io/docs/deployment/docker#multi-stage-build
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index e60bdb76..b2c9c300 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,26 +18,26 @@
+   "dependencies": {
+-    "@backstage/backend-defaults": "^0.8.2-next.0",
++    "@backstage/backend-defaults": "^0.9.0-next.1",
+     "@backstage/config": "^1.3.2",
+-    "@backstage/plugin-app-backend": "^0.4.6-next.0",
+-    "@backstage/plugin-auth-backend": "^0.24.4-next.0",
+-    "@backstage/plugin-auth-backend-module-github-provider": "^0.3.1-next.0",
+-    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.6-next.0",
+-    "@backstage/plugin-auth-node": "^0.6.1-next.0",
+-    "@backstage/plugin-catalog-backend": "^1.31.1-next.0",
+-    "@backstage/plugin-catalog-backend-module-logs": "^0.1.8-next.0",
+-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.6-next.0",
+-    "@backstage/plugin-kubernetes-backend": "^0.19.4-next.0",
+-    "@backstage/plugin-permission-backend": "^0.5.55-next.0",
+-    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.6-next.0",
++    "@backstage/plugin-app-backend": "^0.5.0",
++    "@backstage/plugin-auth-backend": "^0.24.5-next.1",
++    "@backstage/plugin-auth-backend-module-github-provider": "^0.3.1",
++    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.6",
++    "@backstage/plugin-auth-node": "^0.6.1",
++    "@backstage/plugin-catalog-backend": "^1.32.1-next.0",
++    "@backstage/plugin-catalog-backend-module-logs": "^0.1.9-next.0",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.6",
++    "@backstage/plugin-kubernetes-backend": "^0.19.4",
++    "@backstage/plugin-permission-backend": "^0.5.55",
++    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.6",
+     "@backstage/plugin-permission-common": "^0.8.4",
+-    "@backstage/plugin-permission-node": "^0.8.9-next.0",
+-    "@backstage/plugin-proxy-backend": "^0.5.12-next.0",
+-    "@backstage/plugin-scaffolder-backend": "^1.30.1-next.0",
+-    "@backstage/plugin-scaffolder-backend-module-github": "^0.6.1-next.0",
+-    "@backstage/plugin-search-backend": "^1.8.3-next.0",
+-    "@backstage/plugin-search-backend-module-catalog": "^0.3.2-next.0",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.42-next.0",
+-    "@backstage/plugin-search-backend-module-techdocs": "^0.3.7-next.0",
+-    "@backstage/plugin-search-backend-node": "^1.3.9-next.0",
+-    "@backstage/plugin-techdocs-backend": "^1.11.7-next.0",
++    "@backstage/plugin-permission-node": "^0.9.0",
++    "@backstage/plugin-proxy-backend": "^0.6.0",
++    "@backstage/plugin-scaffolder-backend": "^1.32.0-next.1",
++    "@backstage/plugin-scaffolder-backend-module-github": "^0.6.2-next.1",
++    "@backstage/plugin-search-backend": "^2.0.1-next.1",
++    "@backstage/plugin-search-backend-module-catalog": "^0.3.2",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.42",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.4.1-next.1",
++    "@backstage/plugin-search-backend-node": "^1.3.9",
++    "@backstage/plugin-techdocs-backend": "^2.0.1-next.1",
+     "app": "link:../app",
+@@ -48,3 +48,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.30.0"
++    "@backstage/cli": "^0.32.0-next.1"
+   },
