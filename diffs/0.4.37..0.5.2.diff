@@ -1,0 +1,225 @@
+diff --git a/app-config.production.yaml b/app-config.production.yaml
+index df09dac..8f0751c 100644
+--- a/app-config.production.yaml
++++ b/app-config.production.yaml
+@@ -32,3 +32,3 @@ catalog:
+   # Overrides the default list locations from app-config.yaml as these contain example data.
+-  # See https://backstage.io/docs/features/software-catalog/software-catalog-overview#adding-components-to-the-catalog for more details
++  # See https://backstage.io/docs/features/software-catalog/#adding-components-to-the-catalog for more details
+   # on how to get entities into the catalog.
+diff --git a/app-config.yaml b/app-config.yaml
+index 3b5de8b..194549f 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -9,3 +9,3 @@ backend:
+   # Used for enabling authentication, secret is shared by all backend plugins
+-  # See https://backstage.io/docs/tutorials/backend-to-backend-auth for
++  # See https://backstage.io/docs/auth/service-to-service-auth for
+   # information on the format
+@@ -32,4 +32,2 @@ backend:
+     connection: ':memory:'
+-  cache:
+-    store: memory
+   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
+diff --git a/backstage.json b/backstage.json
+index 5bf3c32..88d2f1b 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.11.0"
++  "version": "1.15.0"
+ }
+diff --git a/package.json b/package.json
+index a7bb7c1..54570e5 100644
+--- a/package.json
++++ b/package.json
+@@ -31,3 +31,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.22.2",
++    "@backstage/cli": "^0.22.8",
+     "@spotify/prettier-config": "^12.0.0",
+@@ -37,3 +37,3 @@
+     "prettier": "^2.3.2",
+-    "typescript": "~4.6.4"
++    "typescript": "~5.0.0"
+   },
+diff --git a/packages/app/.eslintignore b/packages/app/.eslintignore
+new file mode 100644
+index 0000000..a48cf0d
+--- /dev/null
++++ b/packages/app/.eslintignore
+@@ -0,0 +1 @@
++public
+diff --git a/packages/app/package.json b/packages/app/package.json
+index a810e10..3c1f704 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -20,27 +20,27 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.2.0",
+-    "@backstage/catalog-model": "^1.2.0",
+-    "@backstage/cli": "^0.22.2",
+-    "@backstage/core-app-api": "^1.5.0",
+-    "@backstage/core-components": "^0.12.4",
+-    "@backstage/core-plugin-api": "^1.4.0",
+-    "@backstage/integration-react": "^1.1.10",
+-    "@backstage/plugin-api-docs": "^0.9.0",
+-    "@backstage/plugin-catalog": "^1.8.0",
+-    "@backstage/plugin-catalog-common": "^1.0.11",
+-    "@backstage/plugin-catalog-graph": "^0.2.27",
+-    "@backstage/plugin-catalog-import": "^0.9.5",
+-    "@backstage/plugin-catalog-react": "^1.3.0",
+-    "@backstage/plugin-github-actions": "^0.5.15",
+-    "@backstage/plugin-org": "^0.6.5",
+-    "@backstage/plugin-permission-react": "^0.4.10",
+-    "@backstage/plugin-scaffolder": "^1.11.0",
+-    "@backstage/plugin-search": "^1.1.0",
+-    "@backstage/plugin-search-react": "^1.5.0",
+-    "@backstage/plugin-tech-radar": "^0.6.1",
+-    "@backstage/plugin-techdocs": "^1.5.0",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.10",
+-    "@backstage/plugin-techdocs-react": "^1.1.3",
+-    "@backstage/plugin-user-settings": "^0.7.0",
+-    "@backstage/theme": "^0.2.17",
++    "@backstage/app-defaults": "^1.4.0",
++    "@backstage/catalog-model": "^1.4.0",
++    "@backstage/cli": "^0.22.8",
++    "@backstage/core-app-api": "^1.8.1",
++    "@backstage/core-components": "^0.13.2",
++    "@backstage/core-plugin-api": "^1.5.2",
++    "@backstage/integration-react": "^1.1.14",
++    "@backstage/plugin-api-docs": "^0.9.5",
++    "@backstage/plugin-catalog": "^1.11.2",
++    "@backstage/plugin-catalog-common": "^1.0.14",
++    "@backstage/plugin-catalog-graph": "^0.2.31",
++    "@backstage/plugin-catalog-import": "^0.9.9",
++    "@backstage/plugin-catalog-react": "^1.7.0",
++    "@backstage/plugin-github-actions": "^0.6.0",
++    "@backstage/plugin-org": "^0.6.9",
++    "@backstage/plugin-permission-react": "^0.4.13",
++    "@backstage/plugin-scaffolder": "^1.14.0",
++    "@backstage/plugin-search": "^1.3.2",
++    "@backstage/plugin-search-react": "^1.6.2",
++    "@backstage/plugin-tech-radar": "^0.6.5",
++    "@backstage/plugin-techdocs": "^1.6.4",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.14",
++    "@backstage/plugin-techdocs-react": "^1.1.7",
++    "@backstage/plugin-user-settings": "^0.7.4",
++    "@backstage/theme": "^0.4.0",
+     "@material-ui/core": "^4.12.2",
+@@ -50,2 +50,3 @@
+     "react-dom": "^17.0.2",
++    "react-router": "^6.3.0",
+     "react-router-dom": "^6.3.0",
+@@ -54,3 +55,3 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.2.5",
++    "@backstage/test-utils": "^1.4.0",
+     "@testing-library/jest-dom": "^5.10.1",
+@@ -58,2 +59,3 @@
+     "@testing-library/user-event": "^14.0.0",
++    "@testing-library/dom": "^8.0.0",
+     "@types/node": "^16.11.26",
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index 056402f..8d62f29 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -42,2 +42,3 @@ const app = createApp({
+       viewTechDoc: techdocsPlugin.routes.docRoot,
++      createFromTemplate: scaffolderPlugin.routes.selectedTemplate,
+     });
+@@ -48,2 +49,3 @@ const app = createApp({
+       registerComponent: catalogImportPlugin.routes.importPage,
++      viewTechDoc: techdocsPlugin.routes.docRoot,
+     });
+diff --git a/packages/backend/README.md b/packages/backend/README.md
+index aa042db..3607b0a 100644
+--- a/packages/backend/README.md
++++ b/packages/backend/README.md
+@@ -38,3 +38,3 @@ locations to the backend. These are places where the backend can find some
+ entity descriptor data to consume and serve. For more information, see
+-[Software Catalog Overview - Adding Components to the Catalog](https://backstage.io/docs/features/software-catalog/software-catalog-overview#adding-components-to-the-catalog).
++[Software Catalog Overview - Adding Components to the Catalog](https://backstage.io/docs/features/software-catalog/#adding-components-to-the-catalog).
+ 
+@@ -58,2 +58,2 @@ and
+ - [Backstage Readme](https://github.com/backstage/backstage/blob/master/README.md)
+-- [Backstage Documentation](https://github.com/backstage/backstage/blob/master/docs/README.md)
++- [Backstage Documentation](https://backstage.io/docs)
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index d3591f7..b1036e8 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,19 +18,19 @@
+   "dependencies": {
+-    "@backstage/backend-common": "^0.18.2",
+-    "@backstage/backend-tasks": "^0.4.3",
+-    "@backstage/catalog-client": "^1.3.1",
+-    "@backstage/catalog-model": "^1.2.0",
+-    "@backstage/config": "^1.0.6",
+-    "@backstage/plugin-app-backend": "^0.3.42",
+-    "@backstage/plugin-auth-backend": "^0.18.0",
+-    "@backstage/plugin-auth-node": "^0.2.11",
+-    "@backstage/plugin-catalog-backend": "^1.7.2",
+-    "@backstage/plugin-permission-common": "^0.7.3",
+-    "@backstage/plugin-permission-node": "^0.7.5",
+-    "@backstage/plugin-proxy-backend": "^0.2.36",
+-    "@backstage/plugin-scaffolder-backend": "^1.11.0",
+-    "@backstage/plugin-search-backend": "^1.2.3",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.3",
+-    "@backstage/plugin-search-backend-node": "^1.1.3",
+-    "@backstage/plugin-techdocs-backend": "^1.5.3",
++    "@backstage/backend-common": "^0.19.0",
++    "@backstage/backend-tasks": "^0.5.3",
++    "@backstage/catalog-client": "^1.4.2",
++    "@backstage/catalog-model": "^1.4.0",
++    "@backstage/config": "^1.0.8",
++    "@backstage/plugin-app-backend": "^0.3.46",
++    "@backstage/plugin-auth-backend": "^0.18.4",
++    "@backstage/plugin-auth-node": "^0.2.15",
++    "@backstage/plugin-catalog-backend": "^1.10.0",
++    "@backstage/plugin-permission-common": "^0.7.6",
++    "@backstage/plugin-permission-node": "^0.7.9",
++    "@backstage/plugin-proxy-backend": "^0.2.40",
++    "@backstage/plugin-scaffolder-backend": "^1.15.0",
++    "@backstage/plugin-search-backend": "^1.3.2",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.7",
++    "@backstage/plugin-search-backend-node": "^1.2.2",
++    "@backstage/plugin-techdocs-backend": "^1.6.3",
+     "app": "link:../app",
+@@ -44,3 +44,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.22.2",
++    "@backstage/cli": "^0.22.8",
+     "@types/dockerode": "^3.3.0",
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index c4736a5..1c08288 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -17,3 +17,3 @@ import {
+   DatabaseManager,
+-  SingleHostDiscovery,
++  HostDiscovery,
+   UrlReaders,
+@@ -37,3 +37,3 @@ function makeCreateEnv(config: Config) {
+   const reader = UrlReaders.default({ logger: root, config });
+-  const discovery = SingleHostDiscovery.fromConfig(config);
++  const discovery = HostDiscovery.fromConfig(config);
+   const cacheManager = CacheManager.fromConfig(config);
+diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
+index ef46f07..a12fee2 100644
+--- a/packages/backend/src/plugins/scaffolder.ts
++++ b/packages/backend/src/plugins/scaffolder.ts
+@@ -19,2 +19,3 @@ export default async function createPlugin(
+     identity: env.identity,
++    permissions: env.permissions,
+   });
+diff --git a/plugins/README.md b/plugins/README.md
+index 58dc32c..d7865fd 100644
+--- a/plugins/README.md
++++ b/plugins/README.md
+@@ -6,3 +6,3 @@ separate folder of its own.
+ If you want to create a new plugin here, go to your project root directory, run
+-the command `yarn backstage-cli create`, and follow the on-screen instructions.
++the command `yarn new`, and follow the on-screen instructions.
+ 
