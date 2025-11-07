@@ -1,0 +1,801 @@
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+new file mode 100644
+index 0000000..edc4ee9
+--- /dev/null
++++ b/.github/workflows/release.yml
+@@ -0,0 +1,76 @@
++name: Create new release diffs
++on:
++  workflow_dispatch:
++    inputs:
++      version:
++        description: "The version of Backstage to release. If missing, the latest version will be used"
++        required: false
++        default: ""
++jobs:
++  release:
++    name: Create release branch
++    runs-on: ubuntu-latest
++    env:
++      BACKSTAGE_APP_NAME: backstagediffapp
++    outputs:
++      backstage_version: ${{ steps.set-outputs.outputs.backstage_version }}
++    steps:
++      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
++      - name: Check out repository code
++        uses: actions/checkout@v2
++        with:
++          ref: "release-base"
++      - name: Set @backstage/create-app version
++        run: echo "CREATE_APP_VERSION=${INPUT_VERSION:-$(npm view @backstage/create-app version)}" >> $GITHUB_ENV
++      - name: Run @backstage/create-app
++        run: printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${CREATE_APP_VERSION} --skip-install
++      - name: Check current directory
++        run: pwd
++      - name: Move all the files into the root directory
++        run: cp -ar $(pwd)/$BACKSTAGE_APP_NAME/. $(pwd)
++      - name: Setup git bot user
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++      - name: Add release
++        run: |
++          git checkout -b release/${CREATE_APP_VERSION}
++          git add .
++          git reset $BACKSTAGE_APP_NAME
++          git commit -m "Release ${CREATE_APP_VERSION}"
++          git push origin release/${CREATE_APP_VERSION}
++      - id: set-outputs
++        name: Set outputs
++        run: echo "::set-output name=backstage_version::$(echo $CREATE_APP_VERSION)"
++      - run: echo "🍏 This job's status is ${{ job.status }}."
++  diff:
++    name: Create new diffs
++    runs-on: ubuntu-latest
++    needs: release
++    steps:
++      - name: Check out diffs branch
++        uses: actions/checkout@v2
++        with:
++          ref: "master"
++          fetch-depth: 0
++      - name: Create new diffs
++        run: |
++          for version in $(jq -r 'keys |.[]' < releases.json); do
++            echo "Creating diffs between version $version and $NEW_VERSION"
++            git diff -U1 origin/release/$version..origin/release/$NEW_VERSION > diffs/$version..$NEW_VERSION.diff
++          done
++          jq ".\"$NEW_VERSION\" = {}" < releases.json > _releases.json
++          mv _releases.json releases.json
++        env:
++          NEW_VERSION: ${{needs.release.outputs.backstage_version}}
++      - name: Setup git bot user
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++      - name: Push the changes
++        run: |
++          git add .
++          git commit -m "Add release ${NEW_VERSION}"
++          git push
++        env:
++          NEW_VERSION: ${{needs.release.outputs.backstage_version}}
+diff --git a/LICENSE b/LICENSE
+new file mode 100644
+index 0000000..2c5e115
+--- /dev/null
++++ b/LICENSE
+@@ -0,0 +1,201 @@
++                              Apache License
++                        Version 2.0, January 2004
++                     http://www.apache.org/licenses/
++
++TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
++
++1. Definitions.
++
++   "License" shall mean the terms and conditions for use, reproduction,
++   and distribution as defined by Sections 1 through 9 of this document.
++
++   "Licensor" shall mean the copyright owner or entity authorized by
++   the copyright owner that is granting the License.
++
++   "Legal Entity" shall mean the union of the acting entity and all
++   other entities that control, are controlled by, or are under common
++   control with that entity. For the purposes of this definition,
++   "control" means (i) the power, direct or indirect, to cause the
++   direction or management of such entity, whether by contract or
++   otherwise, or (ii) ownership of fifty percent (50%) or more of the
++   outstanding shares, or (iii) beneficial ownership of such entity.
++
++   "You" (or "Your") shall mean an individual or Legal Entity
++   exercising permissions granted by this License.
++
++   "Source" form shall mean the preferred form for making modifications,
++   including but not limited to software source code, documentation
++   source, and configuration files.
++
++   "Object" form shall mean any form resulting from mechanical
++   transformation or translation of a Source form, including but
++   not limited to compiled object code, generated documentation,
++   and conversions to other media types.
++
++   "Work" shall mean the work of authorship, whether in Source or
++   Object form, made available under the License, as indicated by a
++   copyright notice that is included in or attached to the work
++   (an example is provided in the Appendix below).
++
++   "Derivative Works" shall mean any work, whether in Source or Object
++   form, that is based on (or derived from) the Work and for which the
++   editorial revisions, annotations, elaborations, or other modifications
++   represent, as a whole, an original work of authorship. For the purposes
++   of this License, Derivative Works shall not include works that remain
++   separable from, or merely link (or bind by name) to the interfaces of,
++   the Work and Derivative Works thereof.
++
++   "Contribution" shall mean any work of authorship, including
++   the original version of the Work and any modifications or additions
++   to that Work or Derivative Works thereof, that is intentionally
++   submitted to Licensor for inclusion in the Work by the copyright owner
++   or by an individual or Legal Entity authorized to submit on behalf of
++   the copyright owner. For the purposes of this definition, "submitted"
++   means any form of electronic, verbal, or written communication sent
++   to the Licensor or its representatives, including but not limited to
++   communication on electronic mailing lists, source code control systems,
++   and issue tracking systems that are managed by, or on behalf of, the
++   Licensor for the purpose of discussing and improving the Work, but
++   excluding communication that is conspicuously marked or otherwise
++   designated in writing by the copyright owner as "Not a Contribution."
++
++   "Contributor" shall mean Licensor and any individual or Legal Entity
++   on behalf of whom a Contribution has been received by Licensor and
++   subsequently incorporated within the Work.
++
++2. Grant of Copyright License. Subject to the terms and conditions of
++   this License, each Contributor hereby grants to You a perpetual,
++   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
++   copyright license to reproduce, prepare Derivative Works of,
++   publicly display, publicly perform, sublicense, and distribute the
++   Work and such Derivative Works in Source or Object form.
++
++3. Grant of Patent License. Subject to the terms and conditions of
++   this License, each Contributor hereby grants to You a perpetual,
++   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
++   (except as stated in this section) patent license to make, have made,
++   use, offer to sell, sell, import, and otherwise transfer the Work,
++   where such license applies only to those patent claims licensable
++   by such Contributor that are necessarily infringed by their
++   Contribution(s) alone or by combination of their Contribution(s)
++   with the Work to which such Contribution(s) was submitted. If You
++   institute patent litigation against any entity (including a
++   cross-claim or counterclaim in a lawsuit) alleging that the Work
++   or a Contribution incorporated within the Work constitutes direct
++   or contributory patent infringement, then any patent licenses
++   granted to You under this License for that Work shall terminate
++   as of the date such litigation is filed.
++
++4. Redistribution. You may reproduce and distribute copies of the
++   Work or Derivative Works thereof in any medium, with or without
++   modifications, and in Source or Object form, provided that You
++   meet the following conditions:
++
++   (a) You must give any other recipients of the Work or
++       Derivative Works a copy of this License; and
++
++   (b) You must cause any modified files to carry prominent notices
++       stating that You changed the files; and
++
++   (c) You must retain, in the Source form of any Derivative Works
++       that You distribute, all copyright, patent, trademark, and
++       attribution notices from the Source form of the Work,
++       excluding those notices that do not pertain to any part of
++       the Derivative Works; and
++
++   (d) If the Work includes a "NOTICE" text file as part of its
++       distribution, then any Derivative Works that You distribute must
++       include a readable copy of the attribution notices contained
++       within such NOTICE file, excluding those notices that do not
++       pertain to any part of the Derivative Works, in at least one
++       of the following places: within a NOTICE text file distributed
++       as part of the Derivative Works; within the Source form or
++       documentation, if provided along with the Derivative Works; or,
++       within a display generated by the Derivative Works, if and
++       wherever such third-party notices normally appear. The contents
++       of the NOTICE file are for informational purposes only and
++       do not modify the License. You may add Your own attribution
++       notices within Derivative Works that You distribute, alongside
++       or as an addendum to the NOTICE text from the Work, provided
++       that such additional attribution notices cannot be construed
++       as modifying the License.
++
++   You may add Your own copyright statement to Your modifications and
++   may provide additional or different license terms and conditions
++   for use, reproduction, or distribution of Your modifications, or
++   for any such Derivative Works as a whole, provided Your use,
++   reproduction, and distribution of the Work otherwise complies with
++   the conditions stated in this License.
++
++5. Submission of Contributions. Unless You explicitly state otherwise,
++   any Contribution intentionally submitted for inclusion in the Work
++   by You to the Licensor shall be under the terms and conditions of
++   this License, without any additional terms or conditions.
++   Notwithstanding the above, nothing herein shall supersede or modify
++   the terms of any separate license agreement you may have executed
++   with Licensor regarding such Contributions.
++
++6. Trademarks. This License does not grant permission to use the trade
++   names, trademarks, service marks, or product names of the Licensor,
++   except as required for reasonable and customary use in describing the
++   origin of the Work and reproducing the content of the NOTICE file.
++
++7. Disclaimer of Warranty. Unless required by applicable law or
++   agreed to in writing, Licensor provides the Work (and each
++   Contributor provides its Contributions) on an "AS IS" BASIS,
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
++   implied, including, without limitation, any warranties or conditions
++   of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
++   PARTICULAR PURPOSE. You are solely responsible for determining the
++   appropriateness of using or redistributing the Work and assume any
++   risks associated with Your exercise of permissions under this License.
++
++8. Limitation of Liability. In no event and under no legal theory,
++   whether in tort (including negligence), contract, or otherwise,
++   unless required by applicable law (such as deliberate and grossly
++   negligent acts) or agreed to in writing, shall any Contributor be
++   liable to You for damages, including any direct, indirect, special,
++   incidental, or consequential damages of any character arising as a
++   result of this License or out of the use or inability to use the
++   Work (including but not limited to damages for loss of goodwill,
++   work stoppage, computer failure or malfunction, or any and all
++   other commercial damages or losses), even if such Contributor
++   has been advised of the possibility of such damages.
++
++9. Accepting Warranty or Additional Liability. While redistributing
++   the Work or Derivative Works thereof, You may choose to offer,
++   and charge a fee for, acceptance of support, warranty, indemnity,
++   or other liability obligations and/or rights consistent with this
++   License. However, in accepting such obligations, You may act only
++   on Your own behalf and on Your sole responsibility, not on behalf
++   of any other Contributor, and only if You agree to indemnify,
++   defend, and hold each Contributor harmless for any liability
++   incurred by, or claims asserted against, such Contributor by reason
++   of your accepting any such warranty or additional liability.
++
++END OF TERMS AND CONDITIONS
++
++APPENDIX: How to apply the Apache License to your work.
++
++   To apply the Apache License to your work, attach the following
++   boilerplate notice, with the fields enclosed by brackets "[]"
++   replaced with your own identifying information. (Don't include
++   the brackets!)  The text should be enclosed in the appropriate
++   comment syntax for the file format. We also recommend that a
++   file or class name and description of purpose be included on the
++   same "printed page" as the copyright notice for easier
++   identification within third-party archives.
++
++Copyright 2020 The Backstage Authors
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
+\ No newline at end of file
+diff --git a/app-config.production.yaml b/app-config.production.yaml
+new file mode 100644
+index 0000000..92f4574
+--- /dev/null
++++ b/app-config.production.yaml
+@@ -0,0 +1,8 @@
++app:
++  # Should be the same as backend.baseUrl when using the `app-backend` plugin
++  baseUrl: http://localhost:7000
++
++backend:
++  baseUrl: http://localhost:7000
++  listen:
++    port: 7000
+diff --git a/diffs/0.1.1..0.2.0.diff b/diffs/0.1.1..0.2.0.diff
+new file mode 100644
+index 0000000..ca6064d
+--- /dev/null
++++ b/diffs/0.1.1..0.2.0.diff
+@@ -0,0 +1,77 @@
++diff --git a/package.json b/package.json
++index b6fb091..db8ca15 100644
++--- a/package.json
+++++ b/package.json
++@@ -28,3 +28,3 @@
++   "devDependencies": {
++-    "@backstage/cli": "^0.1.1",
+++    "@backstage/cli": "^0.2.0",
++     "@spotify/prettier-config": "^7.0.0",
++diff --git a/packages/app/package.json b/packages/app/package.json
++index 3754d7e..985aa1e 100644
++--- a/packages/app/package.json
+++++ b/packages/app/package.json
++@@ -8,18 +8,18 @@
++     "@material-ui/icons": "^4.9.1",
++-    "@backstage/cli": "^0.1.1",
++-    "@backstage/core": "^0.1.1",
++-    "@backstage/plugin-api-docs": "^0.1.1",
++-    "@backstage/plugin-catalog": "^0.1.1",
++-    "@backstage/plugin-register-component": "^0.1.1",
++-    "@backstage/plugin-scaffolder": "^0.1.1",
++-    "@backstage/plugin-techdocs": "^0.1.1",
++-    "@backstage/catalog-model": "^0.1.1",
++-    "@backstage/plugin-circleci": "^0.1.1",
++-    "@backstage/plugin-explore": "^0.1.1",
++-    "@backstage/plugin-lighthouse": "^0.1.1",
++-    "@backstage/plugin-tech-radar": "^0.1.1",
++-    "@backstage/plugin-github-actions": "^0.1.1",
++-    "@backstage/plugin-user-settings": "^0.1.1",
++-    "@backstage/test-utils": "^0.1.1",
++-    "@backstage/theme": "^0.1.1",
+++    "@backstage/cli": "^0.2.0",
+++    "@backstage/core": "^0.2.0",
+++    "@backstage/plugin-api-docs": "^0.2.0",
+++    "@backstage/plugin-catalog": "^0.2.0",
+++    "@backstage/plugin-register-component": "^0.2.0",
+++    "@backstage/plugin-scaffolder": "^0.2.0",
+++    "@backstage/plugin-techdocs": "^0.2.0",
+++    "@backstage/catalog-model": "^0.2.0",
+++    "@backstage/plugin-circleci": "^0.2.0",
+++    "@backstage/plugin-explore": "^0.2.0",
+++    "@backstage/plugin-lighthouse": "^0.2.0",
+++    "@backstage/plugin-tech-radar": "^0.2.0",
+++    "@backstage/plugin-github-actions": "^0.2.0",
+++    "@backstage/plugin-user-settings": "^0.2.0",
+++    "@backstage/test-utils": "^0.1.2",
+++    "@backstage/theme": "^0.2.0",
++     "history": "^5.0.0",
++diff --git a/packages/backend/package.json b/packages/backend/package.json
++index 413fa29..a6ddda7 100644
++--- a/packages/backend/package.json
+++++ b/packages/backend/package.json
++@@ -19,11 +19,11 @@
++   "dependencies": {
++-    "@backstage/backend-common": "^0.1.1",
++-    "@backstage/catalog-model": "^0.1.1",
+++    "@backstage/backend-common": "^0.2.0",
+++    "@backstage/catalog-model": "^0.2.0",
++     "@backstage/config": "^0.1.1",
++-    "@backstage/plugin-auth-backend": "^0.1.1",
++-    "@backstage/plugin-catalog-backend": "^0.1.1",
++-    "@backstage/plugin-proxy-backend": "^0.1.1",
++-    "@backstage/plugin-rollbar-backend": "^0.1.1",
++-    "@backstage/plugin-scaffolder-backend": "^0.1.1",
++-    "@backstage/plugin-techdocs-backend": "^0.1.1",
+++    "@backstage/plugin-auth-backend": "^0.2.0",
+++    "@backstage/plugin-catalog-backend": "^0.2.0",
+++    "@backstage/plugin-proxy-backend": "^0.2.0",
+++    "@backstage/plugin-rollbar-backend": "^0.1.2",
+++    "@backstage/plugin-scaffolder-backend": "^0.2.0",
+++    "@backstage/plugin-techdocs-backend": "^0.2.0",
++     "@octokit/rest": "^18.0.0",
++@@ -38,3 +38,3 @@
++   "devDependencies": {
++-    "@backstage/cli": "^0.1.1",
+++    "@backstage/cli": "^0.2.0",
++     "@types/dockerode": "^2.5.32",
+diff --git a/diffs/0.1.1..0.2.1.diff b/diffs/0.1.1..0.2.1.diff
+new file mode 100644
+index 0000000..f813e20
+--- /dev/null
++++ b/diffs/0.1.1..0.2.1.diff
+@@ -0,0 +1,108 @@
++diff --git a/package.json b/package.json
++index b6fb091..db8ca15 100644
++--- a/package.json
+++++ b/package.json
++@@ -28,3 +28,3 @@
++   "devDependencies": {
++-    "@backstage/cli": "^0.1.1",
+++    "@backstage/cli": "^0.2.0",
++     "@spotify/prettier-config": "^7.0.0",
++diff --git a/packages/app/package.json b/packages/app/package.json
++index 3754d7e..5a3a236 100644
++--- a/packages/app/package.json
+++++ b/packages/app/package.json
++@@ -8,18 +8,18 @@
++     "@material-ui/icons": "^4.9.1",
++-    "@backstage/cli": "^0.1.1",
++-    "@backstage/core": "^0.1.1",
++-    "@backstage/plugin-api-docs": "^0.1.1",
++-    "@backstage/plugin-catalog": "^0.1.1",
++-    "@backstage/plugin-register-component": "^0.1.1",
++-    "@backstage/plugin-scaffolder": "^0.1.1",
++-    "@backstage/plugin-techdocs": "^0.1.1",
++-    "@backstage/catalog-model": "^0.1.1",
++-    "@backstage/plugin-circleci": "^0.1.1",
++-    "@backstage/plugin-explore": "^0.1.1",
++-    "@backstage/plugin-lighthouse": "^0.1.1",
++-    "@backstage/plugin-tech-radar": "^0.1.1",
++-    "@backstage/plugin-github-actions": "^0.1.1",
++-    "@backstage/plugin-user-settings": "^0.1.1",
++-    "@backstage/test-utils": "^0.1.1",
++-    "@backstage/theme": "^0.1.1",
+++    "@backstage/cli": "^0.2.0",
+++    "@backstage/core": "^0.3.0",
+++    "@backstage/plugin-api-docs": "^0.2.1",
+++    "@backstage/plugin-catalog": "^0.2.1",
+++    "@backstage/plugin-register-component": "^0.2.1",
+++    "@backstage/plugin-scaffolder": "^0.3.0",
+++    "@backstage/plugin-techdocs": "^0.2.1",
+++    "@backstage/catalog-model": "^0.2.0",
+++    "@backstage/plugin-circleci": "^0.2.1",
+++    "@backstage/plugin-explore": "^0.2.1",
+++    "@backstage/plugin-lighthouse": "^0.2.1",
+++    "@backstage/plugin-tech-radar": "^0.3.0",
+++    "@backstage/plugin-github-actions": "^0.2.1",
+++    "@backstage/plugin-user-settings": "^0.2.1",
+++    "@backstage/test-utils": "^0.1.2",
+++    "@backstage/theme": "^0.2.1",
++     "history": "^5.0.0",
++diff --git a/packages/app/src/plugins.ts b/packages/app/src/plugins.ts
++index c787ac2..b719594 100644
++--- a/packages/app/src/plugins.ts
+++++ b/packages/app/src/plugins.ts
++@@ -1 +1,2 @@
+++export { plugin as ApiDocs } from '@backstage/plugin-api-docs';
++ export { plugin as CatalogPlugin } from '@backstage/plugin-catalog';
++diff --git a/packages/backend/package.json b/packages/backend/package.json
++index 413fa29..b2f24a8 100644
++--- a/packages/backend/package.json
+++++ b/packages/backend/package.json
++@@ -19,13 +19,13 @@
++   "dependencies": {
++-    "@backstage/backend-common": "^0.1.1",
++-    "@backstage/catalog-model": "^0.1.1",
+++    "@backstage/backend-common": "^0.2.1",
+++    "@backstage/catalog-model": "^0.2.0",
++     "@backstage/config": "^0.1.1",
++-    "@backstage/plugin-auth-backend": "^0.1.1",
++-    "@backstage/plugin-catalog-backend": "^0.1.1",
++-    "@backstage/plugin-proxy-backend": "^0.1.1",
++-    "@backstage/plugin-rollbar-backend": "^0.1.1",
++-    "@backstage/plugin-scaffolder-backend": "^0.1.1",
++-    "@backstage/plugin-techdocs-backend": "^0.1.1",
+++    "@backstage/plugin-auth-backend": "^0.2.1",
+++    "@backstage/plugin-catalog-backend": "^0.2.0",
+++    "@backstage/plugin-proxy-backend": "^0.2.0",
+++    "@backstage/plugin-rollbar-backend": "^0.1.2",
+++    "@backstage/plugin-scaffolder-backend": "^0.3.0",
+++    "@backstage/plugin-techdocs-backend": "^0.2.0",
++     "@octokit/rest": "^18.0.0",
++-    "@gitbeaker/node": "^23.5.0",
+++    "@gitbeaker/node": "^25.2.0",
++     "dockerode": "^3.2.0",
++@@ -38,3 +38,3 @@
++   "devDependencies": {
++-    "@backstage/cli": "^0.1.1",
+++    "@backstage/cli": "^0.2.0",
++     "@types/dockerode": "^2.5.32",
++diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
++index 8de1592..2dc69fe 100644
++--- a/packages/backend/src/plugins/scaffolder.ts
+++++ b/packages/backend/src/plugins/scaffolder.ts
++@@ -13,3 +13,5 @@ import {
++   RepoVisibilityOptions,
+++  CatalogEntityClient,
++ } from '@backstage/plugin-scaffolder-backend';
+++import { SingleHostDiscovery } from '@backstage/backend-common';
++ import { Octokit } from '@octokit/rest';
++@@ -99,2 +101,6 @@ export default async function createPlugin({
++   const dockerClient = new Docker();
+++
+++  const discovery = SingleHostDiscovery.fromConfig(config);
+++  const entityClient = new CatalogEntityClient({ discovery });
+++
++   return await createRouter({
++@@ -106,2 +112,3 @@ export default async function createPlugin({
++     dockerClient,
+++    entityClient,
++   });
+diff --git a/diffs/0.2.0..0.2.1.diff b/diffs/0.2.0..0.2.1.diff
+new file mode 100644
+index 0000000..852f136
+--- /dev/null
++++ b/diffs/0.2.0..0.2.1.diff
+@@ -0,0 +1,85 @@
++diff --git a/packages/app/package.json b/packages/app/package.json
++index 985aa1e..5a3a236 100644
++--- a/packages/app/package.json
+++++ b/packages/app/package.json
++@@ -9,17 +9,17 @@
++     "@backstage/cli": "^0.2.0",
++-    "@backstage/core": "^0.2.0",
++-    "@backstage/plugin-api-docs": "^0.2.0",
++-    "@backstage/plugin-catalog": "^0.2.0",
++-    "@backstage/plugin-register-component": "^0.2.0",
++-    "@backstage/plugin-scaffolder": "^0.2.0",
++-    "@backstage/plugin-techdocs": "^0.2.0",
+++    "@backstage/core": "^0.3.0",
+++    "@backstage/plugin-api-docs": "^0.2.1",
+++    "@backstage/plugin-catalog": "^0.2.1",
+++    "@backstage/plugin-register-component": "^0.2.1",
+++    "@backstage/plugin-scaffolder": "^0.3.0",
+++    "@backstage/plugin-techdocs": "^0.2.1",
++     "@backstage/catalog-model": "^0.2.0",
++-    "@backstage/plugin-circleci": "^0.2.0",
++-    "@backstage/plugin-explore": "^0.2.0",
++-    "@backstage/plugin-lighthouse": "^0.2.0",
++-    "@backstage/plugin-tech-radar": "^0.2.0",
++-    "@backstage/plugin-github-actions": "^0.2.0",
++-    "@backstage/plugin-user-settings": "^0.2.0",
+++    "@backstage/plugin-circleci": "^0.2.1",
+++    "@backstage/plugin-explore": "^0.2.1",
+++    "@backstage/plugin-lighthouse": "^0.2.1",
+++    "@backstage/plugin-tech-radar": "^0.3.0",
+++    "@backstage/plugin-github-actions": "^0.2.1",
+++    "@backstage/plugin-user-settings": "^0.2.1",
++     "@backstage/test-utils": "^0.1.2",
++-    "@backstage/theme": "^0.2.0",
+++    "@backstage/theme": "^0.2.1",
++     "history": "^5.0.0",
++diff --git a/packages/app/src/plugins.ts b/packages/app/src/plugins.ts
++index c787ac2..b719594 100644
++--- a/packages/app/src/plugins.ts
+++++ b/packages/app/src/plugins.ts
++@@ -1 +1,2 @@
+++export { plugin as ApiDocs } from '@backstage/plugin-api-docs';
++ export { plugin as CatalogPlugin } from '@backstage/plugin-catalog';
++diff --git a/packages/backend/package.json b/packages/backend/package.json
++index a6ddda7..b2f24a8 100644
++--- a/packages/backend/package.json
+++++ b/packages/backend/package.json
++@@ -19,6 +19,6 @@
++   "dependencies": {
++-    "@backstage/backend-common": "^0.2.0",
+++    "@backstage/backend-common": "^0.2.1",
++     "@backstage/catalog-model": "^0.2.0",
++     "@backstage/config": "^0.1.1",
++-    "@backstage/plugin-auth-backend": "^0.2.0",
+++    "@backstage/plugin-auth-backend": "^0.2.1",
++     "@backstage/plugin-catalog-backend": "^0.2.0",
++@@ -26,6 +26,6 @@
++     "@backstage/plugin-rollbar-backend": "^0.1.2",
++-    "@backstage/plugin-scaffolder-backend": "^0.2.0",
+++    "@backstage/plugin-scaffolder-backend": "^0.3.0",
++     "@backstage/plugin-techdocs-backend": "^0.2.0",
++     "@octokit/rest": "^18.0.0",
++-    "@gitbeaker/node": "^23.5.0",
+++    "@gitbeaker/node": "^25.2.0",
++     "dockerode": "^3.2.0",
++diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
++index 8de1592..2dc69fe 100644
++--- a/packages/backend/src/plugins/scaffolder.ts
+++++ b/packages/backend/src/plugins/scaffolder.ts
++@@ -13,3 +13,5 @@ import {
++   RepoVisibilityOptions,
+++  CatalogEntityClient,
++ } from '@backstage/plugin-scaffolder-backend';
+++import { SingleHostDiscovery } from '@backstage/backend-common';
++ import { Octokit } from '@octokit/rest';
++@@ -99,2 +101,6 @@ export default async function createPlugin({
++   const dockerClient = new Docker();
+++
+++  const discovery = SingleHostDiscovery.fromConfig(config);
+++  const entityClient = new CatalogEntityClient({ discovery });
+++
++   return await createRouter({
++@@ -106,2 +112,3 @@ export default async function createPlugin({
++     dockerClient,
+++    entityClient,
++   });
+diff --git a/package.json b/package.json
+index b6fb091..77fec40 100644
+--- a/package.json
++++ b/package.json
+@@ -10,2 +10,3 @@
+     "build": "lerna run build",
++    "build-image": "yarn workspace backend build-image",
+     "tsc": "tsc",
+@@ -28,3 +29,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.1.1",
++    "@backstage/cli": "^0.4.0",
+     "@spotify/prettier-config": "^7.0.0",
+@@ -33,5 +34,2 @@
+   },
+-  "resolutions": {
+-    "esbuild": "0.6.3"
+-  },
+   "prettier": "@spotify/prettier-config",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 3754d7e..8272bd0 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -8,18 +8,17 @@
+     "@material-ui/icons": "^4.9.1",
+-    "@backstage/cli": "^0.1.1",
+-    "@backstage/core": "^0.1.1",
+-    "@backstage/plugin-api-docs": "^0.1.1",
+-    "@backstage/plugin-catalog": "^0.1.1",
+-    "@backstage/plugin-register-component": "^0.1.1",
+-    "@backstage/plugin-scaffolder": "^0.1.1",
+-    "@backstage/plugin-techdocs": "^0.1.1",
+-    "@backstage/catalog-model": "^0.1.1",
+-    "@backstage/plugin-circleci": "^0.1.1",
+-    "@backstage/plugin-explore": "^0.1.1",
+-    "@backstage/plugin-lighthouse": "^0.1.1",
+-    "@backstage/plugin-tech-radar": "^0.1.1",
+-    "@backstage/plugin-github-actions": "^0.1.1",
+-    "@backstage/plugin-user-settings": "^0.1.1",
+-    "@backstage/test-utils": "^0.1.1",
+-    "@backstage/theme": "^0.1.1",
++    "@backstage/cli": "^0.4.0",
++    "@backstage/core": "^0.3.2",
++    "@backstage/plugin-api-docs": "^0.3.1",
++    "@backstage/plugin-catalog": "^0.2.5",
++    "@backstage/plugin-register-component": "^0.2.3",
++    "@backstage/plugin-scaffolder": "^0.3.2",
++    "@backstage/plugin-techdocs": "^0.3.1",
++    "@backstage/catalog-model": "^0.4.0",
++    "@backstage/plugin-circleci": "^0.2.3",
++    "@backstage/plugin-lighthouse": "^0.2.4",
++    "@backstage/plugin-tech-radar": "^0.3.0",
++    "@backstage/plugin-github-actions": "^0.2.3",
++    "@backstage/plugin-user-settings": "^0.2.2",
++    "@backstage/test-utils": "^0.1.4",
++    "@backstage/theme": "^0.2.1",
+     "history": "^5.0.0",
+diff --git a/packages/app/src/plugins.ts b/packages/app/src/plugins.ts
+index c787ac2..9eabff0 100644
+--- a/packages/app/src/plugins.ts
++++ b/packages/app/src/plugins.ts
+@@ -1 +1,2 @@
++export { plugin as ApiDocs } from '@backstage/plugin-api-docs';
+ export { plugin as CatalogPlugin } from '@backstage/plugin-catalog';
+@@ -4,3 +5,2 @@ export { plugin as ScaffolderPlugin } from '@backstage/plugin-scaffolder';
+ export { plugin as TechDocsPlugin } from '@backstage/plugin-techdocs';
+-export { plugin as Explore } from '@backstage/plugin-explore';
+ export { plugin as Circleci } from '@backstage/plugin-circleci';
+diff --git a/packages/app/src/sidebar.tsx b/packages/app/src/sidebar.tsx
+index 9013476..b5425b6 100644
+--- a/packages/app/src/sidebar.tsx
++++ b/packages/app/src/sidebar.tsx
+@@ -3,2 +3,3 @@ import HomeIcon from '@material-ui/icons/Home';
+ import LibraryBooks from '@material-ui/icons/LibraryBooks';
++import ExtensionIcon from '@material-ui/icons/Extension';
+ import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
+@@ -28,2 +29,3 @@ export const AppSidebar = () => (
+     <SidebarItem icon={HomeIcon} to="./" text="Home" />
++    <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
+     <SidebarItem icon={LibraryBooks} to="/docs" text="Docs" />
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 93929ce..5051471 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -9,3 +9,3 @@ ADD yarn.lock package.json skeleton.tar ./
+ 
+-RUN yarn install --frozen-lockfile --production
++RUN yarn install --frozen-lockfile --production --network-timeout 300000 && rm -rf "$(yarn cache dir)"
+ 
+@@ -15,2 +15,2 @@ COPY . .
+ 
+-CMD ["node", "packages/backend"]
++CMD ["node", "packages/backend", "--config", "app-config.yaml", "--config", "app-config.production.yaml"]
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 413fa29..c8e3a09 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -11,3 +11,3 @@
+     "build": "backstage-cli backend:build",
+-    "build-image": "backstage-cli backend:build-image --build --tag example-backend",
++    "build-image": "backstage-cli backend:build-image --build --tag backstage",
+     "start": "backstage-cli backend:dev",
+@@ -19,13 +19,14 @@
+   "dependencies": {
+-    "@backstage/backend-common": "^0.1.1",
+-    "@backstage/catalog-model": "^0.1.1",
++    "app": "0.0.0",
++    "@backstage/backend-common": "^0.3.3",
++    "@backstage/catalog-model": "^0.4.0",
+     "@backstage/config": "^0.1.1",
+-    "@backstage/plugin-auth-backend": "^0.1.1",
+-    "@backstage/plugin-catalog-backend": "^0.1.1",
+-    "@backstage/plugin-proxy-backend": "^0.1.1",
+-    "@backstage/plugin-rollbar-backend": "^0.1.1",
+-    "@backstage/plugin-scaffolder-backend": "^0.1.1",
+-    "@backstage/plugin-techdocs-backend": "^0.1.1",
++    "@backstage/plugin-app-backend": "^0.3.2",
++    "@backstage/plugin-auth-backend": "^0.2.5",
++    "@backstage/plugin-catalog-backend": "^0.3.0",
++    "@backstage/plugin-proxy-backend": "^0.2.2",
++    "@backstage/plugin-scaffolder-backend": "^0.3.3",
++    "@backstage/plugin-techdocs-backend": "^0.3.1",
+     "@octokit/rest": "^18.0.0",
+-    "@gitbeaker/node": "^23.5.0",
++    "@gitbeaker/node": "^25.2.0",
+     "dockerode": "^3.2.0",
+@@ -38,3 +39,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.1.1",
++    "@backstage/cli": "^0.4.0",
+     "@types/dockerode": "^2.5.32",
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 51de1ad..80dc623 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -20,2 +20,3 @@ import {
+ import { Config } from '@backstage/config';
++import app from './plugins/app';
+ import auth from './plugins/auth';
+@@ -55,2 +56,3 @@ async function main() {
+   const techdocsEnv = useHotMemoize(module, () => createEnv('techdocs'));
++  const appEnv = useHotMemoize(module, () => createEnv('app'));
+ 
+@@ -66,3 +68,4 @@ async function main() {
+     .loadConfig(config)
+-    .addRouter('/api', apiRouter);
++    .addRouter('/api', apiRouter)
++    .addRouter('', await app(appEnv));
+ 
+diff --git a/packages/backend/src/plugins/app.ts b/packages/backend/src/plugins/app.ts
+new file mode 100644
+index 0000000..5131694
+--- /dev/null
++++ b/packages/backend/src/plugins/app.ts
+@@ -0,0 +1,13 @@
++import { createRouter } from '@backstage/plugin-app-backend';
++import { PluginEnvironment } from '../types';
++
++export default async function createPlugin({
++  logger,
++  config,
++}: PluginEnvironment) {
++  return await createRouter({
++    logger,
++    config,
++    appPackageName: 'app',
++  });
++}
+diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
+index 8de1592..2dc69fe 100644
+--- a/packages/backend/src/plugins/scaffolder.ts
++++ b/packages/backend/src/plugins/scaffolder.ts
+@@ -13,3 +13,5 @@ import {
+   RepoVisibilityOptions,
++  CatalogEntityClient,
+ } from '@backstage/plugin-scaffolder-backend';
++import { SingleHostDiscovery } from '@backstage/backend-common';
+ import { Octokit } from '@octokit/rest';
+@@ -99,2 +101,6 @@ export default async function createPlugin({
+   const dockerClient = new Docker();
++
++  const discovery = SingleHostDiscovery.fromConfig(config);
++  const entityClient = new CatalogEntityClient({ discovery });
++
+   return await createRouter({
+@@ -106,2 +112,3 @@ export default async function createPlugin({
+     dockerClient,
++    entityClient,
+   });
+diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
+index 5506228..ac4d81a 100644
+--- a/packages/backend/src/plugins/techdocs.ts
++++ b/packages/backend/src/plugins/techdocs.ts
+@@ -30,3 +30,3 @@ export default async function createPlugin({
+ 
+-  const publisher = new LocalPublish(logger);
++  const publisher = new LocalPublish(logger, discovery);
+ 
+diff --git a/releases.json b/releases.json
+new file mode 100644
+index 0000000..5518dc3
+--- /dev/null
++++ b/releases.json
+@@ -0,0 +1,5 @@
++{
++  "0.1.1": {},
++  "0.2.0": {},
++  "0.2.1": {}
++}
