@@ -1,0 +1,324 @@
+diff --git a/.gitignore b/.gitignore
+index 5f5cc73..4adebc5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -32,2 +32,5 @@ site
+ # Local configuration files
+-*.local.yaml
+\ No newline at end of file
++*.local.yaml
++
++# Sensitive credentials
++*-credentials.yaml
+diff --git a/app-config.yaml b/app-config.yaml
+index 8c5e06a..a6bbd13 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -47,5 +47,2 @@ techdocs:
+ 
+-lighthouse:
+-  baseUrl: http://localhost:3003
+-
+ auth:
+@@ -73,3 +70,3 @@ catalog:
+     # Backstage example templates
+-    - type: github
++    - type: url
+       target: https://github.com/backstage/backstage/blob/master/plugins/scaffolder-backend/sample-templates/react-ssr-template/template.yaml
+@@ -77,3 +74,3 @@ catalog:
+         - allow: [Template]
+-    - type: github
++    - type: url
+       target: https://github.com/backstage/backstage/blob/master/plugins/scaffolder-backend/sample-templates/springboot-grpc-template/template.yaml
+@@ -81,3 +78,3 @@ catalog:
+         - allow: [Template]
+-    - type: github
++    - type: url
+       target: https://github.com/backstage/backstage/blob/master/plugins/scaffolder-backend/sample-templates/create-react-app/template.yaml
+@@ -85,3 +82,3 @@ catalog:
+         - allow: [Template]
+-    - type: github
++    - type: url
+       target: https://github.com/spotify/cookiecutter-golang/blob/master/template.yaml
+@@ -89,3 +86,3 @@ catalog:
+         - allow: [Template]
+-    - type: github
++    - type: url
+       target: https://github.com/backstage/backstage/blob/master/plugins/scaffolder-backend/sample-templates/docs-template/template.yaml
+diff --git a/package.json b/package.json
+index 49c91b9..797997e 100644
+--- a/package.json
++++ b/package.json
+@@ -9,2 +9,3 @@
+     "start": "yarn workspace app start",
++    "start-backend": "yarn workspace backend start",
+     "build": "lerna run build",
+@@ -29,3 +30,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.4.3",
++    "@backstage/cli": "^0.4.7",
+     "@spotify/prettier-config": "^7.0.0",
+@@ -46,3 +47,3 @@
+     "transformModules": [
+-      "@kyma-project/asyncapi-react"
++      "@asyncapi/react-component"
+     ]
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 4e7297c..9be587e 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -8,16 +8,15 @@
+     "@material-ui/icons": "^4.9.1",
+-    "@backstage/cli": "^0.4.3",
+-    "@backstage/core": "^0.4.2",
+-    "@backstage/plugin-api-docs": "^0.4.1",
+-    "@backstage/plugin-catalog": "^0.2.8",
+-    "@backstage/plugin-register-component": "^0.2.5",
+-    "@backstage/plugin-scaffolder": "^0.3.5",
+-    "@backstage/plugin-techdocs": "^0.5.1",
+-    "@backstage/catalog-model": "^0.6.0",
+-    "@backstage/plugin-circleci": "^0.2.5",
+-    "@backstage/plugin-lighthouse": "^0.2.6",
+-    "@backstage/plugin-tech-radar": "^0.3.1",
+-    "@backstage/plugin-github-actions": "^0.2.6",
+-    "@backstage/plugin-user-settings": "^0.2.3",
+-    "@backstage/plugin-search": "^0.2.4",
++    "@backstage/cli": "^0.4.7",
++    "@backstage/core": "^0.5.0",
++    "@backstage/plugin-api-docs": "^0.4.3",
++    "@backstage/plugin-catalog": "^0.2.13",
++    "@backstage/plugin-catalog-import": "^0.3.5",
++    "@backstage/plugin-scaffolder": "^0.4.0",
++    "@backstage/plugin-techdocs": "^0.5.4",
++    "@backstage/catalog-model": "^0.7.0",
++    "@backstage/plugin-circleci": "^0.2.6",
++    "@backstage/plugin-tech-radar": "^0.3.3",
++    "@backstage/plugin-github-actions": "^0.3.0",
++    "@backstage/plugin-user-settings": "^0.2.4",
++    "@backstage/plugin-search": "^0.2.6",
+     "@backstage/test-utils": "^0.1.6",
+@@ -48,2 +47,3 @@
+     "lint": "backstage-cli lint",
++    "clean": "backstage-cli clean",
+     "test:e2e": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:dev",
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index 2e250a9..6deedcd 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -7,2 +7,3 @@ import {
+   createRouteRef,
++  FlatRoutes,
+ } from '@backstage/core';
+@@ -11,8 +12,9 @@ import * as plugins from './plugins';
+ import { AppSidebar } from './sidebar';
+-import { Route, Routes, Navigate } from 'react-router';
++import { Route, Navigate } from 'react-router';
+ import { Router as CatalogRouter } from '@backstage/plugin-catalog';
+ import { Router as DocsRouter } from '@backstage/plugin-techdocs';
+-import { Router as RegisterComponentRouter } from '@backstage/plugin-register-component';
++import { Router as ImportComponentRouter } from '@backstage/plugin-catalog-import';
+ import { Router as TechRadarRouter } from '@backstage/plugin-tech-radar';
+ import { SearchPage as SearchRouter } from '@backstage/plugin-search';
++import { Router as SettingsRouter } from '@backstage/plugin-user-settings';
+ 
+@@ -42,9 +44,9 @@ const App = () => (
+         <AppSidebar />
+-        <Routes>
++        <FlatRoutes>
+           <Navigate key="/" to="/catalog" />
+           <Route
+-            path="/catalog/*"
++            path="/catalog"
+             element={<CatalogRouter EntityPage={EntityPage} />}
+           />
+-          <Route path="/docs/*" element={<DocsRouter />} />
++          <Route path="/docs" element={<DocsRouter />} />
+           <Route
+@@ -54,4 +56,4 @@ const App = () => (
+           <Route
+-            path="/register-component"
+-            element={<RegisterComponentRouter catalogRouteRef={catalogRouteRef} />}
++            path="/catalog-import"
++            element={<ImportComponentRouter catalogRouteRef={catalogRouteRef} />}
+           />
+@@ -61,4 +63,5 @@ const App = () => (
+           />
++          <Route path="/settings" element={<SettingsRouter />} />
+           {deprecatedAppRoutes}
+-        </Routes>
++        </FlatRoutes>
+       </SidebarPage>
+diff --git a/packages/app/src/plugins.ts b/packages/app/src/plugins.ts
+index 9eabff0..28b42d5 100644
+--- a/packages/app/src/plugins.ts
++++ b/packages/app/src/plugins.ts
+@@ -2,8 +2,9 @@ export { plugin as ApiDocs } from '@backstage/plugin-api-docs';
+ export { plugin as CatalogPlugin } from '@backstage/plugin-catalog';
+-export { plugin as RegisterComponent } from '@backstage/plugin-register-component';
++export { plugin as CatalogImport } from '@backstage/plugin-catalog-import';
++export { plugin as Circleci } from '@backstage/plugin-circleci';
++export { plugin as GithubActions } from '@backstage/plugin-github-actions';
+ export { plugin as ScaffolderPlugin } from '@backstage/plugin-scaffolder';
+ export { plugin as TechDocsPlugin } from '@backstage/plugin-techdocs';
+-export { plugin as Circleci } from '@backstage/plugin-circleci';
+-export { plugin as LighthousePlugin } from '@backstage/plugin-lighthouse';
+ export { plugin as TechRadar } from '@backstage/plugin-tech-radar';
+-export { plugin as GithubActions } from '@backstage/plugin-github-actions';
++export { plugin as UserSettings } from '@backstage/plugin-user-settings';
++
+diff --git a/packages/app/src/sidebar.tsx b/packages/app/src/sidebar.tsx
+index a5595e2..55fa056 100644
+--- a/packages/app/src/sidebar.tsx
++++ b/packages/app/src/sidebar.tsx
+@@ -5,4 +5,2 @@ import ExtensionIcon from '@material-ui/icons/Extension';
+ import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
+-import BuildIcon from '@material-ui/icons/BuildRounded';
+-import RuleIcon from '@material-ui/icons/AssignmentTurnedIn';
+ import MapIcon from '@material-ui/icons/MyLocation';
+@@ -36,4 +34,2 @@ export const AppSidebar = () => (
+     <SidebarItem icon={MapIcon} to="tech-radar" text="Tech Radar" />
+-    <SidebarItem icon={RuleIcon} to="lighthouse" text="Lighthouse" />
+-    <SidebarItem icon={BuildIcon} to="circleci" text="CircleCI" />
+     {/* End global nav */}
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 64d7d2a..cc07771 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -20,13 +20,13 @@
+     "app": "0.0.0",
+-    "@backstage/backend-common": "^0.4.1",
+-    "@backstage/catalog-model": "^0.6.0",
++    "@backstage/backend-common": "^0.5.0",
++    "@backstage/catalog-model": "^0.7.0",
+     "@backstage/config": "^0.1.2",
+-    "@backstage/plugin-app-backend": "^0.3.3",
+-    "@backstage/plugin-auth-backend": "^0.2.7",
+-    "@backstage/plugin-catalog-backend": "^0.5.1",
+-    "@backstage/plugin-proxy-backend": "^0.2.3",
+-    "@backstage/plugin-scaffolder-backend": "^0.3.6",
+-    "@backstage/plugin-techdocs-backend": "^0.5.0",
+-    "@octokit/rest": "^18.0.0",
+-    "@gitbeaker/node": "^25.2.0",
++    "@backstage/plugin-app-backend": "^0.3.4",
++    "@backstage/plugin-auth-backend": "^0.2.11",
++    "@backstage/plugin-catalog-backend": "^0.5.4",
++    "@backstage/plugin-proxy-backend": "^0.2.4",
++    "@backstage/plugin-scaffolder-backend": "^0.5.1",
++    "@backstage/plugin-techdocs-backend": "^0.5.4",
++    "@gitbeaker/node": "^28.0.2",
++    "@octokit/rest": "^18.0.12",
+     "dockerode": "^3.2.1",
+@@ -35,3 +35,3 @@
+     "knex": "^0.21.6",
+-    "sqlite3": "^4.2.0",
++    "sqlite3": "^5.0.0",
+     "winston": "^3.2.1"
+@@ -39,7 +39,6 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.4.3",
++    "@backstage/cli": "^0.4.7",
+     "@types/dockerode": "^3.2.1",
+     "@types/express": "^4.17.6",
+-    "@types/express-serve-static-core": "^4.17.5",
+-    "@types/helmet": "^0.0.47"
++    "@types/express-serve-static-core": "^4.17.5"
+   },
+diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
+index 2dc69fe..c8bd3e5 100644
+--- a/packages/backend/src/plugins/scaffolder.ts
++++ b/packages/backend/src/plugins/scaffolder.ts
+@@ -3,12 +3,6 @@ import {
+   createRouter,
+-  FilePreparer,
+-  GithubPreparer,
+-  GitlabPreparer,
+   Preparers,
+   Publishers,
+-  GithubPublisher,
+-  GitlabPublisher,
+   CreateReactAppTemplater,
+   Templaters,
+-  RepoVisibilityOptions,
+   CatalogEntityClient,
+@@ -16,4 +10,2 @@ import {
+ import { SingleHostDiscovery } from '@backstage/backend-common';
+-import { Octokit } from '@octokit/rest';
+-import { Gitlab } from '@gitbeaker/node';
+ import type { PluginEnvironment } from '../types';
+@@ -28,2 +20,3 @@ export default async function createPlugin({
+   const templaters = new Templaters();
++
+   templaters.register('cookiecutter', cookiecutterTemplater);
+@@ -31,70 +24,4 @@ export default async function createPlugin({
+ 
+-  const filePreparer = new FilePreparer();
+-  const githubPreparer = new GithubPreparer();
+-  const gitlabPreparer = new GitlabPreparer(config);
+-  const preparers = new Preparers();
+-
+-  preparers.register('file', filePreparer);
+-  preparers.register('github', githubPreparer);
+-  preparers.register('gitlab', gitlabPreparer);
+-  preparers.register('gitlab/api', gitlabPreparer);
+-
+-  const publishers = new Publishers();
+-
+-  const githubConfig = config.getOptionalConfig('scaffolder.github');
+-
+-  if (githubConfig) {
+-    try {
+-      const repoVisibility = githubConfig.getString(
+-        'visibility',
+-      ) as RepoVisibilityOptions;
+-
+-      const githubToken = githubConfig.getString('token');
+-      const githubHost = githubConfig.getOptionalString('host');
+-      const githubClient = new Octokit({ auth: githubToken, baseUrl: githubHost });
+-      const githubPublisher = new GithubPublisher({
+-        client: githubClient,
+-        token: githubToken,
+-        repoVisibility,
+-      });
+-      publishers.register('file', githubPublisher);
+-      publishers.register('github', githubPublisher);
+-    } catch (e) {
+-      const providerName = 'github';
+-      if (process.env.NODE_ENV !== 'development') {
+-        throw new Error(
+-          `Failed to initialize ${providerName} scaffolding provider, ${e.message}`,
+-        );
+-      }
+-
+-      logger.warn(
+-        `Skipping ${providerName} scaffolding provider, ${e.message}`,
+-      );
+-    }
+-  }
+-
+-  const gitLabConfig = config.getOptionalConfig('scaffolder.gitlab.api');
+-  if (gitLabConfig) {
+-    try {
+-      const gitLabToken = gitLabConfig.getString('token');
+-      const gitLabClient = new Gitlab({
+-        host: gitLabConfig.getOptionalString('baseUrl'),
+-        token: gitLabToken,
+-      });
+-      const gitLabPublisher = new GitlabPublisher(gitLabClient, gitLabToken);
+-      publishers.register('gitlab', gitLabPublisher);
+-      publishers.register('gitlab/api', gitLabPublisher);
+-    } catch (e) {
+-      const providerName = 'gitlab';
+-      if (process.env.NODE_ENV !== 'development') {
+-        throw new Error(
+-          `Failed to initialize ${providerName} scaffolding provider, ${e.message}`,
+-        );
+-      }
+-
+-      logger.warn(
+-        `Skipping ${providerName} scaffolding provider, ${e.message}`,
+-      );
+-    }
+-  }
++  const preparers = await Preparers.fromConfig(config, { logger });
++  const publishers = await Publishers.fromConfig(config, { logger });
+ 
