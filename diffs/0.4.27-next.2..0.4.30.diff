@@ -1,0 +1,357 @@
+diff --git a/app-config.production.yaml b/app-config.production.yaml
+index b9dd00b..6535d96 100644
+--- a/app-config.production.yaml
++++ b/app-config.production.yaml
+@@ -34 +34,7 @@ backend:
+       #     $file: <file-path>/ca/server.crt
++
++catalog:
++  # Overrides the default list locations from app-config.yaml as these contain example data.
++  # See https://backstage.io/docs/features/software-catalog/software-catalog-overview#adding-components-to-the-catalog for more details
++  # on how to get entities into the catalog.
++  locations: []
+diff --git a/app-config.yaml b/app-config.yaml
+index cd6998d..4a058de 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -26,5 +26,5 @@ backend:
+     origin: http://localhost:3000
+-    methods: [GET, POST, PUT, DELETE]
++    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+     credentials: true
+-  # This is for local developement only, it is not recommended to use this in production
++  # This is for local development only, it is not recommended to use this in production
+   # The production database configuration is stored in app-config.production.yaml
+diff --git a/backstage.json b/backstage.json
+index e636bae..08df5a2 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.2.0-next.2"
++  "version": "1.5.0"
+ }
+diff --git a/package.json b/package.json
+index a2d1402..d010cc8 100644
+--- a/package.json
++++ b/package.json
+@@ -32,3 +32,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.17.1-next.2",
++    "@backstage/cli": "^0.18.1",
+     "@spotify/prettier-config": "^12.0.0",
+@@ -37,3 +37,4 @@
+     "prettier": "^2.3.2",
+-    "typescript": "~4.6.4"
++    "typescript": "~4.6.4",
++    "node-gyp": "^9.0.0"
+   },
+diff --git a/packages/app/cypress.json b/packages/app/cypress.json
+index 5de7ebf..0cb845a 100644
+--- a/packages/app/cypress.json
++++ b/packages/app/cypress.json
+@@ -3,3 +3,4 @@
+   "fixturesFolder": false,
+-  "pluginsFile": false
++  "pluginsFile": false,
++  "retries": 3
+ }
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 8f5393d..1d7aa24 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -9,25 +9,27 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.0.2-next.0",
+-    "@backstage/catalog-model": "^1.0.2-next.0",
+-    "@backstage/cli": "^0.17.1-next.2",
+-    "@backstage/core-app-api": "^1.0.2-next.1",
+-    "@backstage/core-components": "^0.9.4-next.1",
+-    "@backstage/core-plugin-api": "^1.0.2-next.1",
+-    "@backstage/integration-react": "^1.1.0-next.2",
+-    "@backstage/plugin-api-docs": "^0.8.5-next.2",
+-    "@backstage/plugin-catalog": "^1.2.0-next.2",
+-    "@backstage/plugin-catalog-common": "^1.0.2-next.0",
+-    "@backstage/plugin-catalog-graph": "^0.2.17-next.2",
+-    "@backstage/plugin-catalog-import": "^0.8.8-next.2",
+-    "@backstage/plugin-catalog-react": "^1.1.0-next.2",
+-    "@backstage/plugin-github-actions": "^0.5.5-next.2",
+-    "@backstage/plugin-org": "^0.5.5-next.2",
+-    "@backstage/plugin-permission-react": "^0.4.1-next.1",
+-    "@backstage/plugin-scaffolder": "^1.2.0-next.2",
+-    "@backstage/plugin-search": "^0.8.1-next.2",
+-    "@backstage/plugin-search-react": "^0.2.0-next.2",
+-    "@backstage/plugin-tech-radar": "^0.5.12-next.0",
+-    "@backstage/plugin-techdocs": "^1.1.1-next.2",
+-    "@backstage/plugin-user-settings": "^0.4.4-next.0",
+-    "@backstage/theme": "^0.2.15",
++    "@backstage/app-defaults": "^1.0.5",
++    "@backstage/catalog-model": "^1.1.0",
++    "@backstage/cli": "^0.18.1",
++    "@backstage/core-app-api": "^1.0.5",
++    "@backstage/core-components": "^0.11.0",
++    "@backstage/core-plugin-api": "^1.0.5",
++    "@backstage/integration-react": "^1.1.3",
++    "@backstage/plugin-api-docs": "^0.8.8",
++    "@backstage/plugin-catalog": "^1.5.0",
++    "@backstage/plugin-catalog-common": "^1.0.5",
++    "@backstage/plugin-catalog-graph": "^0.2.20",
++    "@backstage/plugin-catalog-import": "^0.8.11",
++    "@backstage/plugin-catalog-react": "^1.1.3",
++    "@backstage/plugin-github-actions": "^0.5.8",
++    "@backstage/plugin-org": "^0.5.8",
++    "@backstage/plugin-permission-react": "^0.4.4",
++    "@backstage/plugin-scaffolder": "^1.5.0",
++    "@backstage/plugin-search": "^1.0.1",
++    "@backstage/plugin-search-react": "^1.0.1",
++    "@backstage/plugin-tech-radar": "^0.5.15",
++    "@backstage/plugin-techdocs": "^1.3.1",
++    "@backstage/plugin-techdocs-react": "^1.0.3",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.3",
++    "@backstage/plugin-user-settings": "^0.4.7",
++    "@backstage/theme": "^0.2.16",
+     "@material-ui/core": "^4.12.2",
+@@ -42,3 +44,3 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.1.0-next.2",
++    "@backstage/test-utils": "^1.1.3",
+     "@testing-library/jest-dom": "^5.10.1",
+@@ -50,3 +52,3 @@
+     "cross-env": "^7.0.0",
+-    "cypress": "^7.3.0",
++    "cypress": "^9.7.0",
+     "eslint-plugin-cypress": "^2.10.3",
+@@ -63,3 +65,3 @@
+     "cy:dev": "cypress open",
+-    "cy:run": "cypress run"
++    "cy:run": "cypress run --browser chrome"
+   },
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index f4ff424..c487726 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -21,2 +21,4 @@ import {
+ } from '@backstage/plugin-techdocs';
++import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
++import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
+ import { UserSettingsPage } from '@backstage/plugin-user-settings';
+@@ -70,3 +72,7 @@ const routes = (
+       element={<TechDocsReaderPage />}
+-    />
++    >
++      <TechDocsAddons>
++        <ReportIssue />
++      </TechDocsAddons>
++    </Route>
+     <Route path="/create" element={<ScaffolderPage />} />
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+index 90738c4..b1164a3 100644
+--- a/packages/app/src/components/Root/Root.tsx
++++ b/packages/app/src/components/Root/Root.tsx
+@@ -16,3 +16,3 @@
+ 
+-import React, { useContext, PropsWithChildren } from 'react';
++import React, { PropsWithChildren } from 'react';
+ import { Link, makeStyles } from '@material-ui/core';
+@@ -34,3 +34,2 @@ import {
+   sidebarConfig,
+-  SidebarContext,
+   SidebarDivider,
+@@ -41,2 +40,3 @@ import {
+   SidebarSpace,
++  useSidebarOpenState,
+ } from '@backstage/core-components';
+@@ -62,3 +62,3 @@ const SidebarLogo = () => {
+   const classes = useSidebarLogoStyles();
+-  const { isOpen } = useContext(SidebarContext);
++  const { isOpen } = useSidebarOpenState();
+ 
+@@ -71,2 +71,3 @@ const SidebarLogo = () => {
+         className={classes.link}
++        aria-label="Home"
+       >
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 84d0944..6ec4da0 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -70,2 +70,13 @@ import {
+ 
++import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
++import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
++
++const techdocsContent = (
++  <EntityTechdocsContent>
++    <TechDocsAddons>
++      <ReportIssue />
++    </TechDocsAddons>
++  </EntityTechdocsContent>
++);
++
+ const cicdContent = (
+@@ -169,3 +180,3 @@ const serviceEntityPage = (
+     <EntityLayout.Route path="/docs" title="Docs">
+-      <EntityTechdocsContent />
++      {techdocsContent}
+     </EntityLayout.Route>
+@@ -196,3 +207,3 @@ const websiteEntityPage = (
+     <EntityLayout.Route path="/docs" title="Docs">
+-      <EntityTechdocsContent />
++      {techdocsContent}
+     </EntityLayout.Route>
+@@ -215,3 +226,3 @@ const defaultEntityPage = (
+     <EntityLayout.Route path="/docs" title="Docs">
+-      <EntityTechdocsContent />
++      {techdocsContent}
+     </EntityLayout.Route>
+diff --git a/packages/app/src/components/search/SearchPage.tsx b/packages/app/src/components/search/SearchPage.tsx
+index d4c7c92..928b820 100644
+--- a/packages/app/src/components/search/SearchPage.tsx
++++ b/packages/app/src/components/search/SearchPage.tsx
+@@ -10,3 +10,5 @@ import { TechDocsSearchResultListItem } from '@backstage/plugin-techdocs';
+ 
++import { SearchType } from '@backstage/plugin-search';
+ import {
++  DefaultResultListItem,
+   SearchBar,
+@@ -14,6 +16,4 @@ import {
+   SearchResult,
+-  SearchType,
+-  DefaultResultListItem,
+-} from '@backstage/plugin-search';
+-import { useSearch } from '@backstage/plugin-search-react';
++  useSearch,
++} from '@backstage/plugin-search-react';
+ import {
+@@ -114,3 +114,3 @@ const SearchPage = () => {
+                 <List>
+-                  {results.map(({ type, document, highlight }) => {
++                  {results.map(({ type, document, highlight, rank }) => {
+                     switch (type) {
+@@ -122,2 +122,3 @@ const SearchPage = () => {
+                             highlight={highlight}
++                            rank={rank}
+                           />
+@@ -130,2 +131,3 @@ const SearchPage = () => {
+                             highlight={highlight}
++                            rank={rank}
+                           />
+@@ -138,2 +140,3 @@ const SearchPage = () => {
+                             highlight={highlight}
++                            rank={rank}
+                           />
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index a5773aa..8836ac7 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -15,3 +15,4 @@ WORKDIR /app
+ 
+-# install sqlite3 dependencies, you can skip this if you don't use sqlite3 in the image
++# Install sqlite3 dependencies. You can skip this if you don't use sqlite3 in the image,
++# in which case you should also move better-sqlite3 to "devDependencies" in package.json.
+ RUN apt-get update && \
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index f4f9fe9..f005c39 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -19,18 +19,19 @@
+     "app": "link:../app",
+-    "@backstage/backend-common": "^0.13.3-next.2",
+-    "@backstage/backend-tasks": "^0.3.1-next.1",
+-    "@backstage/catalog-model": "^1.0.2-next.0",
+-    "@backstage/catalog-client": "^1.0.2-next.0",
+-    "@backstage/config": "^1.0.1-next.0",
+-    "@backstage/plugin-app-backend": "^0.3.32-next.1",
+-    "@backstage/plugin-auth-backend": "^0.13.1-next.2",
+-    "@backstage/plugin-catalog-backend": "^1.1.2-next.2",
+-    "@backstage/plugin-permission-common": "^0.6.1-next.0",
+-    "@backstage/plugin-permission-node": "^0.6.1-next.1",
+-    "@backstage/plugin-proxy-backend": "^0.2.26-next.1",
+-    "@backstage/plugin-scaffolder-backend": "^1.2.0-next.1",
+-    "@backstage/plugin-search-backend": "^0.5.2-next.1",
+-    "@backstage/plugin-search-backend-module-pg": "^0.3.3-next.1",
+-    "@backstage/plugin-search-backend-node": "^0.6.1-next.1",
+-    "@backstage/plugin-techdocs-backend": "^1.1.1-next.1",
++    "@backstage/backend-common": "^0.15.0",
++    "@backstage/backend-tasks": "^0.3.4",
++    "@backstage/catalog-model": "^1.1.0",
++    "@backstage/catalog-client": "^1.0.4",
++    "@backstage/config": "^1.0.1",
++    "@backstage/plugin-app-backend": "^0.3.35",
++    "@backstage/plugin-auth-backend": "^0.15.1",
++    "@backstage/plugin-catalog-backend": "^1.3.1",
++    "@backstage/plugin-permission-common": "^0.6.3",
++    "@backstage/plugin-permission-node": "^0.6.4",
++    "@backstage/plugin-proxy-backend": "^0.2.29",
++    "@backstage/plugin-scaffolder-backend": "^1.5.0",
++    "@backstage/plugin-search-backend": "^1.0.1",
++    "@backstage/plugin-search-backend-module-pg": "^0.3.6",
++    "@backstage/plugin-search-backend-node": "^1.0.1",
++    "@backstage/plugin-techdocs-backend": "^1.2.1",
++    "better-sqlite3": "^7.5.0",
+     "dockerode": "^3.3.1",
+@@ -42,3 +43,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.17.1-next.2",
++    "@backstage/cli": "^0.18.1",
+     "@types/dockerode": "^3.3.0",
+@@ -46,4 +47,3 @@
+     "@types/express": "^4.17.6",
+-    "@types/luxon": "^2.0.4",
+-    "better-sqlite3": "^7.5.0"
++    "@types/luxon": "^2.0.4"
+   },
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 70bc66b..ef05fa5 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -106,3 +106,3 @@ module.hot?.accept();
+ main().catch(error => {
+-  console.error(`Backend failed to start up, ${error}`);
++  console.error('Backend failed to start up', error);
+   process.exit(1);
+diff --git a/packages/backend/src/plugins/auth.ts b/packages/backend/src/plugins/auth.ts
+index 13f18c5..159116d 100644
+--- a/packages/backend/src/plugins/auth.ts
++++ b/packages/backend/src/plugins/auth.ts
+@@ -20,8 +20,17 @@ export default async function createPlugin(
+ 
+-      // This overrides the default GitHub auth provider with a custom one.
+-      // Since the options are empty it will behave just like the default
+-      // provider, but if you uncomment the `signIn` section you will enable
+-      // sign-in via GitHub. This particular configuration uses a resolver
+-      // that matches the username to the user entity name. See the auth
+-      // documentation for more details on how to enable and customize sign-in:
++      // This replaces the default GitHub auth provider with a customized one.
++      // The `signIn` option enables sign-in for this provider, using the
++      // identity resolution logic that's provided in the `resolver` callback.
++      //
++      // This particular resolver makes all users share a single "guest" identity.
++      // It should only be used for testing and trying out Backstage.
++      //
++      // If you want to use a production ready resolver you can switch to the
++      // the one that is commented out below, it looks up a user entity in the
++      // catalog using the GitHub username of the authenticated user.
++      // That resolver requires you to have user entities populated in the catalog,
++      // for example using https://backstage.io/docs/integrations/github/org
++      //
++      // There are other resolvers to choose from, and you can also create
++      // your own, see the auth documentation for more details:
+       //
+@@ -29,5 +38,14 @@ export default async function createPlugin(
+       github: providers.github.create({
+-        // signIn: {
+-        //   resolver: providers.github.resolvers.usernameMatchingUserEntityName(),
+-        // },
++        signIn: {
++          resolver(_, ctx) {
++            const userRef = 'user:default/guest'; // Must be a full entity reference
++            return ctx.issueToken({
++              claims: {
++                sub: userRef, // The user's own identity
++                ent: [userRef], // A list of identities that the user claims ownership through
++              },
++            });
++          },
++          // resolver: providers.github.resolvers.usernameMatchingUserEntityName(),
++        },
+       }),
