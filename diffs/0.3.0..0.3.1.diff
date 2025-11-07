@@ -1,0 +1,56 @@
+diff --git a/package.json b/package.json
+index 49c91b9..73179da 100644
+--- a/package.json
++++ b/package.json
+@@ -9,2 +9,3 @@
+     "start": "yarn workspace app start",
++    "start-backend": "yarn workspace backend start",
+     "build": "lerna run build",
+@@ -29,3 +30,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.4.3",
++    "@backstage/cli": "^0.4.4",
+     "@spotify/prettier-config": "^7.0.0",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 4e7297c..dfe6981 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -8,9 +8,9 @@
+     "@material-ui/icons": "^4.9.1",
+-    "@backstage/cli": "^0.4.3",
+-    "@backstage/core": "^0.4.2",
+-    "@backstage/plugin-api-docs": "^0.4.1",
+-    "@backstage/plugin-catalog": "^0.2.8",
+-    "@backstage/plugin-register-component": "^0.2.5",
++    "@backstage/cli": "^0.4.4",
++    "@backstage/core": "^0.4.3",
++    "@backstage/plugin-api-docs": "^0.4.2",
++    "@backstage/plugin-catalog": "^0.2.9",
++    "@backstage/plugin-register-component": "^0.2.6",
+     "@backstage/plugin-scaffolder": "^0.3.5",
+-    "@backstage/plugin-techdocs": "^0.5.1",
++    "@backstage/plugin-techdocs": "^0.5.2",
+     "@backstage/catalog-model": "^0.6.0",
+@@ -48,2 +48,3 @@
+     "lint": "backstage-cli lint",
++    "clean": "backstage-cli clean",
+     "test:e2e": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:dev",
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 64d7d2a..7a16b33 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -24,3 +24,3 @@
+     "@backstage/plugin-app-backend": "^0.3.3",
+-    "@backstage/plugin-auth-backend": "^0.2.7",
++    "@backstage/plugin-auth-backend": "^0.2.8",
+     "@backstage/plugin-catalog-backend": "^0.5.1",
+@@ -28,3 +28,3 @@
+     "@backstage/plugin-scaffolder-backend": "^0.3.6",
+-    "@backstage/plugin-techdocs-backend": "^0.5.0",
++    "@backstage/plugin-techdocs-backend": "^0.5.1",
+     "@octokit/rest": "^18.0.0",
+@@ -39,3 +39,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.4.3",
++    "@backstage/cli": "^0.4.4",
+     "@types/dockerode": "^3.2.1",
