@@ -1,0 +1,216 @@
+diff --git a/app-config.yaml b/app-config.yaml
+index 269756c..19f3819 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -39,9 +39,9 @@ proxy:
+ techdocs:
+-  storageUrl: http://localhost:7000/api/techdocs/static/docs
+   requestUrl: http://localhost:7000/api/techdocs
++  storageUrl: http://localhost:7000/api/techdocs/static/docs
++  builder: 'local'
+   generators:
+     techdocs: 'docker'
+-
+-lighthouse:
+-  baseUrl: http://localhost:3003
++  publisher:
++    type: 'local'
+ 
+diff --git a/package.json b/package.json
+index a9c5f76..a6bc053 100644
+--- a/package.json
++++ b/package.json
+@@ -9,2 +9,3 @@
+     "start": "yarn workspace app start",
++    "start-backend": "yarn workspace backend start",
+     "build": "lerna run build",
+@@ -29,3 +30,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.4.1",
++    "@backstage/cli": "^0.4.6",
+     "@spotify/prettier-config": "^7.0.0",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 0510bd2..ba052c9 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -8,16 +8,16 @@
+     "@material-ui/icons": "^4.9.1",
+-    "@backstage/cli": "^0.4.1",
+-    "@backstage/core": "^0.4.0",
+-    "@backstage/plugin-api-docs": "^0.4.0",
+-    "@backstage/plugin-catalog": "^0.2.6",
+-    "@backstage/plugin-register-component": "^0.2.4",
+-    "@backstage/plugin-scaffolder": "^0.3.3",
+-    "@backstage/plugin-techdocs": "^0.4.0",
+-    "@backstage/catalog-model": "^0.5.0",
+-    "@backstage/plugin-circleci": "^0.2.4",
+-    "@backstage/plugin-lighthouse": "^0.2.5",
+-    "@backstage/plugin-tech-radar": "^0.3.1",
+-    "@backstage/plugin-github-actions": "^0.2.4",
++    "@backstage/cli": "^0.4.6",
++    "@backstage/core": "^0.4.4",
++    "@backstage/plugin-api-docs": "^0.4.2",
++    "@backstage/plugin-catalog": "^0.2.11",
++    "@backstage/plugin-catalog-import": "^0.3.4",
++    "@backstage/plugin-scaffolder": "^0.3.6",
++    "@backstage/plugin-techdocs": "^0.5.3",
++    "@backstage/catalog-model": "^0.6.1",
++    "@backstage/plugin-circleci": "^0.2.5",
++    "@backstage/plugin-tech-radar": "^0.3.2",
++    "@backstage/plugin-github-actions": "^0.2.7",
+     "@backstage/plugin-user-settings": "^0.2.3",
+-    "@backstage/test-utils": "^0.1.5",
++    "@backstage/plugin-search": "^0.2.5",
++    "@backstage/test-utils": "^0.1.6",
+     "@backstage/theme": "^0.2.2",
+@@ -47,2 +47,3 @@
+     "lint": "backstage-cli lint",
++    "clean": "backstage-cli clean",
+     "test:e2e": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:dev",
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index 4f5c4ed..693e66e 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -14,4 +14,5 @@ import { Router as CatalogRouter } from '@backstage/plugin-catalog';
+ import { Router as DocsRouter } from '@backstage/plugin-techdocs';
+-import { Router as RegisterComponentRouter } from '@backstage/plugin-register-component';
++import { Router as ImportComponentRouter } from '@backstage/plugin-catalog-import';
+ import { Router as TechRadarRouter } from '@backstage/plugin-tech-radar';
++import { SearchPage as SearchRouter } from '@backstage/plugin-search';
+ 
+@@ -53,4 +54,8 @@ const App = () => (
+           <Route
+-            path="/register-component"
+-            element={<RegisterComponentRouter catalogRouteRef={catalogRouteRef} />}
++            path="/catalog-import"
++            element={<ImportComponentRouter catalogRouteRef={catalogRouteRef} />}
++          />
++          <Route
++            path="/search"
++            element={<SearchRouter/>}
+           />
+diff --git a/packages/app/src/plugins.ts b/packages/app/src/plugins.ts
+index 9eabff0..d3c9d6e 100644
+--- a/packages/app/src/plugins.ts
++++ b/packages/app/src/plugins.ts
+@@ -2,8 +2,7 @@ export { plugin as ApiDocs } from '@backstage/plugin-api-docs';
+ export { plugin as CatalogPlugin } from '@backstage/plugin-catalog';
+-export { plugin as RegisterComponent } from '@backstage/plugin-register-component';
++export { plugin as CatalogImport } from '@backstage/plugin-catalog-import';
++export { plugin as Circleci } from '@backstage/plugin-circleci';
++export { plugin as GithubActions } from '@backstage/plugin-github-actions';
+ export { plugin as ScaffolderPlugin } from '@backstage/plugin-scaffolder';
+ export { plugin as TechDocsPlugin } from '@backstage/plugin-techdocs';
+-export { plugin as Circleci } from '@backstage/plugin-circleci';
+-export { plugin as LighthousePlugin } from '@backstage/plugin-lighthouse';
+ export { plugin as TechRadar } from '@backstage/plugin-tech-radar';
+-export { plugin as GithubActions } from '@backstage/plugin-github-actions';
+diff --git a/packages/app/src/sidebar.tsx b/packages/app/src/sidebar.tsx
+index db73e70..55fa056 100644
+--- a/packages/app/src/sidebar.tsx
++++ b/packages/app/src/sidebar.tsx
+@@ -5,4 +5,2 @@ import ExtensionIcon from '@material-ui/icons/Extension';
+ import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
+-import BuildIcon from '@material-ui/icons/BuildRounded';
+-import RuleIcon from '@material-ui/icons/AssignmentTurnedIn';
+ import MapIcon from '@material-ui/icons/MyLocation';
+@@ -22,2 +20,3 @@ import {
+ } from '@backstage/core';
++import { SidebarSearch } from '@backstage/plugin-search';
+ 
+@@ -26,2 +25,3 @@ export const AppSidebar = () => (
+     <SidebarLogo />
++    <SidebarSearch />
+     <SidebarDivider />
+@@ -34,4 +34,2 @@ export const AppSidebar = () => (
+     <SidebarItem icon={MapIcon} to="tech-radar" text="Tech Radar" />
+-    <SidebarItem icon={RuleIcon} to="lighthouse" text="Lighthouse" />
+-    <SidebarItem icon={BuildIcon} to="circleci" text="CircleCI" />
+     {/* End global nav */}
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index dca5749..7a75e78 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -20,13 +20,13 @@
+     "app": "0.0.0",
+-    "@backstage/backend-common": "^0.4.0",
+-    "@backstage/catalog-model": "^0.5.0",
++    "@backstage/backend-common": "^0.4.3",
++    "@backstage/catalog-model": "^0.6.1",
+     "@backstage/config": "^0.1.2",
+     "@backstage/plugin-app-backend": "^0.3.3",
+-    "@backstage/plugin-auth-backend": "^0.2.6",
+-    "@backstage/plugin-catalog-backend": "^0.4.0",
++    "@backstage/plugin-auth-backend": "^0.2.10",
++    "@backstage/plugin-catalog-backend": "^0.5.3",
+     "@backstage/plugin-proxy-backend": "^0.2.3",
+-    "@backstage/plugin-scaffolder-backend": "^0.3.4",
+-    "@backstage/plugin-techdocs-backend": "^0.3.2",
+-    "@octokit/rest": "^18.0.0",
+-    "@gitbeaker/node": "^25.2.0",
++    "@backstage/plugin-scaffolder-backend": "^0.4.1",
++    "@backstage/plugin-techdocs-backend": "^0.5.3",
++    "@gitbeaker/node": "^28.0.2",
++    "@octokit/rest": "^18.0.12",
+     "dockerode": "^3.2.1",
+@@ -35,3 +35,3 @@
+     "knex": "^0.21.6",
+-    "sqlite3": "^4.2.0",
++    "sqlite3": "^5.0.0",
+     "winston": "^3.2.1"
+@@ -39,3 +39,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.4.1",
++    "@backstage/cli": "^0.4.6",
+     "@types/dockerode": "^3.2.1",
+diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
+index ac4d81a..5c7ec50 100644
+--- a/packages/backend/src/plugins/techdocs.ts
++++ b/packages/backend/src/plugins/techdocs.ts
+@@ -2,8 +2,5 @@ import {
+   createRouter,
+-  DirectoryPreparer,
+-  CommonGitPreparer,
+   Preparers,
+   Generators,
+-  LocalPublish,
+-  TechdocsGenerator,
++  Publisher,
+ } from '@backstage/plugin-techdocs-backend';
+@@ -16,18 +13,24 @@ export default async function createPlugin({
+   discovery,
++  reader,
+ }: PluginEnvironment) {
+-  const generators = new Generators();
+-  const techdocsGenerator = new TechdocsGenerator(logger, config);
+-
+-  generators.register('techdocs', techdocsGenerator);
+-
+-  const preparers = new Preparers();
+-  const directoryPreparer = new DirectoryPreparer(logger);
+-  const commonGitPreparer = new CommonGitPreparer(logger);
++  // Preparers are responsible for fetching source files for documentation.
++  const preparers = await Preparers.fromConfig(config, {
++    logger,
++    reader,
++  });
+ 
+-  preparers.register('dir', directoryPreparer);
+-  preparers.register('github', commonGitPreparer);
+-  preparers.register('gitlab', commonGitPreparer);
++  // Generators are used for generating documentation sites.
++  const generators = await Generators.fromConfig(config, {
++    logger,
++  });
+ 
+-  const publisher = new LocalPublish(logger, discovery);
++  // Publisher is used for
++  // 1. Publishing generated files to storage
++  // 2. Fetching files from storage and passing them to TechDocs frontend.
++  const publisher = await Publisher.fromConfig(config, {
++    logger,
++    discovery,
++  });
+ 
++  // Docker client (conditionally) used by the generators, based on techdocs.generators config.
+   const dockerClient = new Docker();
