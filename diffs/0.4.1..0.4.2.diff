@@ -1,9 +1,0 @@
-diff --git a/packages/backend/package.json b/packages/backend/package.json
-index bd338cc..3674613 100644
---- a/packages/backend/package.json
-+++ b/packages/backend/package.json
-@@ -28,3 +28,3 @@
-     "@backstage/plugin-search-backend-node": "^0.4.3",
--    "@backstage/plugin-techdocs-backend": "^0.10.6",
-+    "@backstage/plugin-techdocs-backend": "^0.10.7",
-     "@gitbeaker/node": "^30.2.0",

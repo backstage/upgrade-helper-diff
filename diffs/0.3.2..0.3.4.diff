@@ -1,9 +1,0 @@
-diff --git a/packages/backend/package.json b/packages/backend/package.json
-index 7a46c88..c7d4168 100644
---- a/packages/backend/package.json
-+++ b/packages/backend/package.json
-@@ -27,3 +27,3 @@
-     "@backstage/plugin-proxy-backend": "^0.2.3",
--    "@backstage/plugin-scaffolder-backend": "^0.3.7",
-+    "@backstage/plugin-scaffolder-backend": "^0.4.0",
-     "@backstage/plugin-techdocs-backend": "^0.5.2",
