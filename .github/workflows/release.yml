@@ -101,6 +101,8 @@ jobs:
           mkdir diffs
           for version in $(curl -s https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | jq -r 'to_entries | .[] | .value.createApp // .key'); do
             echo "Creating diffs between version $version and $NEW_VERSION"
+            git fetch origin release/$version
+            git fetch origin release/$NEW_VERSION
             git diff -U1 origin/release/$version..origin/release/$NEW_VERSION > diffs/$version..$NEW_VERSION.diff
           done
       - name: Create new branch with diff files for release ${NEW_VERSION}
@@ -118,6 +120,8 @@ jobs:
         run: |
           for version in $(curl -s https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases-yarn-plugin.json | jq -r 'to_entries |.[] | .key'); do
             echo "Creating yarn-plugin diffs between version $version and $RELEASE_VERSION"
+            git fetch origin release/yarn-plugin/$version
+            git fetch origin release/yarn-plugin/$RELEASE_VERSION
             git diff -U1 origin/release/yarn-plugin/$version..origin/release/yarn-plugin/$RELEASE_VERSION > diffs/$version..$RELEASE_VERSION.diff
           done
       - name: Push the changes
