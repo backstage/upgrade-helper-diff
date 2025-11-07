@@ -1,0 +1,1346 @@
+diff --git a/.dockerignore b/.dockerignore
+index 63c9c34..05edb62 100644
+--- a/.dockerignore
++++ b/.dockerignore
+@@ -1,5 +1,8 @@
+ .git
++.yarn/cache
++.yarn/install-state.gz
+ node_modules
+-packages
+-!packages/backend/dist
++packages/*/src
++packages/*/node_modules
+ plugins
++*.local.yaml
+diff --git a/.gitignore b/.gitignore
+index d16a8d3..d452ac2 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -17,2 +17,11 @@ node_modules/
+ 
++# Yarn 3 files
++.pnp.*
++.yarn/*
++!.yarn/patches
++!.yarn/plugins
++!.yarn/releases
++!.yarn/sdks
++!.yarn/versions
++
+ # Node version directives
+@@ -39 +48,4 @@ site
+ *-credentials.yaml
++
++# vscode database functionality support files
++*.session.sql
+diff --git a/app-config.production.yaml b/app-config.production.yaml
+index 5e36c23..df09dac 100644
+--- a/app-config.production.yaml
++++ b/app-config.production.yaml
+@@ -1,3 +1,3 @@
+ app:
+-  # Should be the same as backend.baseUrl when using the `app-backend` plugin
++  # Should be the same as backend.baseUrl when using the `app-backend` plugin.
+   baseUrl: http://localhost:7007
+@@ -5,4 +5,31 @@ app:
+ backend:
++  # Note that the baseUrl should be the URL that the browser and other clients
++  # should use when communicating with the backend, i.e. it needs to be
++  # reachable not just from within the backend host, but from all of your
++  # callers. When its value is "http://localhost:7007", it's strictly private
++  # and can't be reached by others.
+   baseUrl: http://localhost:7007
+-  listen:
+-    port: 7007
++  # The listener can also be expressed as a single <host>:<port> string. In this case we bind to
++  # all interfaces, the most permissive setting. The right value depends on your specific deployment.
++  listen: ':7007'
++
++  # config options: https://node-postgres.com/api/client
++  database:
++    client: pg
++    connection:
++      host: ${POSTGRES_HOST}
++      port: ${POSTGRES_PORT}
++      user: ${POSTGRES_USER}
++      password: ${POSTGRES_PASSWORD}
++      # https://node-postgres.com/features/ssl
++      # you can set the sslmode configuration option via the `PGSSLMODE` environment variable
++      # see https://www.postgresql.org/docs/current/libpq-ssl.html Table 33.1. SSL Mode Descriptions (e.g. require)
++      # ssl:
++      #   ca: # if you have a CA file and want to verify it you can uncomment this section
++      #     $file: <file-path>/ca/server.crt
++
++catalog:
++  # Overrides the default list locations from app-config.yaml as these contain example data.
++  # See https://backstage.io/docs/features/software-catalog/software-catalog-overview#adding-components-to-the-catalog for more details
++  # on how to get entities into the catalog.
++  locations: []
+diff --git a/app-config.yaml b/app-config.yaml
+index 64a661d..3b5de8b 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -17,2 +17,4 @@ backend:
+     port: 7007
++    # Uncomment the following host directive to bind to specific interfaces
++    # host: 127.0.0.1
+   csp:
+@@ -23,6 +25,8 @@ backend:
+     origin: http://localhost:3000
+-    methods: [GET, POST, PUT, DELETE]
++    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+     credentials: true
++  # This is for local development only, it is not recommended to use this in production
++  # The production database configuration is stored in app-config.production.yaml
+   database:
+-    client: sqlite3
++    client: better-sqlite3
+     connection: ':memory:'
+@@ -35,2 +39,4 @@ integrations:
+     - host: github.com
++      # This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
++      # about setting up the GitHub integration here: https://backstage.io/docs/getting-started/configuration#setting-up-a-github-integration
+       token: ${GITHUB_TOKEN}
+@@ -42,5 +48,7 @@ integrations:
+ proxy:
+-  '/test':
+-    target: 'https://example.com'
+-    changeOrigin: true
++  ### Example for how to add a proxy endpoint for the frontend.
++  ### A typical reason to do this is to handle HTTPS and CORS for internal services.
++  # '/test':
++  #   target: 'https://example.com'
++  #   changeOrigin: true
+ 
+@@ -69,36 +77,28 @@ catalog:
+   rules:
+-    - allow: [Component, System, API, Group, User, Resource, Location]
++    - allow: [Component, System, API, Resource, Location]
+   locations:
+-    # Backstage example components
+-    - type: url
+-      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-components.yaml
++    # Local example data, file locations are relative to the backend process, typically `packages/backend`
++    - type: file
++      target: ../../examples/entities.yaml
+ 
+-    # Backstage example systems
+-    - type: url
+-      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-systems.yaml
+-
+-    # Backstage example APIs
+-    - type: url
+-      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-apis.yaml
+-
+-    # Backstage example resources
+-    - type: url
+-      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-resources.yaml
+-
+-    # Backstage example organization groups
+-    - type: url
+-      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/acme/org.yaml
+-
+-    # Backstage example templates
+-    - type: url
+-      target: https://github.com/backstage/software-templates/blob/main/scaffolder-templates/react-ssr-template/template.yaml
+-      rules:
+-        - allow: [Template]
+-    - type: url
+-      target: https://github.com/backstage/software-templates/blob/main/scaffolder-templates/springboot-grpc-template/template.yaml
++    # Local example template
++    - type: file
++      target: ../../examples/template/template.yaml
+       rules:
+         - allow: [Template]
+-    - type: url
+-      target: https://github.com/backstage/software-templates/blob/main/scaffolder-templates/docs-template/template.yaml
++
++    # Local example organizational data
++    - type: file
++      target: ../../examples/org.yaml
+       rules:
+-        - allow: [Template]
++        - allow: [User, Group]
++
++    ## Uncomment these lines to add more example data
++    # - type: url
++    #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
++
++    ## Uncomment these lines to add an example org
++    # - type: url
++    #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/acme-corp.yaml
++    #   rules:
++    #     - allow: [User, Group]
+diff --git a/backstage.json b/backstage.json
+index 3666530..2161e7a 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "0.71.0"
++  "version": "1.11.0-next.0"
+ }
+diff --git a/examples/entities.yaml b/examples/entities.yaml
+new file mode 100644
+index 0000000..447e8b1
+--- /dev/null
++++ b/examples/entities.yaml
+@@ -0,0 +1,41 @@
++---
++# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-system
++apiVersion: backstage.io/v1alpha1
++kind: System
++metadata:
++  name: examples
++spec:
++  owner: guests
++---
++# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component
++apiVersion: backstage.io/v1alpha1
++kind: Component
++metadata:
++  name: example-website
++spec:
++  type: website
++  lifecycle: experimental
++  owner: guests
++  system: examples
++  providesApis: [example-grpc-api]
++---
++# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-api
++apiVersion: backstage.io/v1alpha1
++kind: API
++metadata:
++  name: example-grpc-api
++spec:
++  type: grpc
++  lifecycle: experimental
++  owner: guests
++  system: examples
++  definition: |
++    syntax = "proto3";
++
++    service Exampler {
++      rpc Example (ExampleMessage) returns (ExampleMessage) {};
++    }
++
++    message ExampleMessage {
++      string example = 1;
++    };
+diff --git a/examples/org.yaml b/examples/org.yaml
+new file mode 100644
+index 0000000..a10e81f
+--- /dev/null
++++ b/examples/org.yaml
+@@ -0,0 +1,17 @@
++---
++# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-user
++apiVersion: backstage.io/v1alpha1
++kind: User
++metadata:
++  name: guest
++spec:
++  memberOf: [guests]
++---
++# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-group
++apiVersion: backstage.io/v1alpha1
++kind: Group
++metadata:
++  name: guests
++spec:
++  type: team
++  children: []
+diff --git a/examples/template/content/catalog-info.yaml b/examples/template/content/catalog-info.yaml
+new file mode 100644
+index 0000000..d4ccca4
+--- /dev/null
++++ b/examples/template/content/catalog-info.yaml
+@@ -0,0 +1,8 @@
++apiVersion: backstage.io/v1alpha1
++kind: Component
++metadata:
++  name: ${{ values.name | dump }}
++spec:
++  type: service
++  owner: user:guest
++  lifecycle: experimental
+diff --git a/examples/template/content/index.js b/examples/template/content/index.js
+new file mode 100644
+index 0000000..071ce5a
+--- /dev/null
++++ b/examples/template/content/index.js
+@@ -0,0 +1 @@
++console.log('Hello from ${{ values.name }}!');
+diff --git a/examples/template/content/package.json b/examples/template/content/package.json
+new file mode 100644
+index 0000000..86f968a
+--- /dev/null
++++ b/examples/template/content/package.json
+@@ -0,0 +1,5 @@
++{
++  "name": "${{ values.name }}",
++  "private": true,
++  "dependencies": {}
++}
+diff --git a/examples/template/template.yaml b/examples/template/template.yaml
+new file mode 100644
+index 0000000..33f262b
+--- /dev/null
++++ b/examples/template/template.yaml
+@@ -0,0 +1,74 @@
++apiVersion: scaffolder.backstage.io/v1beta3
++# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template
++kind: Template
++metadata:
++  name: example-nodejs-template
++  title: Example Node.js Template
++  description: An example template for the scaffolder that creates a simple Node.js service
++spec:
++  owner: user:guest
++  type: service
++
++  # These parameters are used to generate the input form in the frontend, and are
++  # used to gather input data for the execution of the template.
++  parameters:
++    - title: Fill in some steps
++      required:
++        - name
++      properties:
++        name:
++          title: Name
++          type: string
++          description: Unique name of the component
++          ui:autofocus: true
++          ui:options:
++            rows: 5
++    - title: Choose a location
++      required:
++        - repoUrl
++      properties:
++        repoUrl:
++          title: Repository Location
++          type: string
++          ui:field: RepoUrlPicker
++          ui:options:
++            allowedHosts:
++              - github.com
++
++  # These steps are executed in the scaffolder backend, using data that we gathered
++  # via the parameters above.
++  steps:
++    # Each step executes an action, in this case one templates files into the working directory.
++    - id: fetch-base
++      name: Fetch Base
++      action: fetch:template
++      input:
++        url: ./content
++        values:
++          name: ${{ parameters.name }}
++
++    # This step publishes the contents of the working directory to GitHub.
++    - id: publish
++      name: Publish
++      action: publish:github
++      input:
++        allowedHosts: ['github.com']
++        description: This is ${{ parameters.name }}
++        repoUrl: ${{ parameters.repoUrl }}
++
++    # The final step is to register our new component in the catalog.
++    - id: register
++      name: Register
++      action: catalog:register
++      input:
++        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
++        catalogInfoPath: '/catalog-info.yaml'
++
++  # Outputs are displayed to the user after a successful execution of the template.
++  output:
++    links:
++      - title: Repository
++        url: ${{ steps['publish'].output.remoteUrl }}
++      - title: Open in catalog
++        icon: catalog
++        entityRef: ${{ steps['register'].output.entityRef }}
+diff --git a/package.json b/package.json
+index 625a333..fa75c3c 100644
+--- a/package.json
++++ b/package.json
+@@ -5,3 +5,3 @@
+   "engines": {
+-    "node": "14 || 16"
++    "node": "16 || 18"
+   },
+@@ -11,3 +11,4 @@
+     "start-backend": "yarn workspace backend start",
+-    "build": "backstage-cli repo build --all",
++    "build:backend": "yarn workspace backend build",
++    "build:all": "backstage-cli repo build --all",
+     "build-image": "yarn workspace backend build-image",
+@@ -15,6 +16,5 @@
+     "tsc:full": "tsc --skipLibCheck false --incremental false",
+-    "clean": "backstage-cli clean && lerna run clean",
+-    "diff": "lerna run diff --",
+-    "test": "backstage-cli test",
+-    "test:all": "lerna run test -- --coverage",
++    "clean": "backstage-cli repo clean",
++    "test": "backstage-cli repo test",
++    "test:all": "backstage-cli repo test --coverage",
+     "lint": "backstage-cli repo lint --since origin/master",
+@@ -22,4 +22,3 @@
+     "prettier:check": "prettier --check .",
+-    "create-plugin": "backstage-cli create-plugin --scope internal",
+-    "remove-plugin": "backstage-cli remove-plugin"
++    "new": "backstage-cli new --scope internal"
+   },
+@@ -32,3 +31,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.15.2",
++    "@backstage/cli": "^0.22.1",
+     "@spotify/prettier-config": "^12.0.0",
+@@ -36,4 +35,9 @@
+     "lerna": "^4.0.0",
++    "node-gyp": "^9.0.0",
+     "prettier": "^2.3.2",
+-    "typescript": "~4.5.4"
++    "typescript": "~4.6.4"
++  },
++  "resolutions": {
++    "@types/react": "^17",
++    "@types/react-dom": "^17"
+   },
+diff --git a/packages/README.md b/packages/README.md
+new file mode 100644
+index 0000000..6327fa0
+--- /dev/null
++++ b/packages/README.md
+@@ -0,0 +1,9 @@
++# The Packages Folder
++
++This is where your own applications and centrally managed libraries live, each
++in a separate folder of its own.
++
++From the start there's an `app` folder (for the frontend) and a `backend` folder
++(for the Node backend), but you can also add more modules in here that house
++your core additions and adaptations, such as themes, common React component
++libraries, utilities, and similar.
+diff --git a/packages/app/cypress.json b/packages/app/cypress.json
+index 5de7ebf..0cb845a 100644
+--- a/packages/app/cypress.json
++++ b/packages/app/cypress.json
+@@ -3,3 +3,4 @@
+   "fixturesFolder": false,
+-  "pluginsFile": false
++  "pluginsFile": false,
++  "retries": 3
+ }
+diff --git a/packages/app/package.json b/packages/app/package.json
+index bb1da11..ca237dc 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -8,25 +8,39 @@
+   },
++  "scripts": {
++    "start": "backstage-cli package start",
++    "build": "backstage-cli package build",
++    "clean": "backstage-cli package clean",
++    "test": "backstage-cli package test",
++    "lint": "backstage-cli package lint",
++    "test:e2e": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:dev",
++    "test:e2e:ci": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:run",
++    "cy:dev": "cypress open",
++    "cy:run": "cypress run --browser chrome"
++  },
+   "dependencies": {
+-    "@backstage/app-defaults": "^0.2.1",
+-    "@backstage/catalog-model": "^0.13.0",
+-    "@backstage/cli": "^0.15.2",
+-    "@backstage/core-app-api": "^0.6.0",
+-    "@backstage/core-components": "^0.9.1",
+-    "@backstage/core-plugin-api": "^0.8.0",
+-    "@backstage/integration-react": "^0.1.25",
+-    "@backstage/plugin-api-docs": "^0.8.2",
+-    "@backstage/plugin-catalog": "^0.10.0",
+-    "@backstage/plugin-catalog-common": "^0.2.2",
+-    "@backstage/plugin-catalog-graph": "^0.2.14",
+-    "@backstage/plugin-catalog-import": "^0.8.5",
+-    "@backstage/plugin-catalog-react": "^0.9.0",
+-    "@backstage/plugin-github-actions": "^0.5.2",
+-    "@backstage/plugin-org": "^0.5.2",
+-    "@backstage/plugin-permission-react": "^0.3.3",
+-    "@backstage/plugin-scaffolder": "^0.15.0",
+-    "@backstage/plugin-search": "^0.7.3",
+-    "@backstage/plugin-tech-radar": "^0.5.9",
+-    "@backstage/plugin-techdocs": "^0.15.1",
+-    "@backstage/plugin-user-settings": "^0.4.1",
+-    "@backstage/theme": "^0.2.15",
++    "@backstage/app-defaults": "^1.1.0",
++    "@backstage/catalog-model": "^1.1.6-next.0",
++    "@backstage/cli": "^0.22.1",
++    "@backstage/core-app-api": "^1.4.0",
++    "@backstage/core-components": "^0.12.3",
++    "@backstage/core-plugin-api": "^1.3.0",
++    "@backstage/integration-react": "^1.1.9",
++    "@backstage/plugin-api-docs": "^0.8.15-next.0",
++    "@backstage/plugin-catalog": "^1.7.3-next.0",
++    "@backstage/plugin-catalog-common": "^1.0.11-next.0",
++    "@backstage/plugin-catalog-graph": "^0.2.27-next.0",
++    "@backstage/plugin-catalog-import": "^0.9.5-next.0",
++    "@backstage/plugin-catalog-react": "^1.3.0-next.0",
++    "@backstage/plugin-github-actions": "^0.5.15-next.0",
++    "@backstage/plugin-org": "^0.6.5-next.0",
++    "@backstage/plugin-permission-react": "^0.4.9",
++    "@backstage/plugin-scaffolder": "^1.11.0-next.0",
++    "@backstage/plugin-search": "^1.0.8-next.0",
++    "@backstage/plugin-search-react": "^1.4.0",
++    "@backstage/plugin-tech-radar": "^0.6.0",
++    "@backstage/plugin-techdocs": "^1.4.4-next.0",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.0.10-next.0",
++    "@backstage/plugin-techdocs-react": "^1.1.3-next.0",
++    "@backstage/plugin-user-settings": "^0.6.3-next.0",
++    "@backstage/theme": "^0.2.16",
+     "@material-ui/core": "^4.12.2",
+@@ -36,16 +50,14 @@
+     "react-dom": "^17.0.2",
+-    "react-router": "6.0.0-beta.0",
+-    "react-router-dom": "6.0.0-beta.0",
+-    "react-use": "^15.3.3"
++    "react-router-dom": "^6.3.0",
++    "react-use": "^17.2.4"
+   },
+   "devDependencies": {
+-    "@backstage/test-utils": "^0.3.0",
++    "@backstage/test-utils": "^1.2.4",
+     "@testing-library/jest-dom": "^5.10.1",
+-    "@testing-library/react": "^10.4.1",
+-    "@testing-library/user-event": "^12.0.7",
+-    "@types/jest": "^26.0.7",
+-    "@types/node": "^14.14.32",
++    "@testing-library/react": "^12.1.3",
++    "@testing-library/user-event": "^14.0.0",
++    "@types/node": "^16.11.26",
+     "@types/react-dom": "*",
+     "cross-env": "^7.0.0",
+-    "cypress": "^7.3.0",
++    "cypress": "^9.7.0",
+     "eslint-plugin-cypress": "^2.10.3",
+@@ -53,13 +65,2 @@
+   },
+-  "scripts": {
+-    "start": "backstage-cli package start",
+-    "build": "backstage-cli package build",
+-    "clean": "backstage-cli package clean",
+-    "test": "backstage-cli package test",
+-    "lint": "backstage-cli package lint",
+-    "test:e2e": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:dev",
+-    "test:e2e:ci": "cross-env PORT=3001 start-server-and-test start http://localhost:3001 cy:run",
+-    "cy:dev": "cypress open",
+-    "cy:run": "cypress run"
+-  },
+   "browserslist": {
+diff --git a/packages/app/public/index.html b/packages/app/public/index.html
+index a936c73..c6083b3 100644
+--- a/packages/app/public/index.html
++++ b/packages/app/public/index.html
+@@ -45,20 +45,2 @@
+     <title><%= config.getString('app.title') %></title>
+-    <% if (config.has('app.googleAnalyticsTrackingId')) { %>
+-    <script
+-      async
+-      src="https://www.googletagmanager.com/gtag/js?id=<%= config.getString('app.googleAnalyticsTrackingId') %>"
+-    ></script>
+-    <script>
+-      window.dataLayer = window.dataLayer || [];
+-      function gtag() {
+-        dataLayer.push(arguments);
+-      }
+-      gtag('js', new Date());
+-
+-      gtag(
+-        'config',
+-        '<%= config.getString("app.googleAnalyticsTrackingId") %>',
+-      );
+-    </script>
+-    <% } %>
+   </head>
+@@ -74,4 +56,4 @@
+ 
+-      To begin the development, run `npm start` or `yarn start`.
+-      To create a production bundle, use `npm run build` or `yarn build`.
++      To begin the development, run `yarn start`.
++      To create a production bundle, use `yarn build`.
+     -->
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index f4ff424..056402f 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -1,3 +1,3 @@
+ import React from 'react';
+-import { Navigate, Route } from 'react-router';
++import { Navigate, Route } from 'react-router-dom';
+ import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
+@@ -21,2 +21,4 @@ import {
+ } from '@backstage/plugin-techdocs';
++import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
++import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
+ import { UserSettingsPage } from '@backstage/plugin-user-settings';
+@@ -29,5 +31,5 @@ import { AlertDisplay, OAuthRequestDialog } from '@backstage/core-components';
+ import { createApp } from '@backstage/app-defaults';
+-import { FlatRoutes } from '@backstage/core-app-api';
++import { AppRouter, FlatRoutes } from '@backstage/core-app-api';
+ import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
+-import { PermissionedRoute } from '@backstage/plugin-permission-react';
++import { RequirePermission } from '@backstage/plugin-permission-react';
+ import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
+@@ -53,8 +55,5 @@ const app = createApp({
+ 
+-const AppProvider = app.getProvider();
+-const AppRouter = app.getRouter();
+-
+ const routes = (
+   <FlatRoutes>
+-    <Navigate key="/" to="catalog" />
++    <Route path="/" element={<Navigate to="catalog" />} />
+     <Route path="/catalog" element={<CatalogIndexPage />} />
+@@ -70,3 +69,7 @@ const routes = (
+       element={<TechDocsReaderPage />}
+-    />
++    >
++      <TechDocsAddons>
++        <ReportIssue />
++      </TechDocsAddons>
++    </Route>
+     <Route path="/create" element={<ScaffolderPage />} />
+@@ -77,6 +80,9 @@ const routes = (
+     />
+-    <PermissionedRoute
++    <Route
+       path="/catalog-import"
+-      permission={catalogEntityCreatePermission}
+-      element={<CatalogImportPage />}
++      element={
++        <RequirePermission permission={catalogEntityCreatePermission}>
++          <CatalogImportPage />
++        </RequirePermission>
++      }
+     />
+@@ -90,4 +96,4 @@ const routes = (
+ 
+-const App = () => (
+-  <AppProvider>
++export default app.createRoot(
++  <>
+     <AlertDisplay />
+@@ -97,5 +103,3 @@ const App = () => (
+     </AppRouter>
+-  </AppProvider>
++  </>,
+ );
+-
+-export default App;
+diff --git a/packages/app/src/components/Root/LogoFull.tsx b/packages/app/src/components/Root/LogoFull.tsx
+index c7b1c84..47e3b73 100644
+--- a/packages/app/src/components/Root/LogoFull.tsx
++++ b/packages/app/src/components/Root/LogoFull.tsx
+@@ -1,17 +1 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+ import React from 'react';
+diff --git a/packages/app/src/components/Root/LogoIcon.tsx b/packages/app/src/components/Root/LogoIcon.tsx
+index 073cf6e..7eae8c7 100644
+--- a/packages/app/src/components/Root/LogoIcon.tsx
++++ b/packages/app/src/components/Root/LogoIcon.tsx
+@@ -1,17 +1 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+ import React from 'react';
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+index 90738c4..6768b48 100644
+--- a/packages/app/src/components/Root/Root.tsx
++++ b/packages/app/src/components/Root/Root.tsx
+@@ -1,19 +1,3 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-import React, { useContext, PropsWithChildren } from 'react';
+-import { Link, makeStyles } from '@material-ui/core';
++import React, { PropsWithChildren } from 'react';
++import { makeStyles } from '@material-ui/core';
+ import HomeIcon from '@material-ui/icons/Home';
+@@ -25,3 +9,2 @@ import LogoFull from './LogoFull';
+ import LogoIcon from './LogoIcon';
+-import { NavLink } from 'react-router-dom';
+ import {
+@@ -34,3 +17,2 @@ import {
+   sidebarConfig,
+-  SidebarContext,
+   SidebarDivider,
+@@ -41,2 +23,4 @@ import {
+   SidebarSpace,
++  useSidebarOpenState,
++  Link,
+ } from '@backstage/core-components';
+@@ -62,3 +46,3 @@ const SidebarLogo = () => {
+   const classes = useSidebarLogoStyles();
+-  const { isOpen } = useContext(SidebarContext);
++  const { isOpen } = useSidebarOpenState();
+ 
+@@ -66,8 +50,3 @@ const SidebarLogo = () => {
+     <div className={classes.root}>
+-      <Link
+-        component={NavLink}
+-        to="/"
+-        underline="none"
+-        className={classes.link}
+-      >
++      <Link to="/" underline="none" className={classes.link} aria-label="Home">
+         {isOpen ? <LogoFull /> : <LogoIcon />}
+diff --git a/packages/app/src/components/Root/index.ts b/packages/app/src/components/Root/index.ts
+index dff706f..3528881 100644
+--- a/packages/app/src/components/Root/index.ts
++++ b/packages/app/src/components/Root/index.ts
+@@ -1,17 +1 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+ export { Root } from './Root';
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 84d0944..54a05ee 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -1,16 +1 @@
+-/*
+- * Copyright 2020 The Backstage Authors
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+ import React from 'react';
+@@ -70,2 +55,13 @@ import {
+ 
++import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
++import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
++
++const techdocsContent = (
++  <EntityTechdocsContent>
++    <TechDocsAddons>
++      <ReportIssue />
++    </TechDocsAddons>
++  </EntityTechdocsContent>
++);
++
+ const cicdContent = (
+@@ -169,3 +165,3 @@ const serviceEntityPage = (
+     <EntityLayout.Route path="/docs" title="Docs">
+-      <EntityTechdocsContent />
++      {techdocsContent}
+     </EntityLayout.Route>
+@@ -196,3 +192,3 @@ const websiteEntityPage = (
+     <EntityLayout.Route path="/docs" title="Docs">
+-      <EntityTechdocsContent />
++      {techdocsContent}
+     </EntityLayout.Route>
+@@ -215,3 +211,3 @@ const defaultEntityPage = (
+     <EntityLayout.Route path="/docs" title="Docs">
+-      <EntityTechdocsContent />
++      {techdocsContent}
+     </EntityLayout.Route>
+@@ -315,3 +311,6 @@ const systemPage = (
+         </Grid>
+-        <Grid item md={6}>
++        <Grid item md={4} xs={12}>
++          <EntityLinksCard />
++        </Grid>
++        <Grid item md={8}>
+           <EntityHasComponentsCard variant="gridItem" />
+diff --git a/packages/app/src/components/search/SearchPage.tsx b/packages/app/src/components/search/SearchPage.tsx
+index cd4603e..9f11d0c 100644
+--- a/packages/app/src/components/search/SearchPage.tsx
++++ b/packages/app/src/components/search/SearchPage.tsx
+@@ -10,3 +10,5 @@ import { TechDocsSearchResultListItem } from '@backstage/plugin-techdocs';
+ 
++import { SearchType } from '@backstage/plugin-search';
+ import {
++  DefaultResultListItem,
+   SearchBar,
+@@ -14,6 +16,5 @@ import {
+   SearchResult,
+-  SearchType,
+-  DefaultResultListItem,
++  SearchPagination,
+   useSearch,
+-} from '@backstage/plugin-search';
++} from '@backstage/plugin-search-react';
+ import {
+@@ -111,2 +112,3 @@ const SearchPage = () => {
+           <Grid item xs={9}>
++            <SearchPagination />
+             <SearchResult>
+@@ -114,3 +116,3 @@ const SearchPage = () => {
+                 <List>
+-                  {results.map(({ type, document }) => {
++                  {results.map(({ type, document, highlight, rank }) => {
+                     switch (type) {
+@@ -121,2 +123,4 @@ const SearchPage = () => {
+                             result={document}
++                            highlight={highlight}
++                            rank={rank}
+                           />
+@@ -128,2 +132,4 @@ const SearchPage = () => {
+                             result={document}
++                            highlight={highlight}
++                            rank={rank}
+                           />
+@@ -135,2 +141,4 @@ const SearchPage = () => {
+                             result={document}
++                            highlight={highlight}
++                            rank={rank}
+                           />
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index dd35d4d..51f7124 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -7,3 +7,3 @@
+ # yarn tsc
+-# yarn build
++# yarn build:backend
+ #
+@@ -13,4 +13,21 @@ FROM node:16-bullseye-slim
+ 
++# Install sqlite3 dependencies. You can skip this if you don't use sqlite3 in the image,
++# in which case you should also move better-sqlite3 to "devDependencies" in package.json.
++RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
++    --mount=type=cache,target=/var/lib/apt,sharing=locked \
++    apt-get update && \
++    apt-get install -y --no-install-recommends libsqlite3-dev python3 build-essential && \
++    yarn config set python /usr/bin/python3
++
++# From here on we use the least-privileged `node` user to run the backend.
++USER node
++
++# This should create the app dir as `node`.
++# If it is instead created as `root` then the `tar` command below will fail: `can't create directory 'packages/': Permission denied`.
++# If this occurs, then ensure BuildKit is enabled (`DOCKER_BUILDKIT=1`) so the app dir is correctly created as `node`.
+ WORKDIR /app
+ 
++# This switches many Node.js dependencies to production mode.
++ENV NODE_ENV production
++
+ # Copy repo skeleton first, to avoid unnecessary docker cache invalidation.
+@@ -18,17 +35,12 @@ WORKDIR /app
+ # and along with yarn.lock and the root package.json, that's enough to run yarn install.
+-COPY yarn.lock package.json packages/backend/dist/skeleton.tar.gz ./
++COPY --chown=node:node yarn.lock package.json packages/backend/dist/skeleton.tar.gz ./
+ RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
+ 
+-# install sqlite3 dependencies
+-RUN apt-get update && \
+-    apt-get install -y libsqlite3-dev python3 cmake g++ && \
+-    rm -rf /var/lib/apt/lists/* && \
+-    yarn config set python /usr/bin/python3
+-
+-RUN yarn install --frozen-lockfile --production --network-timeout 300000 && rm -rf "$(yarn cache dir)"
++RUN --mount=type=cache,target=/home/node/.cache/yarn,sharing=locked,uid=1000,gid=1000 \
++    yarn install --frozen-lockfile --production --network-timeout 300000
+ 
+ # Then copy the rest of the backend bundle, along with any other files we might want.
+-COPY packages/backend/dist/bundle.tar.gz app-config.yaml ./
++COPY --chown=node:node packages/backend/dist/bundle.tar.gz app-config*.yaml ./
+ RUN tar xzf bundle.tar.gz && rm bundle.tar.gz
+ 
+-CMD ["node", "packages/backend", "--config", "app-config.yaml"]
++CMD ["node", "packages/backend", "--config", "app-config.yaml", "--config", "app-config.production.yaml"]
+diff --git a/packages/backend/README.md b/packages/backend/README.md
+index 02426ef..aa042db 100644
+--- a/packages/backend/README.md
++++ b/packages/backend/README.md
+@@ -18,4 +18,2 @@ To run the example backend, first go to the project root and run
+ yarn install
+-yarn tsc
+-yarn build
+ ```
+@@ -27,7 +25,2 @@ After that, go to the `packages/backend` directory and run
+ ```bash
+-AUTH_GOOGLE_CLIENT_ID=x AUTH_GOOGLE_CLIENT_SECRET=x \
+-AUTH_GITHUB_CLIENT_ID=x AUTH_GITHUB_CLIENT_SECRET=x \
+-AUTH_OAUTH2_CLIENT_ID=x AUTH_OAUTH2_CLIENT_SECRET=x \
+-AUTH_OAUTH2_AUTH_URL=x AUTH_OAUTH2_TOKEN_URL=x \
+-LOG_LEVEL=debug \
+ yarn start
+@@ -35,4 +28,4 @@ yarn start
+ 
+-Substitute `x` for actual values, or leave them as dummy values just to try out
+-the backend without using the auth or sentry features.
++If you want to override any configuration locally, for example adding any secrets,
++you can do so in `app-config.local.yaml`.
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 10f5a4d..4fb74ce 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -15,24 +15,24 @@
+     "clean": "backstage-cli package clean",
+-    "build-image": "docker build ../.. -f Dockerfile --tag backstage",
+-    "migrate:create": "knex migrate:make -x ts"
++    "build-image": "docker build ../.. -f Dockerfile --tag backstage"
+   },
+   "dependencies": {
++    "@backstage/backend-common": "^0.18.2-next.0",
++    "@backstage/backend-tasks": "^0.4.3-next.0",
++    "@backstage/catalog-client": "^1.3.1-next.0",
++    "@backstage/catalog-model": "^1.1.6-next.0",
++    "@backstage/config": "^1.0.6",
++    "@backstage/plugin-app-backend": "^0.3.42-next.0",
++    "@backstage/plugin-auth-backend": "^0.17.5-next.0",
++    "@backstage/plugin-auth-node": "^0.2.11-next.0",
++    "@backstage/plugin-catalog-backend": "^1.7.2-next.0",
++    "@backstage/plugin-permission-common": "^0.7.3",
++    "@backstage/plugin-permission-node": "^0.7.5-next.0",
++    "@backstage/plugin-proxy-backend": "^0.2.36-next.0",
++    "@backstage/plugin-scaffolder-backend": "^1.11.0-next.0",
++    "@backstage/plugin-search-backend": "^1.2.3-next.0",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.3-next.0",
++    "@backstage/plugin-search-backend-node": "^1.1.3-next.0",
++    "@backstage/plugin-techdocs-backend": "^1.5.3-next.0",
+     "app": "link:../app",
+-    "@backstage/backend-common": "^0.13.0",
+-    "@backstage/backend-tasks": "^0.2.0",
+-    "@backstage/catalog-model": "^0.13.0",
+-    "@backstage/catalog-client": "^0.9.0",
+-    "@backstage/config": "^0.1.15",
+-    "@backstage/plugin-app-backend": "^0.3.29",
+-    "@backstage/plugin-auth-backend": "^0.12.1",
+-    "@backstage/plugin-catalog-backend": "^0.24.0",
+-    "@backstage/plugin-permission-common": "^0.5.2",
+-    "@backstage/plugin-permission-node": "^0.5.4",
+-    "@backstage/plugin-proxy-backend": "^0.2.23",
+-    "@backstage/plugin-scaffolder-backend": "^0.18.0",
+-    "@backstage/plugin-search-backend": "^0.4.7",
+-    "@backstage/plugin-search-backend-node": "^0.5.1",
+-    "@backstage/plugin-techdocs-backend": "^0.14.2",
+-    "@gitbeaker/node": "^34.6.0",
+-    "@octokit/rest": "^18.5.3",
++    "better-sqlite3": "^8.0.0",
+     "dockerode": "^3.3.1",
+@@ -40,4 +40,3 @@
+     "express-promise-router": "^4.1.0",
+-    "knex": "^0.21.6",
+-    "@vscode/sqlite3": "^5.0.7",
++    "pg": "^8.3.0",
+     "winston": "^3.2.1"
+@@ -45,6 +44,7 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.15.2",
++    "@backstage/cli": "^0.22.1",
+     "@types/dockerode": "^3.3.0",
+     "@types/express": "^4.17.6",
+-    "@types/express-serve-static-core": "^4.17.5"
++    "@types/express-serve-static-core": "^4.17.5",
++    "@types/luxon": "^2.0.4"
+   },
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 70bc66b..c4736a5 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -32,2 +32,3 @@ import { PluginEnvironment } from './types';
+ import { ServerPermissionClient } from '@backstage/plugin-permission-node';
++import { DefaultIdentityClient } from '@backstage/plugin-auth-node';
+ 
+@@ -38,5 +39,9 @@ function makeCreateEnv(config: Config) {
+   const cacheManager = CacheManager.fromConfig(config);
+-  const databaseManager = DatabaseManager.fromConfig(config);
++  const databaseManager = DatabaseManager.fromConfig(config, { logger: root });
+   const tokenManager = ServerTokenManager.noop();
+   const taskScheduler = TaskScheduler.fromConfig(config);
++
++  const identity = DefaultIdentityClient.create({
++    discovery,
++  });
+   const permissions = ServerPermissionClient.fromConfig(config, {
+@@ -63,2 +68,3 @@ function makeCreateEnv(config: Config) {
+       permissions,
++      identity,
+     };
+@@ -106,3 +112,3 @@ module.hot?.accept();
+ main().catch(error => {
+-  console.error(`Backend failed to start up, ${error}`);
++  console.error('Backend failed to start up', error);
+   process.exit(1);
+diff --git a/packages/backend/src/plugins/app.ts b/packages/backend/src/plugins/app.ts
+index 14e19a1..7c37f68 100644
+--- a/packages/backend/src/plugins/app.ts
++++ b/packages/backend/src/plugins/app.ts
+@@ -4,11 +4,9 @@ import { PluginEnvironment } from '../types';
+ 
+-export default async function createPlugin({
+-  logger,
+-  config,
+-  database,
+-}: PluginEnvironment): Promise<Router> {
++export default async function createPlugin(
++  env: PluginEnvironment,
++): Promise<Router> {
+   return await createRouter({
+-    logger,
+-    config,
+-    database,
++    logger: env.logger,
++    config: env.config,
++    database: env.database,
+     appPackageName: 'app',
+diff --git a/packages/backend/src/plugins/auth.ts b/packages/backend/src/plugins/auth.ts
+index 015c864..77eb6aa 100644
+--- a/packages/backend/src/plugins/auth.ts
++++ b/packages/backend/src/plugins/auth.ts
+@@ -1,2 +1,6 @@
+-import { createRouter } from '@backstage/plugin-auth-backend';
++import {
++  createRouter,
++  providers,
++  defaultAuthProviderFactories,
++} from '@backstage/plugin-auth-backend';
+ import { Router } from 'express';
+@@ -4,15 +8,46 @@ import { PluginEnvironment } from '../types';
+ 
+-export default async function createPlugin({
+-  logger,
+-  database,
+-  config,
+-  discovery,
+-  tokenManager,
+-}: PluginEnvironment): Promise<Router> {
++export default async function createPlugin(
++  env: PluginEnvironment,
++): Promise<Router> {
+   return await createRouter({
+-    logger,
+-    config,
+-    database,
+-    discovery,
+-    tokenManager,
++    logger: env.logger,
++    config: env.config,
++    database: env.database,
++    discovery: env.discovery,
++    tokenManager: env.tokenManager,
++    providerFactories: {
++      ...defaultAuthProviderFactories,
++
++      // This replaces the default GitHub auth provider with a customized one.
++      // The `signIn` option enables sign-in for this provider, using the
++      // identity resolution logic that's provided in the `resolver` callback.
++      //
++      // This particular resolver makes all users share a single "guest" identity.
++      // It should only be used for testing and trying out Backstage.
++      //
++      // If you want to use a production ready resolver you can switch to
++      // the one that is commented out below, it looks up a user entity in the
++      // catalog using the GitHub username of the authenticated user.
++      // That resolver requires you to have user entities populated in the catalog,
++      // for example using https://backstage.io/docs/integrations/github/org
++      //
++      // There are other resolvers to choose from, and you can also create
++      // your own, see the auth documentation for more details:
++      //
++      //   https://backstage.io/docs/auth/identity-resolver
++      github: providers.github.create({
++        signIn: {
++          resolver(_, ctx) {
++            const userRef = 'user:default/guest'; // Must be a full entity reference
++            return ctx.issueToken({
++              claims: {
++                sub: userRef, // The user's own identity
++                ent: [userRef], // A list of identities that the user claims ownership through
++              },
++            });
++          },
++          // resolver: providers.github.resolvers.usernameMatchingUserEntityName(),
++        },
++      }),
++    },
+   });
+diff --git a/packages/backend/src/plugins/proxy.ts b/packages/backend/src/plugins/proxy.ts
+index 506f6d9..54ec393 100644
+--- a/packages/backend/src/plugins/proxy.ts
++++ b/packages/backend/src/plugins/proxy.ts
+@@ -4,8 +4,10 @@ import { PluginEnvironment } from '../types';
+ 
+-export default async function createPlugin({
+-  logger,
+-  config,
+-  discovery,
+-}: PluginEnvironment): Promise<Router> {
+-  return await createRouter({ logger, config, discovery });
++export default async function createPlugin(
++  env: PluginEnvironment,
++): Promise<Router> {
++  return await createRouter({
++    logger: env.logger,
++    config: env.config,
++    discovery: env.discovery,
++  });
+ }
+diff --git a/packages/backend/src/plugins/scaffolder.ts b/packages/backend/src/plugins/scaffolder.ts
+index a460fd8..ef46f07 100644
+--- a/packages/backend/src/plugins/scaffolder.ts
++++ b/packages/backend/src/plugins/scaffolder.ts
+@@ -5,16 +5,16 @@ import type { PluginEnvironment } from '../types';
+ 
+-export default async function createPlugin({
+-  logger,
+-  config,
+-  database,
+-  reader,
+-  discovery,
+-}: PluginEnvironment): Promise<Router> {
+-  const catalogClient = new CatalogClient({ discoveryApi: discovery });
++export default async function createPlugin(
++  env: PluginEnvironment,
++): Promise<Router> {
++  const catalogClient = new CatalogClient({
++    discoveryApi: env.discovery,
++  });
++
+   return await createRouter({
+-    logger,
+-    config,
+-    database,
++    logger: env.logger,
++    config: env.config,
++    database: env.database,
++    reader: env.reader,
+     catalogClient,
+-    reader,
++    identity: env.identity,
+   });
+diff --git a/packages/backend/src/plugins/search.ts b/packages/backend/src/plugins/search.ts
+index c359cb4..e9469dc 100644
+--- a/packages/backend/src/plugins/search.ts
++++ b/packages/backend/src/plugins/search.ts
+@@ -9,13 +9,23 @@ import { DefaultCatalogCollatorFactory } from '@backstage/plugin-catalog-backend
+ import { DefaultTechDocsCollatorFactory } from '@backstage/plugin-techdocs-backend';
++import { Router } from 'express';
+ 
+-export default async function createPlugin({
+-  logger,
+-  permissions,
+-  discovery,
+-  config,
+-  tokenManager,
+-}: PluginEnvironment) {
++export default async function createPlugin(
++  env: PluginEnvironment,
++): Promise<Router> {
+   // Initialize a connection to a search engine.
+-  const searchEngine = new LunrSearchEngine({ logger });
+-  const indexBuilder = new IndexBuilder({ logger, searchEngine });
++  const searchEngine = new LunrSearchEngine({
++    logger: env.logger,
++  });
++  const indexBuilder = new IndexBuilder({
++    logger: env.logger,
++    searchEngine,
++  });
++
++  const schedule = env.scheduler.createScheduledTaskRunner({
++    frequency: { minutes: 10 },
++    timeout: { minutes: 15 },
++    // A 3 second delay gives the backend server a chance to initialize before
++    // any collators are executed, which may attempt requests against the API.
++    initialDelay: { seconds: 3 },
++  });
+ 
+@@ -24,6 +34,6 @@ export default async function createPlugin({
+   indexBuilder.addCollator({
+-    defaultRefreshIntervalSeconds: 600,
+-    factory: DefaultCatalogCollatorFactory.fromConfig(config, {
+-      discovery,
+-      tokenManager,
++    schedule,
++    factory: DefaultCatalogCollatorFactory.fromConfig(env.config, {
++      discovery: env.discovery,
++      tokenManager: env.tokenManager,
+     }),
+@@ -33,7 +43,7 @@ export default async function createPlugin({
+   indexBuilder.addCollator({
+-    defaultRefreshIntervalSeconds: 600,
+-    factory: DefaultTechDocsCollatorFactory.fromConfig(config, {
+-      discovery,
+-      logger,
+-      tokenManager,
++    schedule,
++    factory: DefaultTechDocsCollatorFactory.fromConfig(env.config, {
++      discovery: env.discovery,
++      logger: env.logger,
++      tokenManager: env.tokenManager,
+     }),
+@@ -44,6 +54,4 @@ export default async function createPlugin({
+   const { scheduler } = await indexBuilder.build();
++  scheduler.start();
+ 
+-  // A 3 second delay gives the backend server a chance to initialize before
+-  // any collators are executed, which may attempt requests against the API.
+-  setTimeout(() => scheduler.start(), 3000);
+   useHotCleanup(module, () => scheduler.stop());
+@@ -53,5 +61,5 @@ export default async function createPlugin({
+     types: indexBuilder.getDocumentTypes(),
+-    permissions,
+-    config,
+-    logger,
++    permissions: env.permissions,
++    config: env.config,
++    logger: env.logger,
+   });
+diff --git a/packages/backend/src/plugins/techdocs.ts b/packages/backend/src/plugins/techdocs.ts
+index 054c64d..be8bb0c 100644
+--- a/packages/backend/src/plugins/techdocs.ts
++++ b/packages/backend/src/plugins/techdocs.ts
+@@ -11,13 +11,9 @@ import { PluginEnvironment } from '../types';
+ 
+-export default async function createPlugin({
+-  logger,
+-  config,
+-  discovery,
+-  reader,
+-  cache,
+-}: PluginEnvironment): Promise<Router> {
++export default async function createPlugin(
++  env: PluginEnvironment,
++): Promise<Router> {
+   // Preparers are responsible for fetching source files for documentation.
+-  const preparers = await Preparers.fromConfig(config, {
+-    logger,
+-    reader,
++  const preparers = await Preparers.fromConfig(env.config, {
++    logger: env.logger,
++    reader: env.reader,
+   });
+@@ -29,4 +25,4 @@ export default async function createPlugin({
+   // Generators are used for generating documentation sites.
+-  const generators = await Generators.fromConfig(config, {
+-    logger,
++  const generators = await Generators.fromConfig(env.config, {
++    logger: env.logger,
+     containerRunner,
+@@ -37,5 +33,5 @@ export default async function createPlugin({
+   // 2. Fetching files from storage and passing them to TechDocs frontend.
+-  const publisher = await Publisher.fromConfig(config, {
+-    logger,
+-    discovery,
++  const publisher = await Publisher.fromConfig(env.config, {
++    logger: env.logger,
++    discovery: env.discovery,
+   });
+@@ -49,6 +45,6 @@ export default async function createPlugin({
+     publisher,
+-    logger,
+-    config,
+-    discovery,
+-    cache,
++    logger: env.logger,
++    config: env.config,
++    discovery: env.discovery,
++    cache: env.cache,
+   });
+diff --git a/packages/backend/src/types.ts b/packages/backend/src/types.ts
+index 0862b0e..9cd2c74 100644
+--- a/packages/backend/src/types.ts
++++ b/packages/backend/src/types.ts
+@@ -10,3 +10,4 @@ import {
+ import { PluginTaskScheduler } from '@backstage/backend-tasks';
+-import { PermissionAuthorizer } from '@backstage/plugin-permission-common';
++import { PermissionEvaluator } from '@backstage/plugin-permission-common';
++import { IdentityApi } from '@backstage/plugin-auth-node';
+ 
+@@ -21,3 +22,4 @@ export type PluginEnvironment = {
+   scheduler: PluginTaskScheduler;
+-  permissions: PermissionAuthorizer;
++  permissions: PermissionEvaluator;
++  identity: IdentityApi;
+ };
+diff --git a/plugins/README.md b/plugins/README.md
+new file mode 100644
+index 0000000..58dc32c
+--- /dev/null
++++ b/plugins/README.md
+@@ -0,0 +1,9 @@
++# The Plugins Folder
++
++This is where your own plugins and their associated modules live, each in a
++separate folder of its own.
++
++If you want to create a new plugin here, go to your project root directory, run
++the command `yarn backstage-cli create`, and follow the on-screen instructions.
++
++You can also check out existing plugins on [the plugin marketplace](https://backstage.io/plugins)!
+diff --git a/yarn.lock b/yarn.lock
+new file mode 100644
+index 0000000..5ad7fe2
+--- /dev/null
++++ b/yarn.lock
+@@ -0,0 +1 @@
++# intentionally left empty
