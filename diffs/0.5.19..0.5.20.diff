@@ -1,0 +1,18 @@
+diff --git a/.yarnrc.yml b/.yarnrc.yml
+new file mode 100644
+index 00000000..48f4a8f8
+--- /dev/null
++++ b/.yarnrc.yml
+@@ -0,0 +1,3 @@
++nodeLinker: node-modules
++
++yarnPath: .yarn/releases/yarn-4.4.1.cjs
+diff --git a/backstage.json b/backstage.json
+index 96f53df0..b1ca6e42 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.31.0"
++  "version": "1.31.1"
+ }
