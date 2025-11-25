@@ -1,0 +1,195 @@
+diff --git a/.yarn/plugins/@yarnpkg/plugin-backstage.cjs b/.yarn/plugins/@yarnpkg/plugin-backstage.cjs
+index bbc9b43..0d42e62 100644
+--- a/.yarn/plugins/@yarnpkg/plugin-backstage.cjs
++++ b/.yarn/plugins/@yarnpkg/plugin-backstage.cjs
+@@ -5,3 +5,3 @@ name: "@yarnpkg/plugin-backstage",
+ factory: function (require) {
+-"use strict";var plugin=(()=>{var F=Object.create;var v=Object.defineProperty;var _=Object.getOwnPropertyDescriptor;var N=Object.getOwnPropertyNames;var G=Object.getPrototypeOf,I=Object.prototype.hasOwnProperty;var p=(e=>typeof require<"u"?require:typeof Proxy<"u"?new Proxy(e,{get:(t,r)=>(typeof require<"u"?require:t)[r]}):e)(function(e){if(typeof require<"u")return require.apply(this,arguments);throw Error('Dynamic require of "'+e+'" is not supported')});var J=(e,t)=>{for(var r in t)v(e,r,{get:t[r],enumerable:!0})},S=(e,t,r,n)=>{if(t&&typeof t=="object"||typeof t=="function")for(let o of N(t))!I.call(e,o)&&o!==r&&v(e,o,{get:()=>t[o],enumerable:!(n=_(t,o))||n.enumerable});return e};var L=(e,t,r)=>(r=e!=null?F(G(e)):{},S(t||!e||!e.__esModule?v(r,"default",{value:e,enumerable:!0}):r,e)),z=e=>S(v({},"__esModule",{value:!0}),e);var ae={};J(ae,{default:()=>se});var P=p("@yarnpkg/core");var w=p("@yarnpkg/core");var W=L(p("assert")),j=p("semver"),y=p("@yarnpkg/fslib");var u=L(p("fs")),g=p("path");function A(e,t){let r=e;for(let n=0;n<1e3;n++){let o=(0,g.resolve)(r,"package.json");if(u.default.existsSync(o)&&t(o))return r;let i=(0,g.dirname)(r);if(i===r)return;r=i}throw new Error(`Iteration limit reached when searching for root package.json at ${e}`)}function K(e){let t=A(e,()=>!0);if(!t)throw new Error(`No package.json found while searching for package root of ${e}`);return t}function Y(e){if(!u.default.existsSync((0,g.resolve)(e,"src")))throw new Error("Tried to access monorepo package root dir outside of Backstage repository");return(0,g.resolve)(e,"../..")}function b(e){let t=K(e),r=u.default.realpathSync(process.cwd()).replace(/^[a-z]:/,s=>s.toLocaleUpperCase("en-US")),n="",o=()=>(n||(n=Y(t)),n),a="",i=()=>(a||(a=A(r,s=>{try{let m=u.default.readFileSync(s,"utf8");return!!JSON.parse(m).workspaces}catch(m){throw new Error(`Failed to parse package.json file while searching for root, ${m}`)}})??r),a);return{ownDir:t,get ownRoot(){return o()},targetDir:r,get targetRoot(){return i()},resolveOwn:(...s)=>(0,g.resolve)(t,...s),resolveOwnRoot:(...s)=>(0,g.resolve)(o(),...s),resolveTarget:(...s)=>(0,g.resolve)(r,...s),resolveTargetRoot:(...s)=>(0,g.resolve)(i(),...s)}}var x="backstage.json";var V=e=>{let t=!1,r;return()=>(t||(r=e(),t=!0),r)};var h=p("@yarnpkg/fslib");var C=()=>h.npath.toPortablePath(b(h.npath.fromPortablePath(h.ppath.cwd())).targetRoot);var k=V(()=>{let e=y.ppath.join(C(),x),t=null;try{t=(0,j.valid)(y.xfs.readJsonSync(e).version),(0,W.default)(t!==null)}catch{throw new Error("Valid version string not found in backstage.json")}return t});var d=p("@yarnpkg/core");var q="https://versions.backstage.io",Q="https://raw.githubusercontent.com/backstage/versions/main";function X(e,t){return new Promise((r,n)=>{let o=setTimeout(()=>{t.aborted||r()},e);t.addEventListener("abort",()=>{clearTimeout(o),n(new Error("Aborted"))})})}async function Z(e,t,r){let n=new AbortController,o=new AbortController,a=e(n.signal).then(s=>(o.abort(),s)),i=X(r,o.signal).then(()=>t(o.signal)).then(s=>(n.abort(),s));return Promise.any([a,i]).catch(()=>a)}async function D(e){let t=encodeURIComponent(e.version),r=e.fetch??fetch,n=e.versionsBaseUrl??q,o=e.gitHubRawBaseUrl??Q,a=await Z(i=>r(`${n}/v1/releases/${t}/manifest.json`,{signal:i}),i=>r(`${o}/v1/releases/${t}/manifest.json`,{signal:i}),500);if(a.status===404)throw new Error(`No release found for ${e.version} version`);if(a.status!==200)throw new Error(`Unexpected response status ${a.status} when fetching release from ${a.url}.`);return a.json()}var c="backstage:";var f=async(e,t)=>{let r=d.structUtils.stringifyIdent(e),n=d.structUtils.parseRange(e.range);if(n.protocol!==c)throw new Error(`Unsupported version protocol in version range "${e.range}" for package ${r}`);if(n.selector!=="^")throw new Error(`Unexpected version selector "${n.selector}" for package ${r}`);let o=k(),i=(await D({version:o,fetch:async s=>{let m=await d.httpUtils.get(s,{configuration:t,jsonResponse:!0});return{status:200,url:s,json:()=>m}}})).packages.find(s=>s.name===r);if(!i)throw new Error(`Package ${r} not found in manifest for Backstage v${o}. This means the specified package is not included in this Backstage release. This may imply the package has been replaced with an alternative - please review the documentation for the package. If you need to continue using this package, it will be necessary to switch to manually managing its version.`);return i.version};var ee=e=>w.structUtils.parseRange(e).protocol===c,te=(e,t,r)=>e!=="dependencies"?e:r.manifest.ensureDependencyMeta(w.structUtils.makeDescriptor(t,"unknown")).optional?"optionalDependencies":e,B=async(e,t)=>{for(let r of["dependencies","devDependencies"]){let n=Array.from(e.manifest.getForScope(r).values()).filter(o=>o.range.startsWith(c));for(let o of n){let a=w.structUtils.stringifyIdent(o);if(w.structUtils.parseRange(o.range).selector!=="^")throw new Error(`Unexpected version range "${o.range}" for dependency on "${a}"`);let s=te(r,o,e);t[s][a]=`^${await f(o,e.project.configuration)}`}}if(["dependencies","devDependencies","optionalDependencies"].some(r=>Object.values(t[r]??{}).some(ee)))throw new Error(`Failed to replace all "backstage:" ranges in manifest for ${t.name}`)};var O=p("@yarnpkg/core");var $=async(e,t)=>{let r=O.structUtils.parseRange(e.range);if(r.protocol!==c)return e;if(r.selector!=="^")throw new Error(`Invalid backstage: version range found: ${e.range}`);return O.structUtils.bindDescriptor(e,{backstage:k(),npm:await f(e,t.configuration)})};var H=p("@yarnpkg/core");var U=async(e,t,r,n)=>{let o=H.structUtils.parseRange(r.range);if(r.scope==="backstage"&&o.protocol!==c){let a=r.range;try{r.range=`${c}^`,await f(r,e.project.configuration),console.info(`Setting ${r.scope}/${r.name} to ${c}^`)}catch{r.range=a}}};var M=p("@yarnpkg/core");var E=async(e,t,r,n)=>{let o=M.structUtils.parseRange(n.range);n.scope==="backstage"&&o.protocol!==c&&console.warn(`${n.name} should be set to "${c}^" instead of "${n.range}". Make sure this change is intentional and not a mistake.`)};var l=p("@yarnpkg/core"),T=p("@yarnpkg/plugin-npm");var R=class e{static protocol=c;supportsDescriptor=t=>t.range.startsWith(e.protocol);async getCandidates(t,r,n){let o=l.structUtils.parseRange(t.range).params?.npm;if(!o||Array.isArray(o))throw new Error(`Missing npm parameter on backstage: range "${t.range}"`);return new T.NpmSemverResolver().getCandidates(l.structUtils.makeDescriptor(t,`npm:^${o}`),r,n)}getResolutionDependencies(t){let r=l.structUtils.parseRange(t.range).params?.npm;if(!r)throw new Error(`Missing npm parameter on backstage: range "${t.range}".`);return{[l.structUtils.stringifyIdent(t)]:l.structUtils.makeDescriptor(t,`npm:^${r}`)}}async getSatisfying(t,r,n,o){let a=t,i=l.structUtils.parseRange(a.range);if(i.protocol===c){let s=i.params?.npm;a=l.structUtils.makeDescriptor(t,`npm:^${s}`)}return new T.NpmSemverResolver().getSatisfying(a,r,n,o)}bindDescriptor=t=>t;supportsLocator=()=>!1;shouldPersistResolution=()=>{throw new Error("Unreachable: BackstageNpmResolver should never persist resolution as it uses npm: protocol")};resolve=async()=>{throw new Error("Unreachable: BackstageNpmResolver should never resolve as it uses npm: protocol")}};var re="\x1B[31;1m",oe="\x1B[0m";P.semverUtils.satisfiesWithPrereleases(P.YarnVersion,"^4.1.1")||(console.error(),console.error(`${re}Unsupported yarn version${oe}: The Backstage yarn plugin only works with yarn ^4.1.1. Please upgrade yarn, or remove this plugin with "yarn plugin remove @yarnpkg/plugin-backstage".`),console.error());var ne={hooks:{afterWorkspaceDependencyAddition:U,afterWorkspaceDependencyReplacement:E,reduceDependency:$,beforeWorkspacePacking:B},resolvers:[R]},se=ne;return z(ae);})();
++"use strict";var plugin=(()=>{var ee=Object.create;var R=Object.defineProperty;var re=Object.getOwnPropertyDescriptor;var te=Object.getOwnPropertyNames;var oe=Object.getPrototypeOf,ne=Object.prototype.hasOwnProperty;var f=(e=>typeof require<"u"?require:typeof Proxy<"u"?new Proxy(e,{get:(r,t)=>(typeof require<"u"?require:r)[t]}):e)(function(e){if(typeof require<"u")return require.apply(this,arguments);throw Error('Dynamic require of "'+e+'" is not supported')});var se=(e,r)=>()=>(r||e((r={exports:{}}).exports,r),r.exports),ae=(e,r)=>{for(var t in r)R(e,t,{get:r[t],enumerable:!0})},W=(e,r,t,n)=>{if(r&&typeof r=="object"||typeof r=="function")for(let o of te(r))!ne.call(e,o)&&o!==t&&R(e,o,{get:()=>r[o],enumerable:!(n=re(r,o))||n.enumerable});return e};var O=(e,r,t)=>(t=e!=null?ee(oe(e)):{},W(r||!e||!e.__esModule?R(t,"default",{value:e,enumerable:!0}):t,e)),ie=e=>W(R({},"__esModule",{value:!0}),e);var z=se((Ne,H)=>{"use strict";var A=class e extends Error{constructor(r){super(e._prepareSuperMessage(r)),Object.defineProperty(this,"name",{value:"NonError",configurable:!0,writable:!0}),Error.captureStackTrace&&Error.captureStackTrace(this,e)}static _prepareSuperMessage(r){try{return JSON.stringify(r)}catch{return String(r)}}},fe=[{property:"name",enumerable:!1},{property:"message",enumerable:!1},{property:"stack",enumerable:!1},{property:"code",enumerable:!0}],B=Symbol(".toJSON called"),le=e=>{e[B]=!0;let r=e.toJSON();return delete e[B],r},$=({from:e,seen:r,to_:t,forceEnumerable:n,maxDepth:o,depth:a})=>{let i=t||(Array.isArray(e)?[]:{});if(r.push(e),a>=o)return i;if(typeof e.toJSON=="function"&&e[B]!==!0)return le(e);for(let[s,p]of Object.entries(e)){if(typeof Buffer=="function"&&Buffer.isBuffer(p)){i[s]="[object Buffer]";continue}if(typeof p!="function"){if(!p||typeof p!="object"){i[s]=p;continue}if(!r.includes(e[s])){a++,i[s]=$({from:e[s],seen:r.slice(),forceEnumerable:n,maxDepth:o,depth:a});continue}i[s]="[Circular]"}}for(let{property:s,enumerable:p}of fe)typeof e[s]=="string"&&Object.defineProperty(i,s,{value:e[s],enumerable:n?!0:p,configurable:!0,writable:!0});return i},ge=(e,r={})=>{let{maxDepth:t=Number.POSITIVE_INFINITY}=r;return typeof e=="object"&&e!==null?$({from:e,seen:[],forceEnumerable:!0,maxDepth:t,depth:0}):typeof e=="function"?`[Function: ${e.name||"anonymous"}]`:e},me=(e,r={})=>{let{maxDepth:t=Number.POSITIVE_INFINITY}=r;if(e instanceof Error)return e;if(typeof e=="object"&&e!==null&&!Array.isArray(e)){let n=new Error;return $({from:e,seen:[],to_:n,maxDepth:t,depth:0}),n}return new A(e)};H.exports={serializeError:ge,deserializeError:me}});var Pe={};ae(Pe,{default:()=>xe});var v=f("@yarnpkg/core");var E=f("@yarnpkg/core");var D=O(f("assert")),X=f("semver"),P=f("@yarnpkg/fslib");var d=O(f("fs")),l=f("path");function F(e,r){let t=e;for(let n=0;n<1e3;n++){let o=(0,l.resolve)(t,"package.json");if(d.default.existsSync(o)&&r(o))return t;let i=(0,l.dirname)(t);if(i===t)return;t=i}throw new Error(`Iteration limit reached when searching for root package.json at ${e}`)}function ce(e){let r=F(e,()=>!0);if(!r)throw new Error(`No package.json found while searching for package root of ${e}`);return r}function pe(e){if(!d.default.existsSync((0,l.resolve)(e,"src")))throw new Error("Tried to access monorepo package root dir outside of Backstage repository");return(0,l.resolve)(e,"../..")}function S(e){let r=ce(e),t=d.default.realpathSync(process.cwd()).replace(/^[a-z]:/,s=>s.toLocaleUpperCase("en-US")),n="",o=()=>(n||(n=pe(r)),n),a="",i=()=>(a||(a=F(t,s=>{try{let p=d.default.readFileSync(s,"utf8");return!!JSON.parse(p).workspaces}catch(p){throw new Error(`Failed to parse package.json file while searching for root, ${p}`)}})??t),a);return{ownDir:r,get ownRoot(){return o()},targetDir:t,get targetRoot(){return i()},resolveOwn:(...s)=>(0,l.resolve)(r,...s),resolveOwnRoot:(...s)=>(0,l.resolve)(o(),...s),resolveTarget:(...s)=>(0,l.resolve)(t,...s),resolveTargetRoot:(...s)=>(0,l.resolve)(i(),...s)}}var T="backstage.json";function u(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return!(typeof r.name!="string"||r.name===""||typeof r.message!="string")}var G=O(z());function J(e){if(u(e)){let r=String(e);return r!=="[object Object]"?r:`${e.name}: ${e.message}`}return`unknown error '${e}'`}var x=class extends Error{cause;constructor(r,t){let n=r;if(t!==void 0){let o=J(t);n?n+=`; caused by ${o}`:n=`caused by ${o}`}super(n),Error.captureStackTrace?.(this,this.constructor),(!this.name||this.name==="Error")&&this.constructor.name!=="Error"&&(this.name=this.constructor.name),this.cause=u(t)?t:void 0}};var y=class extends x{constructor(r,t){super(r,t),this.name=u(t)?t.name:"Error"}};var Y=e=>{let r=!1,t;return()=>(r||(t=e(),r=!0),t)};var k=f("@yarnpkg/fslib");var K=()=>k.npath.toPortablePath(S(k.npath.fromPortablePath(k.ppath.cwd())).targetRoot);var h=Y(()=>{let e=P.ppath.join(K(),T),r=null;try{let t=P.xfs.readJsonSync(e).version;(0,D.default)(t!==void 0,"Version field is missing"),r=(0,X.valid)(t),(0,D.default)(r!==null,"Version exists but is not valid semver")}catch(t){throw new y("Valid version string not found in backstage.json",t)}return r});var w=f("@yarnpkg/core"),q=f("@yarnpkg/fslib");var ue="https://versions.backstage.io",de="https://raw.githubusercontent.com/backstage/versions/main";function ye(e,r){return new Promise((t,n)=>{let o=setTimeout(()=>{r.aborted||t()},e);r.addEventListener("abort",()=>{clearTimeout(o),n(new Error("Aborted"))})})}async function ke(e,r,t){let n=new AbortController,o=new AbortController,a=e(n.signal).then(s=>(o.abort(),s)),i=ye(t,o.signal).then(()=>r(o.signal)).then(s=>(n.abort(),s));return Promise.any([a,i]).catch(()=>a)}async function U(e){let r=encodeURIComponent(e.version),t=e.fetch??fetch,n=e.versionsBaseUrl??ue,o=e.gitHubRawBaseUrl??de,a=await ke(i=>t(`${n}/v1/releases/${r}/manifest.json`,{signal:i}),i=>t(`${o}/v1/releases/${r}/manifest.json`,{signal:i}),500);if(a.status===404)throw new Error(`No release found for ${e.version} version`);if(a.status!==200)throw new Error(`Unexpected response status ${a.status} when fetching release from ${a.url}.`);return a.json()}var c="backstage:";var j=f("process"),m=async(e,r)=>{let t=w.structUtils.stringifyIdent(e),n=w.structUtils.parseRange(e.range);if(n.protocol!==c)throw new Error(`Unsupported version protocol in version range "${e.range}" for package ${t}`);if(n.selector!=="^")throw new Error(`Unexpected version selector "${n.selector}" for package ${t}`);let o=h(),a=j.env.BACKSTAGE_MANIFEST_FILE,s=(a?await q.xfs.readJsonSync(a):await U({version:o,versionsBaseUrl:j.env.BACKSTAGE_VERSIONS_BASE_URL,fetch:async p=>{let M=await w.httpUtils.get(p,{configuration:r,jsonResponse:!0});return{status:200,url:p,json:()=>M}}})).packages.find(p=>p.name===t);if(!s)throw new Error(`Package ${t} not found in manifest for Backstage v${o}. This means the specified package is not included in this Backstage release. This may imply the package has been replaced with an alternative - please review the documentation for the package. If you need to continue using this package, it will be necessary to switch to manually managing its version.`);return s.version};var he=e=>E.structUtils.parseRange(e).protocol===c,we=(e,r,t)=>e!=="dependencies"?e:t.manifest.ensureDependencyMeta(E.structUtils.makeDescriptor(r,"unknown")).optional?"optionalDependencies":e,L=async(e,r)=>{for(let t of["dependencies","devDependencies"]){let n=Array.from(e.manifest.getForScope(t).values()).filter(o=>o.range.startsWith(c));for(let o of n){let a=E.structUtils.stringifyIdent(o);if(E.structUtils.parseRange(o.range).selector!=="^")throw new Error(`Unexpected version range "${o.range}" for dependency on "${a}"`);let s=we(t,o,e);r[s][a]=`^${await m(o,e.project.configuration)}`}}if(["dependencies","devDependencies","optionalDependencies"].some(t=>Object.values(r[t]??{}).some(he)))throw new Error(`Failed to replace all "backstage:" ranges in manifest for ${r.name}`)};var N=f("@yarnpkg/core");var C=async(e,r)=>{let t=N.structUtils.parseRange(e.range);if(t.protocol!==c)return e;if(t.selector!=="^")throw new Error(`Invalid backstage: version range found: ${e.range}`);return N.structUtils.bindDescriptor(e,{backstage:h(),npm:await m(e,r.configuration)})};var Q=f("@yarnpkg/core");var V=async(e,r,t,n)=>{let o=Q.structUtils.parseRange(t.range);if(t.scope==="backstage"&&o.protocol!==c){let a=t.range;try{t.range=`${c}^`,await m(t,e.project.configuration),console.info(`Setting ${t.scope}/${t.name} to ${c}^`)}catch{t.range=a}}};var Z=f("@yarnpkg/core");var _=async(e,r,t,n)=>{let o=Z.structUtils.parseRange(n.range);n.scope==="backstage"&&o.protocol!==c&&console.warn(`${n.name} should be set to "${c}^" instead of "${n.range}". Make sure this change is intentional and not a mistake.`)};var g=f("@yarnpkg/core"),I=f("@yarnpkg/plugin-npm");var b=class e{static protocol=c;supportsDescriptor=r=>r.range.startsWith(e.protocol);async getCandidates(r,t,n){let o=g.structUtils.parseRange(r.range).params?.npm;if(!o||Array.isArray(o))throw new Error(`Missing npm parameter on backstage: range "${r.range}"`);return new I.NpmSemverResolver().getCandidates(g.structUtils.makeDescriptor(r,`npm:^${o}`),t,n)}getResolutionDependencies(r){let t=g.structUtils.parseRange(r.range).params?.npm;if(!t)throw new Error(`Missing npm parameter on backstage: range "${r.range}".`);return{[g.structUtils.stringifyIdent(r)]:g.structUtils.makeDescriptor(r,`npm:^${t}`)}}async getSatisfying(r,t,n,o){let a=r,i=g.structUtils.parseRange(a.range);if(i.protocol===c){let s=i.params?.npm;a=g.structUtils.makeDescriptor(r,`npm:^${s}`)}return new I.NpmSemverResolver().getSatisfying(a,t,n,o)}bindDescriptor=r=>r;supportsLocator=()=>!1;shouldPersistResolution=()=>{throw new Error("Unreachable: BackstageNpmResolver should never persist resolution as it uses npm: protocol")};resolve=async()=>{throw new Error("Unreachable: BackstageNpmResolver should never resolve as it uses npm: protocol")}};var Ee="\x1B[31;1m",be="\x1B[0m";v.semverUtils.satisfiesWithPrereleases(v.YarnVersion,"^4.1.1")||(console.error(),console.error(`${Ee}Unsupported yarn version${be}: The Backstage yarn plugin only works with yarn ^4.1.1. Please upgrade yarn, or remove this plugin with "yarn plugin remove @yarnpkg/plugin-backstage".`),console.error());var Re={hooks:{afterWorkspaceDependencyAddition:V,afterWorkspaceDependencyReplacement:_,reduceDependency:C,beforeWorkspacePacking:L},resolvers:[b]},xe=Re;return ie(Pe);})();
+ return plugin;
+diff --git a/.yarnrc.yml b/.yarnrc.yml
+index 8c49241..c117b53 100644
+--- a/.yarnrc.yml
++++ b/.yarnrc.yml
+@@ -3,5 +3,5 @@ nodeLinker: node-modules
+ plugins:
+-  - checksum: 8af7b3f2d7d19cacc7a3712f871efcb6208ba283a1f532260b0cba80c2cb66ed772b207b5ba41b8c5d64dd8d5e0c0e15bbb445bd14afac491712965211ba027c
++  - checksum: ed8eb542bb8100843e62f9061d04e06cab181c8d1116a145a927fd70faf6dcba2f970eec18909579a922ec28dc1e3448b607e9af1cce5a54885d0cde70bf90ca
+     path: .yarn/plugins/@yarnpkg/plugin-backstage.cjs
+-    spec: "https://versions.backstage.io/v1/releases/1.42.0-next.2/yarn-plugin"
++    spec: "https://versions.backstage.io/v1/releases/1.46.0-next.0/yarn-plugin"
+ 
+diff --git a/backstage.json b/backstage.json
+index 2c451d7..eda440f 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.42.0-next.2"
++  "version": "1.46.0-next.0"
+ }
+diff --git a/examples/template/template.yaml b/examples/template/template.yaml
+index f04c324..efb33be 100644
+--- a/examples/template/template.yaml
++++ b/examples/template/template.yaml
+@@ -68,2 +68,14 @@ spec:
+ 
++    # Let's notify the user that the template has completed using the Notification action
++    - id: notify
++      name: Notify
++      action: notification:send
++      input:
++        recipients: entity
++        entityRefs:
++          - user:default/guest
++        title: 'Template executed'
++        info: 'Your template has been executed'
++        severity: 'normal'
++
+   # Outputs are displayed to the user after a successful execution of the template.
+diff --git a/packages/app/package.json b/packages/app/package.json
+index e7de17d..9d6168b 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -30,2 +30,3 @@
+     "@backstage/plugin-kubernetes": "backstage:^",
++    "@backstage/plugin-notifications": "backstage:^",
+     "@backstage/plugin-org": "backstage:^",
+@@ -35,2 +36,3 @@
+     "@backstage/plugin-search-react": "backstage:^",
++    "@backstage/plugin-signals": "backstage:^",
+     "@backstage/plugin-techdocs": "backstage:^",
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index 89b199c..bb9c98e 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -37,2 +37,4 @@ import { RequirePermission } from '@backstage/plugin-permission-react';
+ import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
++import { NotificationsPage } from '@backstage/plugin-notifications';
++import { SignalsDisplay } from '@backstage/plugin-signals';
+ 
+@@ -96,2 +98,3 @@ const routes = (
+     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
++    <Route path="/notifications" element={<NotificationsPage />} />
+   </FlatRoutes>
+@@ -103,2 +106,3 @@ export default app.createRoot(
+     <OAuthRequestDialog />
++    <SignalsDisplay />
+     <AppRouter>
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+index 31fc08d..4163f34 100644
+--- a/packages/app/src/components/Root/Root.tsx
++++ b/packages/app/src/components/Root/Root.tsx
+@@ -29,2 +29,3 @@ import { MyGroupsSidebarItem } from '@backstage/plugin-org';
+ import GroupIcon from '@material-ui/icons/People';
++import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
+ 
+@@ -85,2 +86,4 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
+       <SidebarDivider />
++      <NotificationsSidebarItem />
++      <SidebarDivider />
+       <SidebarGroup
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 68d6c2f..ee80245 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -14,3 +14,3 @@
+ 
+-FROM node:20-bookworm-slim
++FROM node:22-bookworm-slim
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 744e448..2c06805 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -29,2 +29,3 @@
+     "@backstage/plugin-kubernetes-backend": "backstage:^",
++    "@backstage/plugin-notifications-backend": "backstage:^",
+     "@backstage/plugin-permission-backend": "backstage:^",
+@@ -36,2 +37,3 @@
+     "@backstage/plugin-scaffolder-backend-module-github": "backstage:^",
++    "@backstage/plugin-scaffolder-backend-module-notifications": "backstage:^",
+     "@backstage/plugin-search-backend": "backstage:^",
+@@ -41,2 +43,3 @@
+     "@backstage/plugin-search-backend-node": "backstage:^",
++    "@backstage/plugin-signals-backend": "backstage:^",
+     "@backstage/plugin-techdocs-backend": "backstage:^",
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 6d0a6f4..cc2db7c 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -14,4 +14,11 @@ backend.add(import('@backstage/plugin-app-backend'));
+ backend.add(import('@backstage/plugin-proxy-backend'));
++
++// scaffolder plugin
+ backend.add(import('@backstage/plugin-scaffolder-backend'));
+ backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
++backend.add(
++  import('@backstage/plugin-scaffolder-backend-module-notifications'),
++);
++
++// techdocs plugin
+ backend.add(import('@backstage/plugin-techdocs-backend'));
+@@ -51,5 +58,9 @@ backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
+ 
+-// kubernetes
++// kubernetes plugin
+ backend.add(import('@backstage/plugin-kubernetes-backend'));
+ 
++// notifications and signals plugins
++backend.add(import('@backstage/plugin-notifications-backend'));
++backend.add(import('@backstage/plugin-signals-backend'));
++
+ backend.start();
+diff --git a/playwright.config.ts b/playwright.config.ts
+index 37c7fb1..0dc740b 100644
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -34,3 +34,3 @@ export default defineConfig({
+         {
+-          command: 'yarn start',
++          command: 'yarn start app',
+           port: 3000,
+@@ -39,2 +39,8 @@ export default defineConfig({
+         },
++        {
++          command: 'yarn start backend',
++          port: 7007,
++          reuseExistingServer: true,
++          timeout: 60_000,
++        },
+       ],
+diff --git a/yarn.lock b/yarn.lock
+index 46a911d..4089959 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -4,25 +4,5 @@
+ 
+-"@google-cloud/storage@^7.0.0":
+-  version "7.14.0"
+-  resolved "https://registry.yarnpkg.com/@google-cloud/storage/-/storage-7.14.0.tgz#eda9715f68507949214af804c906eba6d168a214"
+-  integrity sha512-H41bPL2cMfSi4EEnFzKvg7XSb7T67ocSXrmF7MPjfgFB0L6CKGzfIYJheAZi1iqXjz6XaCT1OBf6HCG5vDBTOQ==
+-
+-"@octokit/types@npm:^13.0.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/types@npm:^13.1.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/types@npm:^13.5.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/openapi-types@^22.2.0":
+-  version "22.2.0"
+-  resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-22.2.0.tgz#75aa7dcd440821d99def6a60b5f014207ae4968e"
+-  integrity sha512-QBhVjcUa9W7Wwhm6DBFu6ZZ+1/t/oYxqc2tp81Pi41YNuJinbFRx8B133qVOrAaBbF7D/m0Et6f9/pZt9Rc+tg==
++"@swc/core@^1.3.46":
++  version "1.11.31"
++  resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.11.31.tgz#e5de9ed005551ce9a16aa69e79935fc33065475c"
++  integrity sha512-mAby9aUnKRjMEA7v8cVZS9Ah4duoRBnX7X6r5qrhTxErx+68MoY1TPrVwj/66/SWN3Bl+jijqAqoB8Qx0QE34A==
