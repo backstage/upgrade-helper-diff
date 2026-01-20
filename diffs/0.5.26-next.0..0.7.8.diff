@@ -1,0 +1,425 @@
+diff --git a/.gitignore b/.gitignore
+index 77ad56d..2164e72 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -9,3 +9,2 @@ yarn-debug.log*
+ yarn-error.log*
+-lerna-debug.log*
+ 
+@@ -54 +53,4 @@ site
+ e2e-test-report/
++
++# Cache
++.cache/
+diff --git a/README.md b/README.md
+index 8c7c437..041c4fb 100644
+--- a/README.md
++++ b/README.md
+@@ -8,3 +8,3 @@ To start the app, run:
+ yarn install
+-yarn dev
++yarn start
+ ```
+diff --git a/app-config.yaml b/app-config.yaml
+index fc6918a..ca52ec5 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -105,5 +105,2 @@ catalog:
+     #     - allow: [User, Group]
+-  # Experimental: Always use the search method in UrlReaderProcessor.
+-  # New adopters are encouraged to enable it as this behavior will be the default in a future release.
+-  useUrlReadersSearch: true
+ 
+diff --git a/backstage.json b/backstage.json
+index 4ffc4e0..84c46d1 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.37.0-next.0"
++  "version": "1.47.0"
+ }
+diff --git a/examples/template/template.yaml b/examples/template/template.yaml
+index 33f262b..efb33be 100644
+--- a/examples/template/template.yaml
++++ b/examples/template/template.yaml
+@@ -50,2 +50,4 @@ spec:
+     # This step publishes the contents of the working directory to GitHub.
++    # If you or your organization prefer another default branch name over 'main'
++    # you can change that here.
+     - id: publish
+@@ -54,5 +56,5 @@ spec:
+       input:
+-        allowedHosts: ['github.com']
+         description: This is ${{ parameters.name }}
+         repoUrl: ${{ parameters.repoUrl }}
++        defaultBranch: 'main'
+ 
+@@ -66,2 +68,14 @@ spec:
+ 
++    # Let's notify the user that the template has completed using the Notification action
++    - id: notify
++      name: Notify
++      action: notification:send
++      input:
++        recipients: entity
++        entityRefs:
++          - user:default/guest
++        title: 'Template executed'
++        info: 'Your template has been executed'
++        severity: 'normal'
++
+   # Outputs are displayed to the user after a successful execution of the template.
+diff --git a/package.json b/package.json
+index 1444fc9..a5c72e8 100644
+--- a/package.json
++++ b/package.json
+@@ -5,8 +5,6 @@
+   "engines": {
+-    "node": "20 || 22"
++    "node": "22 || 24"
+   },
+   "scripts": {
+-    "dev": "yarn workspaces foreach -A --include backend --include app --parallel --jobs unlimited -v -i run start",
+-    "start": "yarn workspace app start",
+-    "start-backend": "yarn workspace backend start",
++    "start": "backstage-cli repo start",
+     "build:backend": "yarn workspace backend build",
+@@ -33,8 +31,12 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.30.0",
++    "@backstage/cli": "^0.35.2",
+     "@backstage/e2e-test-utils": "^0.1.1",
+     "@playwright/test": "^1.32.3",
++    "@jest/environment-jsdom-abstract": "^30.0.0",
++    "@types/jest": "^30.0.0",
++    "jest": "^30.2.0",
++    "jsdom": "^27.1.0",
+     "node-gyp": "^10.0.0",
+     "prettier": "^2.3.2",
+-    "typescript": "~5.4.0"
++    "typescript": "~5.8.0"
+   },
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 007e3e3..1b72eb0 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -16,26 +16,29 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.5.17",
+-    "@backstage/catalog-model": "^1.7.3",
+-    "@backstage/cli": "^0.30.0",
+-    "@backstage/core-app-api": "^1.15.5",
+-    "@backstage/core-components": "^0.16.4",
+-    "@backstage/core-plugin-api": "^1.10.4",
+-    "@backstage/integration-react": "^1.2.4",
+-    "@backstage/plugin-api-docs": "^0.12.5-next.0",
+-    "@backstage/plugin-catalog": "^1.28.0-next.0",
+-    "@backstage/plugin-catalog-common": "^1.1.3",
+-    "@backstage/plugin-catalog-graph": "^0.4.17-next.0",
+-    "@backstage/plugin-catalog-import": "^0.12.11-next.0",
+-    "@backstage/plugin-catalog-react": "^1.16.0-next.0",
+-    "@backstage/plugin-kubernetes": "^0.12.5-next.0",
+-    "@backstage/plugin-org": "^0.6.37-next.0",
+-    "@backstage/plugin-permission-react": "^0.4.31",
+-    "@backstage/plugin-scaffolder": "^1.29.0-next.0",
+-    "@backstage/plugin-search": "^1.4.24-next.0",
+-    "@backstage/plugin-search-react": "^1.8.7-next.0",
+-    "@backstage/plugin-techdocs": "^1.12.4-next.0",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.22-next.0",
+-    "@backstage/plugin-techdocs-react": "^1.2.15-next.0",
+-    "@backstage/plugin-user-settings": "^0.8.20-next.0",
+-    "@backstage/theme": "^0.6.4",
++    "@backstage/app-defaults": "^1.7.4",
++    "@backstage/catalog-model": "^1.7.6",
++    "@backstage/cli": "^0.35.2",
++    "@backstage/core-app-api": "^1.19.3",
++    "@backstage/core-components": "^0.18.5",
++    "@backstage/core-plugin-api": "^1.12.1",
++    "@backstage/integration-react": "^1.2.14",
++    "@backstage/plugin-api-docs": "^0.13.3",
++    "@backstage/plugin-catalog": "^1.32.2",
++    "@backstage/plugin-catalog-common": "^1.1.7",
++    "@backstage/plugin-catalog-graph": "^0.5.6",
++    "@backstage/plugin-catalog-import": "^0.13.9",
++    "@backstage/plugin-catalog-react": "^1.21.5",
++    "@backstage/plugin-kubernetes": "^0.12.15",
++    "@backstage/plugin-notifications": "^0.5.13",
++    "@backstage/plugin-org": "^0.6.48",
++    "@backstage/plugin-permission-react": "^0.4.39",
++    "@backstage/plugin-scaffolder": "^1.35.1",
++    "@backstage/plugin-search": "^1.5.3",
++    "@backstage/plugin-search-react": "^1.10.2",
++    "@backstage/plugin-signals": "^0.0.27",
++    "@backstage/plugin-techdocs": "^1.16.2",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.32",
++    "@backstage/plugin-techdocs-react": "^1.3.7",
++    "@backstage/plugin-user-settings": "^0.8.31",
++    "@backstage/theme": "^0.7.1",
++    "@backstage/ui": "^0.11.0",
+     "@material-ui/core": "^4.12.2",
+@@ -48,3 +51,3 @@
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.7.5",
++    "@backstage/test-utils": "^1.7.14",
+     "@playwright/test": "^1.32.3",
+diff --git a/packages/app/src/App.test.tsx b/packages/app/src/App.test.tsx
+index ec8ba1d..b6ca21d 100644
+--- a/packages/app/src/App.test.tsx
++++ b/packages/app/src/App.test.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { render, waitFor } from '@testing-library/react';
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index e24c468..bb9c98e 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { Navigate, Route } from 'react-router-dom';
+@@ -38,2 +37,4 @@ import { RequirePermission } from '@backstage/plugin-permission-react';
+ import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
++import { NotificationsPage } from '@backstage/plugin-notifications';
++import { SignalsDisplay } from '@backstage/plugin-signals';
+ 
+@@ -97,2 +98,3 @@ const routes = (
+     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
++    <Route path="/notifications" element={<NotificationsPage />} />
+   </FlatRoutes>
+@@ -104,2 +106,3 @@ export default app.createRoot(
+     <OAuthRequestDialog />
++    <SignalsDisplay />
+     <AppRouter>
+diff --git a/packages/app/src/components/Root/LogoFull.tsx b/packages/app/src/components/Root/LogoFull.tsx
+index 47e3b73..ce63651 100644
+--- a/packages/app/src/components/Root/LogoFull.tsx
++++ b/packages/app/src/components/Root/LogoFull.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { makeStyles } from '@material-ui/core';
+diff --git a/packages/app/src/components/Root/LogoIcon.tsx b/packages/app/src/components/Root/LogoIcon.tsx
+index 7eae8c7..c60ba62 100644
+--- a/packages/app/src/components/Root/LogoIcon.tsx
++++ b/packages/app/src/components/Root/LogoIcon.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { makeStyles } from '@material-ui/core';
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+index 853d175..4163f34 100644
+--- a/packages/app/src/components/Root/Root.tsx
++++ b/packages/app/src/components/Root/Root.tsx
+@@ -1,2 +1,2 @@
+-import React, { PropsWithChildren } from 'react';
++import { PropsWithChildren } from 'react';
+ import { makeStyles } from '@material-ui/core';
+@@ -29,2 +29,3 @@ import { MyGroupsSidebarItem } from '@backstage/plugin-org';
+ import GroupIcon from '@material-ui/icons/People';
++import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
+ 
+@@ -85,2 +86,4 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
+       <SidebarDivider />
++      <NotificationsSidebarItem />
++      <SidebarDivider />
+       <SidebarGroup
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+index 6164c76..f75d984 100644
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ b/packages/app/src/components/catalog/EntityPage.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { Button, Grid } from '@material-ui/core';
+@@ -80,3 +79,2 @@ const cicdContent = (
+      */}
+-
+     <EntitySwitch.Case>
+diff --git a/packages/app/src/components/search/SearchPage.tsx b/packages/app/src/components/search/SearchPage.tsx
+index 1788dde..08a774b 100644
+--- a/packages/app/src/components/search/SearchPage.tsx
++++ b/packages/app/src/components/search/SearchPage.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { makeStyles, Theme, Grid, Paper } from '@material-ui/core';
+diff --git a/packages/app/src/index.tsx b/packages/app/src/index.tsx
+index d875c77..46f3190 100644
+--- a/packages/app/src/index.tsx
++++ b/packages/app/src/index.tsx
+@@ -1,5 +1,5 @@
+ import '@backstage/cli/asset-types';
+-import React from 'react';
+ import ReactDOM from 'react-dom/client';
+ import App from './App';
++import '@backstage/ui/css/styles.css';
+ 
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 13ff70d..a70705f 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -10,4 +10,7 @@
+ # Once the commands have been run, you can build the image using `yarn build-image`
++#
++# Alternatively, there is also a multi-stage Dockerfile documented here:
++# https://backstage.io/docs/deployment/docker#multi-stage-build
+ 
+-FROM node:20-bookworm-slim
++FROM node:24-trixie-slim
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index e60bdb7..074a063 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,28 +18,31 @@
+   "dependencies": {
+-    "@backstage/backend-defaults": "^0.8.2-next.0",
+-    "@backstage/config": "^1.3.2",
+-    "@backstage/plugin-app-backend": "^0.4.6-next.0",
+-    "@backstage/plugin-auth-backend": "^0.24.4-next.0",
+-    "@backstage/plugin-auth-backend-module-github-provider": "^0.3.1-next.0",
+-    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.6-next.0",
+-    "@backstage/plugin-auth-node": "^0.6.1-next.0",
+-    "@backstage/plugin-catalog-backend": "^1.31.1-next.0",
+-    "@backstage/plugin-catalog-backend-module-logs": "^0.1.8-next.0",
+-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.6-next.0",
+-    "@backstage/plugin-kubernetes-backend": "^0.19.4-next.0",
+-    "@backstage/plugin-permission-backend": "^0.5.55-next.0",
+-    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.6-next.0",
+-    "@backstage/plugin-permission-common": "^0.8.4",
+-    "@backstage/plugin-permission-node": "^0.8.9-next.0",
+-    "@backstage/plugin-proxy-backend": "^0.5.12-next.0",
+-    "@backstage/plugin-scaffolder-backend": "^1.30.1-next.0",
+-    "@backstage/plugin-scaffolder-backend-module-github": "^0.6.1-next.0",
+-    "@backstage/plugin-search-backend": "^1.8.3-next.0",
+-    "@backstage/plugin-search-backend-module-catalog": "^0.3.2-next.0",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.42-next.0",
+-    "@backstage/plugin-search-backend-module-techdocs": "^0.3.7-next.0",
+-    "@backstage/plugin-search-backend-node": "^1.3.9-next.0",
+-    "@backstage/plugin-techdocs-backend": "^1.11.7-next.0",
++    "@backstage/backend-defaults": "^0.15.0",
++    "@backstage/config": "^1.3.6",
++    "@backstage/plugin-app-backend": "^0.5.10",
++    "@backstage/plugin-auth-backend": "^0.26.0",
++    "@backstage/plugin-auth-backend-module-github-provider": "^0.4.0",
++    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.15",
++    "@backstage/plugin-auth-node": "^0.6.11",
++    "@backstage/plugin-catalog-backend": "^3.3.1",
++    "@backstage/plugin-catalog-backend-module-logs": "^0.1.18",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.16",
++    "@backstage/plugin-kubernetes-backend": "^0.21.0",
++    "@backstage/plugin-notifications-backend": "^0.6.1",
++    "@backstage/plugin-permission-backend": "^0.7.7",
++    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.15",
++    "@backstage/plugin-permission-common": "^0.9.4",
++    "@backstage/plugin-permission-node": "^0.10.8",
++    "@backstage/plugin-proxy-backend": "^0.6.9",
++    "@backstage/plugin-scaffolder-backend": "^3.1.1",
++    "@backstage/plugin-scaffolder-backend-module-github": "^0.9.4",
++    "@backstage/plugin-scaffolder-backend-module-notifications": "^0.1.18",
++    "@backstage/plugin-search-backend": "^2.0.10",
++    "@backstage/plugin-search-backend-module-catalog": "^0.3.11",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.51",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.4.10",
++    "@backstage/plugin-search-backend-node": "^1.4.0",
++    "@backstage/plugin-signals-backend": "^0.3.11",
++    "@backstage/plugin-techdocs-backend": "^2.1.4",
+     "app": "link:../app",
+-    "better-sqlite3": "^9.0.0",
++    "better-sqlite3": "^12.0.0",
+     "node-gyp": "^10.0.0",
+@@ -48,3 +51,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.30.0"
++    "@backstage/cli": "^0.35.2"
+   },
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 6d0a6f4..cc2db7c 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -14,4 +14,11 @@ backend.add(import('@backstage/plugin-app-backend'));
+ backend.add(import('@backstage/plugin-proxy-backend'));
++
++// scaffolder plugin
+ backend.add(import('@backstage/plugin-scaffolder-backend'));
+ backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
++backend.add(
++  import('@backstage/plugin-scaffolder-backend-module-notifications'),
++);
++
++// techdocs plugin
+ backend.add(import('@backstage/plugin-techdocs-backend'));
+@@ -51,5 +58,9 @@ backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
+ 
+-// kubernetes
++// kubernetes plugin
+ backend.add(import('@backstage/plugin-kubernetes-backend'));
+ 
++// notifications and signals plugins
++backend.add(import('@backstage/plugin-notifications-backend'));
++backend.add(import('@backstage/plugin-signals-backend'));
++
+ backend.start();
+diff --git a/playwright.config.ts b/playwright.config.ts
+index 733be13..0dc740b 100644
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -34,3 +34,3 @@ export default defineConfig({
+         {
+-          command: 'yarn dev',
++          command: 'yarn start app',
+           port: 3000,
+@@ -39,2 +39,8 @@ export default defineConfig({
+         },
++        {
++          command: 'yarn start backend',
++          port: 7007,
++          reuseExistingServer: true,
++          timeout: 60_000,
++        },
+       ],
+diff --git a/tsconfig.json b/tsconfig.json
+index 2aa745d..eac19c5 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -13,3 +13,4 @@
+     "outDir": "dist-types",
+-    "rootDir": "."
++    "rootDir": ".",
++    "jsx": "react-jsx"
+   }
+diff --git a/yarn.lock b/yarn.lock
+index 46a911d..2ea15e3 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -4,25 +4,10 @@
+ 
+-"@google-cloud/storage@^7.0.0":
+-  version "7.14.0"
+-  resolved "https://registry.yarnpkg.com/@google-cloud/storage/-/storage-7.14.0.tgz#eda9715f68507949214af804c906eba6d168a214"
+-  integrity sha512-H41bPL2cMfSi4EEnFzKvg7XSb7T67ocSXrmF7MPjfgFB0L6CKGzfIYJheAZi1iqXjz6XaCT1OBf6HCG5vDBTOQ==
+-
+-"@octokit/types@npm:^13.0.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/types@npm:^13.1.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/types@npm:^13.5.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/openapi-types@^22.2.0":
+-  version "22.2.0"
+-  resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-22.2.0.tgz#75aa7dcd440821d99def6a60b5f014207ae4968e"
+-  integrity sha512-QBhVjcUa9W7Wwhm6DBFu6ZZ+1/t/oYxqc2tp81Pi41YNuJinbFRx8B133qVOrAaBbF7D/m0Et6f9/pZt9Rc+tg==
++"@swc/core@^1.3.46":
++  version "1.11.31"
++  resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.11.31.tgz#e5de9ed005551ce9a16aa69e79935fc33065475c"
++  integrity sha512-mAby9aUnKRjMEA7v8cVZS9Ah4duoRBnX7X6r5qrhTxErx+68MoY1TPrVwj/66/SWN3Bl+jijqAqoB8Qx0QE34A==
++
++memfs@^4.51.1:
++  version "4.51.1"
++  resolved "https://registry.yarnpkg.com/memfs/-/memfs-4.51.1.tgz#25945de4a90d1573945105e187daa9385e1bca73"
++  integrity sha512-Eyt3XrufitN2ZL9c/uIRMyDwXanLI88h/L3MoWqNY747ha3dMR9dWqp8cRT5ntjZ0U1TNuq4U91ZXK0sMBjYOQ==
