@@ -40,7 +40,7 @@ jobs:
             fi
 
             echo "Found new version: createApp=$CREATE_APP_VERSION releaseVersion=$RELEASE_VERSION"
-            VERSIONS_JSON=$(echo "$VERSIONS_JSON" | jq \
+            VERSIONS_JSON=$(echo "$VERSIONS_JSON" | jq -c \
               --arg v "$CREATE_APP_VERSION" \
               --arg rv "$RELEASE_VERSION" \
               '. + [{"version": $v, "releaseVersion": $rv}]')
