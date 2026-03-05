@@ -27,7 +27,10 @@ jobs:
               continue
             fi
 
-            MANIFEST=$(curl -sf "https://raw.githubusercontent.com/backstage/versions/main/v1/releases/${RELEASE_VERSION}/manifest.json")
+            MANIFEST=$(curl -sf "https://raw.githubusercontent.com/backstage/versions/main/v1/releases/${RELEASE_VERSION}/manifest.json") || {
+              echo "Error: failed to fetch manifest for $RELEASE_VERSION (HTTP error)" >&2
+              exit 1
+            }
             if [ -z "$MANIFEST" ]; then
               echo "Error: no manifest found for $RELEASE_VERSION" >&2
               exit 1
