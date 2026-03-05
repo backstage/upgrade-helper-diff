@@ -260,52 +260,7 @@
   "1.44.1": {
     "createApp": "0.7.5"
   },
-  "1.45.0-next.0": {
-    "createApp": "0.7.6-next.0"
-  },
   "1.44.2": {
     "createApp": "0.7.5"
-  },
-  "1.45.0-next.1": {
-    "createApp": "0.7.6-next.1"
-  },
-  "1.45.0-next.2": {
-    "createApp": "0.7.6-next.2"
-  },
-  "1.45.0-next.3": {
-    "createApp": "0.7.6-next.3"
-  },
-  "1.45.0": {
-    "createApp": "0.7.6"
-  },
-  "1.46.0-next.0": {
-    "createApp": "0.7.7-next.0"
-  },
-  "1.46.0-next.1": {
-    "createApp": "0.7.7-next.1"
-  },
-  "1.46.0-next.2": {
-    "createApp": "0.7.7-next.2"
-  },
-  "1.46.0": {
-    "createApp": "0.7.7"
-  },
-  "1.47.0-next.0": {
-    "createApp": "0.7.8-next.0"
-  },
-  "1.47.0-next.1": {
-    "createApp": "0.7.8-next.1"
-  },
-  "1.47.0-next.2": {
-    "createApp": "0.7.8-next.2"
-  },
-  "1.47.0-next.3": {
-    "createApp": "0.7.8-next.3"
-  },
-  "1.47.0": {
-    "createApp": "0.7.8"
-  },
-  "1.48.0-next.0": {
-    "createApp": "0.7.9-next.0"
   }
 }
