@@ -126,6 +126,7 @@ jobs:
               mkdir diffs
               git fetch origin release/$VERSION
               for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | jq -r 'to_entries | .[] | .value.createApp // .key'); do
+                [ "$(printf '%s\n%s\n' "$ver" "$VERSION" | sort -V | head -1)" != "$ver" ] && continue
                 echo "Creating diffs between $ver and $VERSION"
                 git fetch origin release/$ver
                 git diff -U1 origin/release/$ver..origin/release/$VERSION > diffs/$ver..$VERSION.diff
@@ -173,6 +174,7 @@ jobs:
               mkdir diffs
               git fetch origin release/yarn-plugin/$RELEASE_VERSION
               for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases-yarn-plugin.json | jq -r 'to_entries | .[] | .key'); do
+                [ "$(printf '%s\n%s\n' "$ver" "$RELEASE_VERSION" | sort -V | head -1)" != "$ver" ] && continue
                 echo "Creating yarn-plugin diffs between $ver and $RELEASE_VERSION"
                 git fetch origin release/yarn-plugin/$ver
                 git diff -U1 origin/release/yarn-plugin/$ver..origin/release/yarn-plugin/$RELEASE_VERSION > diffs/$ver..$RELEASE_VERSION.diff
