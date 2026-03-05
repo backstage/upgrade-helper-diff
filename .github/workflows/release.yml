@@ -53,8 +53,7 @@ jobs:
   process:
     name: Process new releases
     needs: detect
-    if: false
-    # if: needs.detect.outputs.versions != '[]'
+    if: needs.detect.outputs.versions != '[]'
     runs-on: ubuntu-latest
     env:
       BACKSTAGE_APP_NAME: backstagediffapp
