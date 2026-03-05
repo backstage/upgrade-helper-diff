@@ -81,15 +81,15 @@ jobs:
             echo "=== Processing createApp=$VERSION releaseVersion=$RELEASE_VERSION ==="
 
             # ── Release branch ──────────────────────────────────────────────
-            git fetch origin release-base
-            git checkout -B workdir origin/release-base
-            git clean -fd
-
-            printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${VERSION} --skip-install
-            rm -rf "$(pwd)/$BACKSTAGE_APP_NAME/.git"
-            cp -ar "$(pwd)/$BACKSTAGE_APP_NAME/." "$(pwd)"
-
             if [ -z "$(git ls-remote --heads origin release/${VERSION})" ]; then
+              git fetch origin release-base
+              git checkout -B workdir origin/release-base
+              git clean -fd
+
+              printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${VERSION} --skip-install
+              rm -rf "$(pwd)/$BACKSTAGE_APP_NAME/.git"
+              cp -ar "$(pwd)/$BACKSTAGE_APP_NAME/." "$(pwd)"
+
               git checkout -b release/${VERSION}
               git add .
               git reset $BACKSTAGE_APP_NAME
@@ -100,13 +100,13 @@ jobs:
             fi
 
             # ── Yarn plugin branch ──────────────────────────────────────────
-            git fetch origin "release/${VERSION}"
-            git checkout -B workdir "origin/release/${VERSION}"
-            git clean -fd
-            yarn plugin import https://versions.backstage.io/v1/tags/next/yarn-plugin
-            YARN_ENABLE_IMMUTABLE_INSTALLS=false npx -p @backstage/cli@latest backstage-cli versions:bump --release $RELEASE_VERSION
-
             if [ -z "$(git ls-remote --heads origin release/yarn-plugin/${RELEASE_VERSION})" ]; then
+              git fetch origin "release/${VERSION}"
+              git checkout -B workdir "origin/release/${VERSION}"
+              git clean -fd
+              yarn plugin import https://versions.backstage.io/v1/tags/next/yarn-plugin
+              YARN_ENABLE_IMMUTABLE_INSTALLS=false npx -p @backstage/cli@latest backstage-cli versions:bump --release $RELEASE_VERSION
+
               git checkout -b release/yarn-plugin/${RELEASE_VERSION}
               git add .
               git reset $BACKSTAGE_APP_NAME yarn.lock
