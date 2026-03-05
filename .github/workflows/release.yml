@@ -1,6 +1,11 @@
 name: Create new release diffs
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      releaseVersion:
+        description: "Backstage release version to process (e.g. 1.48.0). If omitted, auto-detects all untracked releases."
+        required: false
+        default: ""
 jobs:
   detect:
     name: Detect new releases
@@ -15,39 +20,52 @@ jobs:
         run: |
           set -e
 
-          KNOWN_RELEASES=$(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | \
-            jq -r 'keys[]')
-
-          VERSIONS_JSON="[]"
-          while IFS= read -r TAG; do
-            RELEASE_VERSION="${TAG#v}"
-
-            if echo "$KNOWN_RELEASES" | grep -qx "$RELEASE_VERSION"; then
-              echo "Release $RELEASE_VERSION already tracked, skipping"
-              continue
-            fi
-
+          resolve_manifest() {
+            local RELEASE_VERSION="$1"
             MANIFEST=$(curl -sf "https://raw.githubusercontent.com/backstage/versions/main/v1/releases/${RELEASE_VERSION}/manifest.json") || {
               echo "Error: failed to fetch manifest for $RELEASE_VERSION (HTTP error)" >&2
-              continue
-            }
-            if [ -z "$MANIFEST" ]; then
-              echo "Error: no manifest found for $RELEASE_VERSION" >&2
               exit 1
-            fi
-
+            }
             CREATE_APP_VERSION=$(echo "$MANIFEST" | jq -r '.packages[] | select(.name == "@backstage/create-app") | .version')
             if [ -z "$CREATE_APP_VERSION" ] || [ "$CREATE_APP_VERSION" = "null" ]; then
               echo "Error: no @backstage/create-app found in manifest for $RELEASE_VERSION" >&2
               exit 1
             fi
+            echo "$CREATE_APP_VERSION"
+          }
 
-            echo "Found new version: createApp=$CREATE_APP_VERSION releaseVersion=$RELEASE_VERSION"
+          VERSIONS_JSON="[]"
+
+          if [ -n "${{ github.event.inputs.releaseVersion }}" ]; then
+            RELEASE_VERSION="${{ github.event.inputs.releaseVersion }}"
+            RELEASE_VERSION="${RELEASE_VERSION#v}"
+            CREATE_APP_VERSION=$(resolve_manifest "$RELEASE_VERSION")
+            echo "Forced version: createApp=$CREATE_APP_VERSION releaseVersion=$RELEASE_VERSION"
             VERSIONS_JSON=$(echo "$VERSIONS_JSON" | jq -c \
               --arg v "$CREATE_APP_VERSION" \
               --arg rv "$RELEASE_VERSION" \
               '. + [{"version": $v, "releaseVersion": $rv}]')
-          done < <(gh api "/repos/backstage/backstage/releases?per_page=50" | jq -r 'reverse | .[].tag_name')
+          else
+            KNOWN_RELEASES=$(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | \
+              jq -r 'keys[]')
+
+            while IFS= read -r TAG; do
+              RELEASE_VERSION="${TAG#v}"
+
+              if echo "$KNOWN_RELEASES" | grep -qx "$RELEASE_VERSION"; then
+                echo "Release $RELEASE_VERSION already tracked, skipping"
+                continue
+              fi
+
+              CREATE_APP_VERSION=$(resolve_manifest "$RELEASE_VERSION") || continue
+
+              echo "Found new version: createApp=$CREATE_APP_VERSION releaseVersion=$RELEASE_VERSION"
+              VERSIONS_JSON=$(echo "$VERSIONS_JSON" | jq -c \
+                --arg v "$CREATE_APP_VERSION" \
+                --arg rv "$RELEASE_VERSION" \
+                '. + [{"version": $v, "releaseVersion": $rv}]')
+            done < <(gh api "/repos/backstage/backstage/releases?per_page=50" | jq -r 'reverse | .[].tag_name')
+          fi
 
           echo "versions=$VERSIONS_JSON" >> $GITHUB_OUTPUT
   process:
