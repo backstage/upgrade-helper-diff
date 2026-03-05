@@ -83,7 +83,7 @@ jobs:
             # ── Release branch ──────────────────────────────────────────────
             if [ -z "$(git ls-remote --heads origin release/${VERSION})" ]; then
               git fetch origin release-base
-              git checkout -B workdir origin/release-base
+              git checkout -fB workdir origin/release-base
               git clean -fd
 
               printf "$BACKSTAGE_APP_NAME\n\t" | npx @backstage/create-app@${VERSION} --skip-install
@@ -102,7 +102,7 @@ jobs:
             # ── Yarn plugin branch ──────────────────────────────────────────
             if [ -z "$(git ls-remote --heads origin release/yarn-plugin/${RELEASE_VERSION})" ]; then
               git fetch origin "release/${VERSION}"
-              git checkout -B workdir "origin/release/${VERSION}"
+              git checkout -fB workdir "origin/release/${VERSION}"
               git clean -fd
               yarn plugin import https://versions.backstage.io/v1/tags/next/yarn-plugin
               YARN_ENABLE_IMMUTABLE_INSTALLS=false npx --legacy-peer-deps -p @backstage/cli@latest backstage-cli versions:bump --release $RELEASE_VERSION
@@ -118,7 +118,7 @@ jobs:
 
             # ── Legacy diffs ─────────────────────────────────────────────────
             git fetch origin release-diff-base
-            git checkout -B workdir origin/release-diff-base
+            git checkout -fB workdir origin/release-diff-base
             git clean -fd
 
             if [ -z "$(git ls-remote --heads origin release-diff/legacy/v${VERSION})" ]; then
@@ -146,7 +146,7 @@ jobs:
               FUTURE_BRANCH="release-diff/legacy/v${future_ver}"
               [ -z "$(git ls-remote --heads origin "${FUTURE_BRANCH}")" ] && continue
               git fetch origin "${FUTURE_BRANCH}"
-              git checkout -B workdir "origin/${FUTURE_BRANCH}"
+              git checkout -fB workdir "origin/${FUTURE_BRANCH}"
               git clean -fd
               DIFF_FILE="diffs/${VERSION}..${future_ver}.diff"
               if [ ! -f "$DIFF_FILE" ]; then
@@ -165,7 +165,7 @@ jobs:
 
             # ── Yarn plugin diffs ────────────────────────────────────────────
             git fetch origin release-diff-base
-            git checkout -B workdir origin/release-diff-base
+            git checkout -fB workdir origin/release-diff-base
             git clean -fd
 
             if [ -z "$(git ls-remote --heads origin release-diff/v${RELEASE_VERSION})" ]; then
@@ -193,7 +193,7 @@ jobs:
               FUTURE_BRANCH="release-diff/v${future_rv}"
               [ -z "$(git ls-remote --heads origin "${FUTURE_BRANCH}")" ] && continue
               git fetch origin "${FUTURE_BRANCH}"
-              git checkout -B workdir "origin/${FUTURE_BRANCH}"
+              git checkout -fB workdir "origin/${FUTURE_BRANCH}"
               git clean -fd
               DIFF_FILE="diffs/${RELEASE_VERSION}..${future_rv}.diff"
               if [ ! -f "$DIFF_FILE" ]; then
@@ -212,7 +212,7 @@ jobs:
 
             # ── Update JSON files on master ──────────────────────────────────
             git fetch origin master
-            git checkout -B workdir origin/master
+            git checkout -fB workdir origin/master
             git clean -fd
 
             jq ".\"$RELEASE_VERSION\" = { createApp: \"$VERSION\" }" < releases.json > _releases.json
