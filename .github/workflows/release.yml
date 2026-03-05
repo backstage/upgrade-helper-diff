@@ -105,7 +105,7 @@ jobs:
               git checkout -B workdir "origin/release/${VERSION}"
               git clean -fd
               yarn plugin import https://versions.backstage.io/v1/tags/next/yarn-plugin
-              YARN_ENABLE_IMMUTABLE_INSTALLS=false npx -p @backstage/cli@latest backstage-cli versions:bump --release $RELEASE_VERSION
+              YARN_ENABLE_IMMUTABLE_INSTALLS=false npx --legacy-peer-deps -p @backstage/cli@latest backstage-cli versions:bump --release $RELEASE_VERSION
 
               git checkout -b release/yarn-plugin/${RELEASE_VERSION}
               git add .
