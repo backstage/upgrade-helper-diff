@@ -142,18 +142,27 @@ jobs:
             if [ -z "$(git ls-remote --heads origin release-diff/legacy/v${VERSION})" ]; then
               git checkout -b release-diff/legacy/v${VERSION}
               mkdir diffs
-              git fetch origin release/$VERSION
-              for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | jq -r 'to_entries | .[] | .value.createApp // .key'); do
-                [ "$(printf '%s\n%s\n' "$ver" "$VERSION" | sort -V | head -1)" != "$ver" ] && continue
-                echo "Creating diffs between $ver and $VERSION"
+            else
+              git fetch origin "release-diff/legacy/v${VERSION}"
+              git checkout -fB "release-diff/legacy/v${VERSION}" "origin/release-diff/legacy/v${VERSION}"
+              git clean -fd
+            fi
+            git fetch origin release/$VERSION
+            for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | jq -r 'to_entries | .[] | .value.createApp // .key'); do
+              [ "$(printf '%s\n%s\n' "$ver" "$VERSION" | sort -V | head -1)" != "$ver" ] && continue
+              DIFF_FILE="diffs/$ver..$VERSION.diff"
+              if [ ! -f "$DIFF_FILE" ]; then
+                echo "Creating diff between $ver and $VERSION"
                 git fetch origin release/$ver
-                git diff -U1 origin/release/$ver..origin/release/$VERSION > diffs/$ver..$VERSION.diff
-              done
-              git add .
+                git diff -U1 origin/release/$ver..origin/release/$VERSION > "$DIFF_FILE"
+                git add "$DIFF_FILE"
+              fi
+            done
+            if ! git diff --cached --quiet; then
               git commit -m "Add release ${VERSION}"
               git push origin release-diff/legacy/v${VERSION}
             else
-              echo "Branch release-diff/legacy/v${VERSION} already exists, skipping"
+              echo "No new diffs for release-diff/legacy/v${VERSION}"
             fi
 
             # ── Backfill legacy diff branches ─────────────────────────────────
@@ -190,18 +199,27 @@ jobs:
             if [ -z "$(git ls-remote --heads origin release-diff/v${RELEASE_VERSION})" ]; then
               git checkout -b release-diff/v${RELEASE_VERSION}
               mkdir diffs
-              git fetch origin release/yarn-plugin/$RELEASE_VERSION
-              for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases-yarn-plugin.json | jq -r 'to_entries | .[] | .key'); do
-                [ "$(printf '%s\n%s\n' "$ver" "$RELEASE_VERSION" | sort -V | head -1)" != "$ver" ] && continue
-                echo "Creating yarn-plugin diffs between $ver and $RELEASE_VERSION"
+            else
+              git fetch origin "release-diff/v${RELEASE_VERSION}"
+              git checkout -fB "release-diff/v${RELEASE_VERSION}" "origin/release-diff/v${RELEASE_VERSION}"
+              git clean -fd
+            fi
+            git fetch origin release/yarn-plugin/$RELEASE_VERSION
+            for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases-yarn-plugin.json | jq -r 'to_entries | .[] | .key'); do
+              [ "$(printf '%s\n%s\n' "$ver" "$RELEASE_VERSION" | sort -V | head -1)" != "$ver" ] && continue
+              DIFF_FILE="diffs/$ver..$RELEASE_VERSION.diff"
+              if [ ! -f "$DIFF_FILE" ]; then
+                echo "Creating yarn-plugin diff between $ver and $RELEASE_VERSION"
                 git fetch origin release/yarn-plugin/$ver
-                git diff -U1 origin/release/yarn-plugin/$ver..origin/release/yarn-plugin/$RELEASE_VERSION > diffs/$ver..$RELEASE_VERSION.diff
-              done
-              git add .
+                git diff -U1 origin/release/yarn-plugin/$ver..origin/release/yarn-plugin/$RELEASE_VERSION > "$DIFF_FILE"
+                git add "$DIFF_FILE"
+              fi
+            done
+            if ! git diff --cached --quiet; then
               git commit -m "Add release ${RELEASE_VERSION}"
               git push origin release-diff/v${RELEASE_VERSION}
             else
-              echo "Branch release-diff/v${RELEASE_VERSION} already exists, skipping"
+              echo "No new diffs for release-diff/v${RELEASE_VERSION}"
             fi
 
             # ── Backfill yarn-plugin diff branches ────────────────────────────
@@ -240,8 +258,12 @@ jobs:
             jq ".\"$RELEASE_VERSION\" = { createApp: \"$VERSION\" }" < releases-yarn-plugin.json > _releases-yarn-plugin.json
             mv _releases-yarn-plugin.json releases-yarn-plugin.json
             git add releases.json releases-yarn-plugin.json
-            git commit -m "Add release ${VERSION}"
-            git push origin master
+            if ! git diff --cached --quiet; then
+              git commit -m "Add release ${VERSION}"
+              git push origin master
+            else
+              echo "releases.json already up to date, skipping"
+            fi
 
           done <<< "$(echo "$VERSIONS" | jq -c '.[]')"
       - run: echo "🍏 This job's status is ${{ job.status }}."
