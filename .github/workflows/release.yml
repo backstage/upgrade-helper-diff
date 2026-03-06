@@ -6,6 +6,11 @@ on:
         description: "Backstage release version to process (e.g. 1.48.0). If omitted, auto-detects all untracked releases."
         required: false
         default: ""
+      force:
+        description: "Re-process already-tracked releases (useful for backfilling missing diffs). Only applies when no releaseVersion is specified."
+        type: boolean
+        required: false
+        default: false
 jobs:
   detect:
     name: Detect new releases
@@ -53,8 +58,11 @@ jobs:
               RELEASE_VERSION="${TAG#v}"
 
               if echo "$KNOWN_RELEASES" | grep -qx "$RELEASE_VERSION"; then
-                echo "Release $RELEASE_VERSION already tracked, skipping"
-                continue
+                if [ "${{ github.event.inputs.force }}" != "true" ]; then
+                  echo "Release $RELEASE_VERSION already tracked, skipping"
+                  continue
+                fi
+                echo "Release $RELEASE_VERSION already tracked, re-processing (force=true)"
               fi
 
               CREATE_APP_VERSION=$(resolve_manifest "$RELEASE_VERSION") || continue
