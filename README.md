@@ -48,7 +48,7 @@ Go to **Actions → Create new release diffs → Run workflow**.
 
 - **No input**: auto-detects all untracked releases and processes them in order.
 - **"Backstage release version to process"** (e.g. `1.48.0` or `v1.48.0`): processes only that specific release. Useful for reprocessing a release or filling in missing diffs.
-- **"Re-process already-tracked releases"** checkbox (no release version specified): re-processes all releases from the last 50, including already-tracked ones. Useful for bulk backfilling missing diffs across all recent releases.
+- **"Re-process already-tracked releases"** checkbox (no release version specified): re-processes latest releases, including already-tracked ones. Useful for bulk backfilling missing diffs across all recent releases.
 
 ## Notes
 
