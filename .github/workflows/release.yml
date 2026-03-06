@@ -157,6 +157,7 @@ jobs:
             fi
             git fetch origin release/$VERSION
             for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | jq -r 'to_entries | .[] | .value.createApp // .key'); do
+              [ "$ver" = "$VERSION" ] && continue
               [ "$(printf '%s\n%s\n' "$ver" "$VERSION" | sort -V | head -1)" != "$ver" ] && continue
               DIFF_FILE="diffs/$ver..$VERSION.diff"
               if [ ! -f "$DIFF_FILE" ]; then
@@ -214,6 +215,7 @@ jobs:
             fi
             git fetch origin release/yarn-plugin/$RELEASE_VERSION
             for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases-yarn-plugin.json | jq -r 'to_entries | .[] | .key'); do
+              [ "$ver" = "$RELEASE_VERSION" ] && continue
               [ "$(printf '%s\n%s\n' "$ver" "$RELEASE_VERSION" | sort -V | head -1)" != "$ver" ] && continue
               DIFF_FILE="diffs/$ver..$RELEASE_VERSION.diff"
               if [ ! -f "$DIFF_FILE" ]; then
