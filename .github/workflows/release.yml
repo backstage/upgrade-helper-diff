@@ -72,7 +72,7 @@ jobs:
                 --arg v "$CREATE_APP_VERSION" \
                 --arg rv "$RELEASE_VERSION" \
                 '. + [{"version": $v, "releaseVersion": $rv}]')
-            done < <(gh api "/repos/backstage/backstage/releases?per_page=50" | jq -r 'reverse | .[].tag_name')
+            done < <(gh api "/repos/backstage/backstage/releases?per_page=20" | jq -r 'reverse | .[].tag_name')
           fi
 
           echo "versions=$VERSIONS_JSON" >> $GITHUB_OUTPUT
