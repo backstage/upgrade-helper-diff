@@ -156,7 +156,8 @@ jobs:
               git clean -fd
             fi
             git fetch origin release/$VERSION
-            for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | jq -r 'to_entries | .[] | .value.createApp // .key'); do
+            git fetch origin master
+            for ver in $(git show origin/master:releases.json | jq -r 'to_entries | .[] | .value.createApp // .key'); do
               [ "$ver" = "$VERSION" ] && continue
               [ "$(printf '%s\n%s\n' "$ver" "$VERSION" | sort -V | head -1)" != "$ver" ] && continue
               DIFF_FILE="diffs/$ver..$VERSION.diff"
@@ -198,7 +199,7 @@ jobs:
                   echo "No changes to commit for ${DIFF_FILE}, skipping"
                 fi
               fi
-            done < <(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases.json | jq -r '[to_entries[] | .value.createApp // .key] | unique[]')
+            done < <(git show origin/master:releases.json | jq -r '[to_entries[] | .value.createApp // .key] | unique[]')
 
             # ── Yarn plugin diffs ────────────────────────────────────────────
             git fetch origin release-diff-base
@@ -214,7 +215,8 @@ jobs:
               git clean -fd
             fi
             git fetch origin release/yarn-plugin/$RELEASE_VERSION
-            for ver in $(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases-yarn-plugin.json | jq -r 'to_entries | .[] | .key'); do
+            git fetch origin master
+            for ver in $(git show origin/master:releases-yarn-plugin.json | jq -r 'to_entries | .[] | .key'); do
               [ "$ver" = "$RELEASE_VERSION" ] && continue
               [ "$(printf '%s\n%s\n' "$ver" "$RELEASE_VERSION" | sort -V | head -1)" != "$ver" ] && continue
               DIFF_FILE="diffs/$ver..$RELEASE_VERSION.diff"
@@ -256,7 +258,7 @@ jobs:
                   echo "No changes to commit for ${DIFF_FILE}, skipping"
                 fi
               fi
-            done < <(curl -sf https://raw.githubusercontent.com/backstage/upgrade-helper-diff/master/releases-yarn-plugin.json | jq -r 'keys[]')
+            done < <(git show origin/master:releases-yarn-plugin.json | jq -r 'keys[]')
 
             # ── Update JSON files on master ──────────────────────────────────
             git fetch origin master
