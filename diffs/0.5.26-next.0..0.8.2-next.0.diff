@@ -1,0 +1,1404 @@
+diff --git a/.gitignore b/.gitignore
+index 77ad56d..2164e72 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -9,3 +9,2 @@ yarn-debug.log*
+ yarn-error.log*
+-lerna-debug.log*
+ 
+@@ -54 +53,4 @@ site
+ e2e-test-report/
++
++# Cache
++.cache/
+diff --git a/README.md b/README.md
+index 8c7c437..041c4fb 100644
+--- a/README.md
++++ b/README.md
+@@ -8,3 +8,3 @@ To start the app, run:
+ yarn install
+-yarn dev
++yarn start
+ ```
+diff --git a/app-config.yaml b/app-config.yaml
+index fc6918a..b26d412 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -4,2 +4,11 @@ app:
+ 
++  # Enable all packages by default, this will discover packages from packages/app/package.json
++  packages: all
++
++  extensions:
++    # Configure the catalog index page to be the root page, this is normally mounted on /catalog
++    - page:catalog:
++        config:
++          path: /
++
+ organization:
+@@ -105,5 +114,2 @@ catalog:
+     #     - allow: [User, Group]
+-  # Experimental: Always use the search method in UrlReaderProcessor.
+-  # New adopters are encouraged to enable it as this behavior will be the default in a future release.
+-  useUrlReadersSearch: true
+ 
+diff --git a/backstage.json b/backstage.json
+index 4ffc4e0..f5a619c 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.37.0-next.0"
++  "version": "1.50.0-next.0"
+ }
+diff --git a/examples/entities.yaml b/examples/entities.yaml
+index 447e8b1..cc57de8 100644
+--- a/examples/entities.yaml
++++ b/examples/entities.yaml
+@@ -14,2 +14,4 @@ metadata:
+   name: example-website
++  annotations:
++    backstage.io/techdocs-ref: dir:./example-docs
+ spec:
+diff --git a/examples/example-docs/docs/index.md b/examples/example-docs/docs/index.md
+new file mode 100644
+index 0000000..ecd4dbd
+--- /dev/null
++++ b/examples/example-docs/docs/index.md
+@@ -0,0 +1,5 @@
++# Example TechDocs page
++
++This is an example TechDocs page!
++
++The source of this documentation for the `example-website` component is found in the `examples/example-docs` directory, which is referenced from `examples/entities.yaml`. Typically the `docs` directory would live alongside the `catalog-info.yaml` file of a component instead, but in this case it is separated out to avoid cluttering the examples directory.
+diff --git a/examples/example-docs/mkdocs.yml b/examples/example-docs/mkdocs.yml
+new file mode 100644
+index 0000000..b482f45
+--- /dev/null
++++ b/examples/example-docs/mkdocs.yml
+@@ -0,0 +1,4 @@
++site_name: example-website
++docs_dir: docs
++plugins:
++  - techdocs-core
+diff --git a/examples/template/template.yaml b/examples/template/template.yaml
+index 33f262b..efb33be 100644
+--- a/examples/template/template.yaml
++++ b/examples/template/template.yaml
+@@ -50,2 +50,4 @@ spec:
+     # This step publishes the contents of the working directory to GitHub.
++    # If you or your organization prefer another default branch name over 'main'
++    # you can change that here.
+     - id: publish
+@@ -54,5 +56,5 @@ spec:
+       input:
+-        allowedHosts: ['github.com']
+         description: This is ${{ parameters.name }}
+         repoUrl: ${{ parameters.repoUrl }}
++        defaultBranch: 'main'
+ 
+@@ -66,2 +68,14 @@ spec:
+ 
++    # Let's notify the user that the template has completed using the Notification action
++    - id: notify
++      name: Notify
++      action: notification:send
++      input:
++        recipients: entity
++        entityRefs:
++          - user:default/guest
++        title: 'Template executed'
++        info: 'Your template has been executed'
++        severity: 'normal'
++
+   # Outputs are displayed to the user after a successful execution of the template.
+diff --git a/package.json b/package.json
+index 1444fc9..cbd50bd 100644
+--- a/package.json
++++ b/package.json
+@@ -5,8 +5,6 @@
+   "engines": {
+-    "node": "20 || 22"
++    "node": "22 || 24"
+   },
+   "scripts": {
+-    "dev": "yarn workspaces foreach -A --include backend --include app --parallel --jobs unlimited -v -i run start",
+-    "start": "yarn workspace app start",
+-    "start-backend": "yarn workspace backend start",
++    "start": "backstage-cli repo start",
+     "build:backend": "yarn workspace backend build",
+@@ -26,15 +24,27 @@
+   },
+-  "workspaces": {
+-    "packages": [
+-      "packages/*",
+-      "plugins/*"
+-    ]
++  "backstage": {
++    "cli": {
++      "new": {
++        "globals": {
++          "license": "UNLICENSED"
++        }
++      }
++    }
+   },
++  "workspaces": [
++    "packages/*",
++    "plugins/*"
++  ],
+   "devDependencies": {
+-    "@backstage/cli": "^0.30.0",
+-    "@backstage/e2e-test-utils": "^0.1.1",
++    "@backstage/cli": "^0.36.1-next.0",
++    "@backstage/cli-defaults": "^0.1.1-next.0",
++    "@backstage/e2e-test-utils": "^0.1.2",
++    "@jest/environment-jsdom-abstract": "^30.0.0",
+     "@playwright/test": "^1.32.3",
++    "@types/jest": "^30.0.0",
++    "jest": "^30.2.0",
++    "jsdom": "^27.1.0",
+     "node-gyp": "^10.0.0",
+     "prettier": "^2.3.2",
+-    "typescript": "~5.4.0"
++    "typescript": "~5.8.0"
+   },
+diff --git a/packages/app/e2e-tests/app.test.ts b/packages/app/e2e-tests/app.test.ts
+index 839ff88..187e124 100644
+--- a/packages/app/e2e-tests/app.test.ts
++++ b/packages/app/e2e-tests/app.test.ts
+@@ -25,3 +25,5 @@ test('App should render the welcome page', async ({ page }) => {
+ 
+-  await expect(page.getByText('My Company Catalog')).toBeVisible();
++  const nav = page.getByRole('navigation');
++  await expect(nav.getByRole('link', { name: 'Catalog' })).toBeVisible();
++  await expect(page.getByRole('link', { name: 'APIs' })).toBeVisible();
+ });
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 007e3e3..8ca1a7b 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -16,26 +16,24 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "^1.5.17",
+-    "@backstage/catalog-model": "^1.7.3",
+-    "@backstage/cli": "^0.30.0",
+-    "@backstage/core-app-api": "^1.15.5",
+-    "@backstage/core-components": "^0.16.4",
+-    "@backstage/core-plugin-api": "^1.10.4",
+-    "@backstage/integration-react": "^1.2.4",
+-    "@backstage/plugin-api-docs": "^0.12.5-next.0",
+-    "@backstage/plugin-catalog": "^1.28.0-next.0",
+-    "@backstage/plugin-catalog-common": "^1.1.3",
+-    "@backstage/plugin-catalog-graph": "^0.4.17-next.0",
+-    "@backstage/plugin-catalog-import": "^0.12.11-next.0",
+-    "@backstage/plugin-catalog-react": "^1.16.0-next.0",
+-    "@backstage/plugin-kubernetes": "^0.12.5-next.0",
+-    "@backstage/plugin-org": "^0.6.37-next.0",
+-    "@backstage/plugin-permission-react": "^0.4.31",
+-    "@backstage/plugin-scaffolder": "^1.29.0-next.0",
+-    "@backstage/plugin-search": "^1.4.24-next.0",
+-    "@backstage/plugin-search-react": "^1.8.7-next.0",
+-    "@backstage/plugin-techdocs": "^1.12.4-next.0",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.22-next.0",
+-    "@backstage/plugin-techdocs-react": "^1.2.15-next.0",
+-    "@backstage/plugin-user-settings": "^0.8.20-next.0",
+-    "@backstage/theme": "^0.6.4",
++    "@backstage/cli": "^0.36.1-next.0",
++    "@backstage/core-components": "^0.18.9-next.0",
++    "@backstage/core-plugin-api": "^1.12.5-next.0",
++    "@backstage/frontend-defaults": "^0.5.1-next.0",
++    "@backstage/frontend-plugin-api": "^0.15.2-next.0",
++    "@backstage/integration-react": "^1.2.17-next.0",
++    "@backstage/plugin-api-docs": "^0.13.6-next.0",
++    "@backstage/plugin-app-react": "^0.2.2-next.0",
++    "@backstage/plugin-app-visualizer": "^0.2.2-next.0",
++    "@backstage/plugin-catalog": "^2.0.2-next.0",
++    "@backstage/plugin-catalog-graph": "^0.6.1-next.0",
++    "@backstage/plugin-catalog-import": "^0.13.12-next.0",
++    "@backstage/plugin-kubernetes": "^0.12.18-next.0",
++    "@backstage/plugin-notifications": "^0.5.16-next.0",
++    "@backstage/plugin-org": "^0.7.1-next.0",
++    "@backstage/plugin-scaffolder": "^1.36.2-next.0",
++    "@backstage/plugin-search": "^1.7.1-next.0",
++    "@backstage/plugin-signals": "^0.0.30-next.0",
++    "@backstage/plugin-techdocs": "^1.17.3-next.0",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.35-next.0",
++    "@backstage/plugin-user-settings": "^0.9.2-next.0",
++    "@backstage/ui": "^0.14.0-next.0",
+     "@material-ui/core": "^4.12.2",
+@@ -44,7 +42,7 @@
+     "react-dom": "^18.0.2",
+-    "react-router": "^6.3.0",
+-    "react-router-dom": "^6.3.0"
++    "react-router": "^6.30.2",
++    "react-router-dom": "^6.30.2"
+   },
+   "devDependencies": {
+-    "@backstage/test-utils": "^1.7.5",
++    "@backstage/frontend-test-utils": "^0.5.2-next.0",
+     "@playwright/test": "^1.32.3",
+diff --git a/packages/app/src/App.test.tsx b/packages/app/src/App.test.tsx
+index ec8ba1d..98e7a64 100644
+--- a/packages/app/src/App.test.tsx
++++ b/packages/app/src/App.test.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { render, waitFor } from '@testing-library/react';
+@@ -22,3 +21,3 @@ describe('App', () => {
+ 
+-    const rendered = render(<App />);
++    const rendered = render(App.createRoot());
+ 
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index e24c468..c0206fe 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -1,109 +1,7 @@
+-import React from 'react';
+-import { Navigate, Route } from 'react-router-dom';
+-import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
+-import {
+-  CatalogEntityPage,
+-  CatalogIndexPage,
+-  catalogPlugin,
+-} from '@backstage/plugin-catalog';
+-import {
+-  CatalogImportPage,
+-  catalogImportPlugin,
+-} from '@backstage/plugin-catalog-import';
+-import { ScaffolderPage, scaffolderPlugin } from '@backstage/plugin-scaffolder';
+-import { orgPlugin } from '@backstage/plugin-org';
+-import { SearchPage } from '@backstage/plugin-search';
+-import {
+-  TechDocsIndexPage,
+-  techdocsPlugin,
+-  TechDocsReaderPage,
+-} from '@backstage/plugin-techdocs';
+-import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
+-import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
+-import { UserSettingsPage } from '@backstage/plugin-user-settings';
+-import { apis } from './apis';
+-import { entityPage } from './components/catalog/EntityPage';
+-import { searchPage } from './components/search/SearchPage';
+-import { Root } from './components/Root';
++import { createApp } from '@backstage/frontend-defaults';
++import catalogPlugin from '@backstage/plugin-catalog/alpha';
++import { navModule } from './modules/nav';
+ 
+-import {
+-  AlertDisplay,
+-  OAuthRequestDialog,
+-  SignInPage,
+-} from '@backstage/core-components';
+-import { createApp } from '@backstage/app-defaults';
+-import { AppRouter, FlatRoutes } from '@backstage/core-app-api';
+-import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
+-import { RequirePermission } from '@backstage/plugin-permission-react';
+-import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
+-
+-const app = createApp({
+-  apis,
+-  bindRoutes({ bind }) {
+-    bind(catalogPlugin.externalRoutes, {
+-      createComponent: scaffolderPlugin.routes.root,
+-      viewTechDoc: techdocsPlugin.routes.docRoot,
+-      createFromTemplate: scaffolderPlugin.routes.selectedTemplate,
+-    });
+-    bind(apiDocsPlugin.externalRoutes, {
+-      registerApi: catalogImportPlugin.routes.importPage,
+-    });
+-    bind(scaffolderPlugin.externalRoutes, {
+-      registerComponent: catalogImportPlugin.routes.importPage,
+-      viewTechDoc: techdocsPlugin.routes.docRoot,
+-    });
+-    bind(orgPlugin.externalRoutes, {
+-      catalogIndex: catalogPlugin.routes.catalogIndex,
+-    });
+-  },
+-  components: {
+-    SignInPage: props => <SignInPage {...props} auto providers={['guest']} />,
+-  },
++export default createApp({
++  features: [catalogPlugin, navModule],
+ });
+-
+-const routes = (
+-  <FlatRoutes>
+-    <Route path="/" element={<Navigate to="catalog" />} />
+-    <Route path="/catalog" element={<CatalogIndexPage />} />
+-    <Route
+-      path="/catalog/:namespace/:kind/:name"
+-      element={<CatalogEntityPage />}
+-    >
+-      {entityPage}
+-    </Route>
+-    <Route path="/docs" element={<TechDocsIndexPage />} />
+-    <Route
+-      path="/docs/:namespace/:kind/:name/*"
+-      element={<TechDocsReaderPage />}
+-    >
+-      <TechDocsAddons>
+-        <ReportIssue />
+-      </TechDocsAddons>
+-    </Route>
+-    <Route path="/create" element={<ScaffolderPage />} />
+-    <Route path="/api-docs" element={<ApiExplorerPage />} />
+-    <Route
+-      path="/catalog-import"
+-      element={
+-        <RequirePermission permission={catalogEntityCreatePermission}>
+-          <CatalogImportPage />
+-        </RequirePermission>
+-      }
+-    />
+-    <Route path="/search" element={<SearchPage />}>
+-      {searchPage}
+-    </Route>
+-    <Route path="/settings" element={<UserSettingsPage />} />
+-    <Route path="/catalog-graph" element={<CatalogGraphPage />} />
+-  </FlatRoutes>
+-);
+-
+-export default app.createRoot(
+-  <>
+-    <AlertDisplay />
+-    <OAuthRequestDialog />
+-    <AppRouter>
+-      <Root>{routes}</Root>
+-    </AppRouter>
+-  </>,
+-);
+diff --git a/packages/app/src/apis.ts b/packages/app/src/apis.ts
+deleted file mode 100644
+index c89753a..0000000
+--- a/packages/app/src/apis.ts
++++ /dev/null
+@@ -1,19 +0,0 @@
+-import {
+-  ScmIntegrationsApi,
+-  scmIntegrationsApiRef,
+-  ScmAuth,
+-} from '@backstage/integration-react';
+-import {
+-  AnyApiFactory,
+-  configApiRef,
+-  createApiFactory,
+-} from '@backstage/core-plugin-api';
+-
+-export const apis: AnyApiFactory[] = [
+-  createApiFactory({
+-    api: scmIntegrationsApiRef,
+-    deps: { configApi: configApiRef },
+-    factory: ({ configApi }) => ScmIntegrationsApi.fromConfig(configApi),
+-  }),
+-  ScmAuth.createDefaultApiFactory(),
+-];
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+deleted file mode 100644
+index 853d175..0000000
+--- a/packages/app/src/components/Root/Root.tsx
++++ /dev/null
+@@ -1,96 +0,0 @@
+-import React, { PropsWithChildren } from 'react';
+-import { makeStyles } from '@material-ui/core';
+-import HomeIcon from '@material-ui/icons/Home';
+-import ExtensionIcon from '@material-ui/icons/Extension';
+-import LibraryBooks from '@material-ui/icons/LibraryBooks';
+-import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
+-import LogoFull from './LogoFull';
+-import LogoIcon from './LogoIcon';
+-import {
+-  Settings as SidebarSettings,
+-  UserSettingsSignInAvatar,
+-} from '@backstage/plugin-user-settings';
+-import { SidebarSearchModal } from '@backstage/plugin-search';
+-import {
+-  Sidebar,
+-  sidebarConfig,
+-  SidebarDivider,
+-  SidebarGroup,
+-  SidebarItem,
+-  SidebarPage,
+-  SidebarScrollWrapper,
+-  SidebarSpace,
+-  useSidebarOpenState,
+-  Link,
+-} from '@backstage/core-components';
+-import MenuIcon from '@material-ui/icons/Menu';
+-import SearchIcon from '@material-ui/icons/Search';
+-import { MyGroupsSidebarItem } from '@backstage/plugin-org';
+-import GroupIcon from '@material-ui/icons/People';
+-
+-const useSidebarLogoStyles = makeStyles({
+-  root: {
+-    width: sidebarConfig.drawerWidthClosed,
+-    height: 3 * sidebarConfig.logoHeight,
+-    display: 'flex',
+-    flexFlow: 'row nowrap',
+-    alignItems: 'center',
+-    marginBottom: -14,
+-  },
+-  link: {
+-    width: sidebarConfig.drawerWidthClosed,
+-    marginLeft: 24,
+-  },
+-});
+-
+-const SidebarLogo = () => {
+-  const classes = useSidebarLogoStyles();
+-  const { isOpen } = useSidebarOpenState();
+-
+-  return (
+-    <div className={classes.root}>
+-      <Link to="/" underline="none" className={classes.link} aria-label="Home">
+-        {isOpen ? <LogoFull /> : <LogoIcon />}
+-      </Link>
+-    </div>
+-  );
+-};
+-
+-export const Root = ({ children }: PropsWithChildren<{}>) => (
+-  <SidebarPage>
+-    <Sidebar>
+-      <SidebarLogo />
+-      <SidebarGroup label="Search" icon={<SearchIcon />} to="/search">
+-        <SidebarSearchModal />
+-      </SidebarGroup>
+-      <SidebarDivider />
+-      <SidebarGroup label="Menu" icon={<MenuIcon />}>
+-        {/* Global nav, not org-specific */}
+-        <SidebarItem icon={HomeIcon} to="catalog" text="Home" />
+-        <MyGroupsSidebarItem
+-          singularTitle="My Group"
+-          pluralTitle="My Groups"
+-          icon={GroupIcon}
+-        />
+-        <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
+-        <SidebarItem icon={LibraryBooks} to="docs" text="Docs" />
+-        <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
+-        {/* End global nav */}
+-        <SidebarDivider />
+-        <SidebarScrollWrapper>
+-          {/* Items in this group will be scrollable if they run out of space */}
+-        </SidebarScrollWrapper>
+-      </SidebarGroup>
+-      <SidebarSpace />
+-      <SidebarDivider />
+-      <SidebarGroup
+-        label="Settings"
+-        icon={<UserSettingsSignInAvatar />}
+-        to="/settings"
+-      >
+-        <SidebarSettings />
+-      </SidebarGroup>
+-    </Sidebar>
+-    {children}
+-  </SidebarPage>
+-);
+diff --git a/packages/app/src/components/Root/index.ts b/packages/app/src/components/Root/index.ts
+deleted file mode 100644
+index 3528881..0000000
+--- a/packages/app/src/components/Root/index.ts
++++ /dev/null
+@@ -1 +0,0 @@
+-export { Root } from './Root';
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+deleted file mode 100644
+index 6164c76..0000000
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ /dev/null
+@@ -1,412 +0,0 @@
+-import React from 'react';
+-import { Button, Grid } from '@material-ui/core';
+-import {
+-  EntityApiDefinitionCard,
+-  EntityConsumedApisCard,
+-  EntityConsumingComponentsCard,
+-  EntityHasApisCard,
+-  EntityProvidedApisCard,
+-  EntityProvidingComponentsCard,
+-} from '@backstage/plugin-api-docs';
+-import {
+-  EntityAboutCard,
+-  EntityDependsOnComponentsCard,
+-  EntityDependsOnResourcesCard,
+-  EntityHasComponentsCard,
+-  EntityHasResourcesCard,
+-  EntityHasSubcomponentsCard,
+-  EntityHasSystemsCard,
+-  EntityLayout,
+-  EntityLinksCard,
+-  EntitySwitch,
+-  EntityOrphanWarning,
+-  EntityProcessingErrorsPanel,
+-  isComponentType,
+-  isKind,
+-  hasCatalogProcessingErrors,
+-  isOrphan,
+-  hasRelationWarnings,
+-  EntityRelationWarning,
+-} from '@backstage/plugin-catalog';
+-import {
+-  EntityUserProfileCard,
+-  EntityGroupProfileCard,
+-  EntityMembersListCard,
+-  EntityOwnershipCard,
+-} from '@backstage/plugin-org';
+-import { EntityTechdocsContent } from '@backstage/plugin-techdocs';
+-import { EmptyState } from '@backstage/core-components';
+-import {
+-  Direction,
+-  EntityCatalogGraphCard,
+-} from '@backstage/plugin-catalog-graph';
+-import {
+-  RELATION_API_CONSUMED_BY,
+-  RELATION_API_PROVIDED_BY,
+-  RELATION_CONSUMES_API,
+-  RELATION_DEPENDENCY_OF,
+-  RELATION_DEPENDS_ON,
+-  RELATION_HAS_PART,
+-  RELATION_PART_OF,
+-  RELATION_PROVIDES_API,
+-} from '@backstage/catalog-model';
+-
+-import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
+-import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
+-
+-import {
+-  EntityKubernetesContent,
+-  isKubernetesAvailable,
+-} from '@backstage/plugin-kubernetes';
+-
+-const techdocsContent = (
+-  <EntityTechdocsContent>
+-    <TechDocsAddons>
+-      <ReportIssue />
+-    </TechDocsAddons>
+-  </EntityTechdocsContent>
+-);
+-
+-const cicdContent = (
+-  // This is an example of how you can implement your company's logic in entity page.
+-  // You can for example enforce that all components of type 'service' should use GitHubActions
+-  <EntitySwitch>
+-    {/*
+-      Here you can add support for different CI/CD services, for example
+-      using @backstage-community/plugin-github-actions as follows:
+-      <EntitySwitch.Case if={isGithubActionsAvailable}>
+-        <EntityGithubActionsContent />
+-      </EntitySwitch.Case>
+-     */}
+-
+-    <EntitySwitch.Case>
+-      <EmptyState
+-        title="No CI/CD available for this entity"
+-        missing="info"
+-        description="You need to add an annotation to your component if you want to enable CI/CD for it. You can read more about annotations in Backstage by clicking the button below."
+-        action={
+-          <Button
+-            variant="contained"
+-            color="primary"
+-            href="https://backstage.io/docs/features/software-catalog/well-known-annotations"
+-          >
+-            Read more
+-          </Button>
+-        }
+-      />
+-    </EntitySwitch.Case>
+-  </EntitySwitch>
+-);
+-
+-const entityWarningContent = (
+-  <>
+-    <EntitySwitch>
+-      <EntitySwitch.Case if={isOrphan}>
+-        <Grid item xs={12}>
+-          <EntityOrphanWarning />
+-        </Grid>
+-      </EntitySwitch.Case>
+-    </EntitySwitch>
+-
+-    <EntitySwitch>
+-      <EntitySwitch.Case if={hasRelationWarnings}>
+-        <Grid item xs={12}>
+-          <EntityRelationWarning />
+-        </Grid>
+-      </EntitySwitch.Case>
+-    </EntitySwitch>
+-
+-    <EntitySwitch>
+-      <EntitySwitch.Case if={hasCatalogProcessingErrors}>
+-        <Grid item xs={12}>
+-          <EntityProcessingErrorsPanel />
+-        </Grid>
+-      </EntitySwitch.Case>
+-    </EntitySwitch>
+-  </>
+-);
+-
+-const overviewContent = (
+-  <Grid container spacing={3} alignItems="stretch">
+-    {entityWarningContent}
+-    <Grid item md={6}>
+-      <EntityAboutCard variant="gridItem" />
+-    </Grid>
+-    <Grid item md={6} xs={12}>
+-      <EntityCatalogGraphCard variant="gridItem" height={400} />
+-    </Grid>
+-
+-    <Grid item md={4} xs={12}>
+-      <EntityLinksCard />
+-    </Grid>
+-    <Grid item md={8} xs={12}>
+-      <EntityHasSubcomponentsCard variant="gridItem" />
+-    </Grid>
+-  </Grid>
+-);
+-
+-const serviceEntityPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      {overviewContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/ci-cd" title="CI/CD">
+-      {cicdContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route
+-      path="/kubernetes"
+-      title="Kubernetes"
+-      if={isKubernetesAvailable}
+-    >
+-      <EntityKubernetesContent />
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/api" title="API">
+-      <Grid container spacing={3} alignItems="stretch">
+-        <Grid item md={6}>
+-          <EntityProvidedApisCard />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityConsumedApisCard />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/dependencies" title="Dependencies">
+-      <Grid container spacing={3} alignItems="stretch">
+-        <Grid item md={6}>
+-          <EntityDependsOnComponentsCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityDependsOnResourcesCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/docs" title="Docs">
+-      {techdocsContent}
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const websiteEntityPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      {overviewContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/ci-cd" title="CI/CD">
+-      {cicdContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route
+-      path="/kubernetes"
+-      title="Kubernetes"
+-      if={isKubernetesAvailable}
+-    >
+-      <EntityKubernetesContent />
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/dependencies" title="Dependencies">
+-      <Grid container spacing={3} alignItems="stretch">
+-        <Grid item md={6}>
+-          <EntityDependsOnComponentsCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityDependsOnResourcesCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/docs" title="Docs">
+-      {techdocsContent}
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-/**
+- * NOTE: This page is designed to work on small screens such as mobile devices.
+- * This is based on Material UI Grid. If breakpoints are used, each grid item must set the `xs` prop to a column size or to `true`,
+- * since this does not default. If no breakpoints are used, the items will equitably share the available space.
+- * https://material-ui.com/components/grid/#basic-grid.
+- */
+-
+-const defaultEntityPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      {overviewContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/docs" title="Docs">
+-      {techdocsContent}
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const componentPage = (
+-  <EntitySwitch>
+-    <EntitySwitch.Case if={isComponentType('service')}>
+-      {serviceEntityPage}
+-    </EntitySwitch.Case>
+-
+-    <EntitySwitch.Case if={isComponentType('website')}>
+-      {websiteEntityPage}
+-    </EntitySwitch.Case>
+-
+-    <EntitySwitch.Case>{defaultEntityPage}</EntitySwitch.Case>
+-  </EntitySwitch>
+-);
+-
+-const apiPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3}>
+-        {entityWarningContent}
+-        <Grid item md={6}>
+-          <EntityAboutCard />
+-        </Grid>
+-        <Grid item md={6} xs={12}>
+-          <EntityCatalogGraphCard variant="gridItem" height={400} />
+-        </Grid>
+-        <Grid item md={4} xs={12}>
+-          <EntityLinksCard />
+-        </Grid>
+-        <Grid container item md={12}>
+-          <Grid item md={6}>
+-            <EntityProvidingComponentsCard />
+-          </Grid>
+-          <Grid item md={6}>
+-            <EntityConsumingComponentsCard />
+-          </Grid>
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/definition" title="Definition">
+-      <Grid container spacing={3}>
+-        <Grid item xs={12}>
+-          <EntityApiDefinitionCard />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const userPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3}>
+-        {entityWarningContent}
+-        <Grid item xs={12} md={6}>
+-          <EntityUserProfileCard variant="gridItem" />
+-        </Grid>
+-        <Grid item xs={12} md={6}>
+-          <EntityOwnershipCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const groupPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3}>
+-        {entityWarningContent}
+-        <Grid item xs={12} md={6}>
+-          <EntityGroupProfileCard variant="gridItem" />
+-        </Grid>
+-        <Grid item xs={12} md={6}>
+-          <EntityOwnershipCard variant="gridItem" />
+-        </Grid>
+-        <Grid item xs={12} md={6}>
+-          <EntityMembersListCard />
+-        </Grid>
+-        <Grid item xs={12} md={6}>
+-          <EntityLinksCard />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const systemPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3} alignItems="stretch">
+-        {entityWarningContent}
+-        <Grid item md={6}>
+-          <EntityAboutCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6} xs={12}>
+-          <EntityCatalogGraphCard variant="gridItem" height={400} />
+-        </Grid>
+-        <Grid item md={4} xs={12}>
+-          <EntityLinksCard />
+-        </Grid>
+-        <Grid item md={8}>
+-          <EntityHasComponentsCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityHasApisCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityHasResourcesCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-    <EntityLayout.Route path="/diagram" title="Diagram">
+-      <EntityCatalogGraphCard
+-        variant="gridItem"
+-        direction={Direction.TOP_BOTTOM}
+-        title="System Diagram"
+-        height={700}
+-        relations={[
+-          RELATION_PART_OF,
+-          RELATION_HAS_PART,
+-          RELATION_API_CONSUMED_BY,
+-          RELATION_API_PROVIDED_BY,
+-          RELATION_CONSUMES_API,
+-          RELATION_PROVIDES_API,
+-          RELATION_DEPENDENCY_OF,
+-          RELATION_DEPENDS_ON,
+-        ]}
+-        unidirectional={false}
+-      />
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const domainPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3} alignItems="stretch">
+-        {entityWarningContent}
+-        <Grid item md={6}>
+-          <EntityAboutCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6} xs={12}>
+-          <EntityCatalogGraphCard variant="gridItem" height={400} />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityHasSystemsCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-export const entityPage = (
+-  <EntitySwitch>
+-    <EntitySwitch.Case if={isKind('component')} children={componentPage} />
+-    <EntitySwitch.Case if={isKind('api')} children={apiPage} />
+-    <EntitySwitch.Case if={isKind('group')} children={groupPage} />
+-    <EntitySwitch.Case if={isKind('user')} children={userPage} />
+-    <EntitySwitch.Case if={isKind('system')} children={systemPage} />
+-    <EntitySwitch.Case if={isKind('domain')} children={domainPage} />
+-
+-    <EntitySwitch.Case>{defaultEntityPage}</EntitySwitch.Case>
+-  </EntitySwitch>
+-);
+diff --git a/packages/app/src/components/search/SearchPage.tsx b/packages/app/src/components/search/SearchPage.tsx
+deleted file mode 100644
+index 1788dde..0000000
+--- a/packages/app/src/components/search/SearchPage.tsx
++++ /dev/null
+@@ -1,124 +0,0 @@
+-import React from 'react';
+-import { makeStyles, Theme, Grid, Paper } from '@material-ui/core';
+-
+-import { CatalogSearchResultListItem } from '@backstage/plugin-catalog';
+-import {
+-  catalogApiRef,
+-  CATALOG_FILTER_EXISTS,
+-} from '@backstage/plugin-catalog-react';
+-import { TechDocsSearchResultListItem } from '@backstage/plugin-techdocs';
+-
+-import { SearchType } from '@backstage/plugin-search';
+-import {
+-  SearchBar,
+-  SearchFilter,
+-  SearchResult,
+-  SearchPagination,
+-  useSearch,
+-} from '@backstage/plugin-search-react';
+-import {
+-  CatalogIcon,
+-  Content,
+-  DocsIcon,
+-  Header,
+-  Page,
+-} from '@backstage/core-components';
+-import { useApi } from '@backstage/core-plugin-api';
+-
+-const useStyles = makeStyles((theme: Theme) => ({
+-  bar: {
+-    padding: theme.spacing(1, 0),
+-  },
+-  filters: {
+-    padding: theme.spacing(2),
+-    marginTop: theme.spacing(2),
+-  },
+-  filter: {
+-    '& + &': {
+-      marginTop: theme.spacing(2.5),
+-    },
+-  },
+-}));
+-
+-const SearchPage = () => {
+-  const classes = useStyles();
+-  const { types } = useSearch();
+-  const catalogApi = useApi(catalogApiRef);
+-
+-  return (
+-    <Page themeId="home">
+-      <Header title="Search" />
+-      <Content>
+-        <Grid container direction="row">
+-          <Grid item xs={12}>
+-            <Paper className={classes.bar}>
+-              <SearchBar />
+-            </Paper>
+-          </Grid>
+-          <Grid item xs={3}>
+-            <SearchType.Accordion
+-              name="Result Type"
+-              defaultValue="software-catalog"
+-              types={[
+-                {
+-                  value: 'software-catalog',
+-                  name: 'Software Catalog',
+-                  icon: <CatalogIcon />,
+-                },
+-                {
+-                  value: 'techdocs',
+-                  name: 'Documentation',
+-                  icon: <DocsIcon />,
+-                },
+-              ]}
+-            />
+-            <Paper className={classes.filters}>
+-              {types.includes('techdocs') && (
+-                <SearchFilter.Select
+-                  className={classes.filter}
+-                  label="Entity"
+-                  name="name"
+-                  values={async () => {
+-                    // Return a list of entities which are documented.
+-                    const { items } = await catalogApi.getEntities({
+-                      fields: ['metadata.name'],
+-                      filter: {
+-                        'metadata.annotations.backstage.io/techdocs-ref':
+-                          CATALOG_FILTER_EXISTS,
+-                      },
+-                    });
+-
+-                    const names = items.map(entity => entity.metadata.name);
+-                    names.sort();
+-                    return names;
+-                  }}
+-                />
+-              )}
+-              <SearchFilter.Select
+-                className={classes.filter}
+-                label="Kind"
+-                name="kind"
+-                values={['Component', 'Template']}
+-              />
+-              <SearchFilter.Checkbox
+-                className={classes.filter}
+-                label="Lifecycle"
+-                name="lifecycle"
+-                values={['experimental', 'production']}
+-              />
+-            </Paper>
+-          </Grid>
+-          <Grid item xs={9}>
+-            <SearchPagination />
+-            <SearchResult>
+-              <CatalogSearchResultListItem icon={<CatalogIcon />} />
+-              <TechDocsSearchResultListItem icon={<DocsIcon />} />
+-            </SearchResult>
+-          </Grid>
+-        </Grid>
+-      </Content>
+-    </Page>
+-  );
+-};
+-
+-export const searchPage = <SearchPage />;
+diff --git a/packages/app/src/index.tsx b/packages/app/src/index.tsx
+index d875c77..ac9e52b 100644
+--- a/packages/app/src/index.tsx
++++ b/packages/app/src/index.tsx
+@@ -1,6 +1,6 @@
+ import '@backstage/cli/asset-types';
+-import React from 'react';
+ import ReactDOM from 'react-dom/client';
+ import App from './App';
++import '@backstage/ui/css/styles.css';
+ 
+-ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
++ReactDOM.createRoot(document.getElementById('root')!).render(App.createRoot());
+diff --git a/packages/app/src/components/Root/LogoFull.tsx b/packages/app/src/modules/nav/LogoFull.tsx
+similarity index 99%
+rename from packages/app/src/components/Root/LogoFull.tsx
+rename to packages/app/src/modules/nav/LogoFull.tsx
+index 47e3b73..95f69ae 100644
+--- a/packages/app/src/components/Root/LogoFull.tsx
++++ b/packages/app/src/modules/nav/LogoFull.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { makeStyles } from '@material-ui/core';
+@@ -12,3 +11,4 @@ const useStyles = makeStyles({
+ });
+-const LogoFull = () => {
++
++export const LogoFull = () => {
+   const classes = useStyles();
+@@ -28,3 +28 @@ const LogoFull = () => {
+ };
+-
+-export default LogoFull;
+diff --git a/packages/app/src/components/Root/LogoIcon.tsx b/packages/app/src/modules/nav/LogoIcon.tsx
+similarity index 97%
+rename from packages/app/src/components/Root/LogoIcon.tsx
+rename to packages/app/src/modules/nav/LogoIcon.tsx
+index 7eae8c7..38544dd 100644
+--- a/packages/app/src/components/Root/LogoIcon.tsx
++++ b/packages/app/src/modules/nav/LogoIcon.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { makeStyles } from '@material-ui/core';
+@@ -13,3 +12,3 @@ const useStyles = makeStyles({
+ 
+-const LogoIcon = () => {
++export const LogoIcon = () => {
+   const classes = useStyles();
+@@ -29,3 +28 @@ const LogoIcon = () => {
+ };
+-
+-export default LogoIcon;
+diff --git a/packages/app/src/modules/nav/Sidebar.tsx b/packages/app/src/modules/nav/Sidebar.tsx
+new file mode 100644
+index 0000000..e0bb425
+--- /dev/null
++++ b/packages/app/src/modules/nav/Sidebar.tsx
+@@ -0,0 +1,58 @@
++import {
++  Sidebar,
++  SidebarDivider,
++  SidebarGroup,
++  SidebarItem,
++  SidebarScrollWrapper,
++  SidebarSpace,
++} from '@backstage/core-components';
++import { NavContentBlueprint } from '@backstage/plugin-app-react';
++import { SidebarLogo } from './SidebarLogo';
++import MenuIcon from '@material-ui/icons/Menu';
++import SearchIcon from '@material-ui/icons/Search';
++import { SidebarSearchModal } from '@backstage/plugin-search';
++import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
++import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
++
++export const SidebarContent = NavContentBlueprint.make({
++  params: {
++    component: ({ navItems }) => {
++      const nav = navItems.withComponent(item => (
++        <SidebarItem icon={() => item.icon} to={item.href} text={item.title} />
++      ));
++
++      // Skipped items
++      nav.take('page:search'); // Using search modal instead
++
++      return (
++        <Sidebar>
++          <SidebarLogo />
++          <SidebarGroup label="Search" icon={<SearchIcon />} to="/search">
++            <SidebarSearchModal />
++          </SidebarGroup>
++          <SidebarDivider />
++          <SidebarGroup label="Menu" icon={<MenuIcon />}>
++            {nav.take('page:catalog')}
++            {nav.take('page:scaffolder')}
++            <SidebarDivider />
++            <SidebarScrollWrapper>
++              {nav.rest({ sortBy: 'title' })}
++            </SidebarScrollWrapper>
++          </SidebarGroup>
++          <SidebarSpace />
++          <SidebarDivider />
++          <NotificationsSidebarItem />
++          <SidebarDivider />
++          <SidebarGroup
++            label="Settings"
++            icon={<UserSettingsSignInAvatar />}
++            to="/settings"
++          >
++            {nav.take('page:app-visualizer')}
++            {nav.take('page:user-settings')}
++          </SidebarGroup>
++        </Sidebar>
++      );
++    },
++  },
++});
+diff --git a/packages/app/src/modules/nav/SidebarLogo.tsx b/packages/app/src/modules/nav/SidebarLogo.tsx
+new file mode 100644
+index 0000000..80df964
+--- /dev/null
++++ b/packages/app/src/modules/nav/SidebarLogo.tsx
+@@ -0,0 +1,36 @@
++import {
++  Link,
++  sidebarConfig,
++  useSidebarOpenState,
++} from '@backstage/core-components';
++import { makeStyles } from '@material-ui/core';
++import { LogoFull } from './LogoFull';
++import { LogoIcon } from './LogoIcon';
++
++const useSidebarLogoStyles = makeStyles({
++  root: {
++    width: sidebarConfig.drawerWidthClosed,
++    height: 3 * sidebarConfig.logoHeight,
++    display: 'flex',
++    flexFlow: 'row nowrap',
++    alignItems: 'center',
++    marginBottom: -14,
++  },
++  link: {
++    width: sidebarConfig.drawerWidthClosed,
++    marginLeft: 24,
++  },
++});
++
++export const SidebarLogo = () => {
++  const classes = useSidebarLogoStyles();
++  const { isOpen } = useSidebarOpenState();
++
++  return (
++    <div className={classes.root}>
++      <Link to="/" underline="none" className={classes.link} aria-label="Home">
++        {isOpen ? <LogoFull /> : <LogoIcon />}
++      </Link>
++    </div>
++  );
++};
+diff --git a/packages/app/src/modules/nav/index.ts b/packages/app/src/modules/nav/index.ts
+new file mode 100644
+index 0000000..abb61fc
+--- /dev/null
++++ b/packages/app/src/modules/nav/index.ts
+@@ -0,0 +1,7 @@
++import { createFrontendModule } from '@backstage/frontend-plugin-api';
++import { SidebarContent } from './Sidebar';
++
++export const navModule = createFrontendModule({
++  pluginId: 'app',
++  extensions: [SidebarContent],
++});
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 13ff70d..a70705f 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -10,4 +10,7 @@
+ # Once the commands have been run, you can build the image using `yarn build-image`
++#
++# Alternatively, there is also a multi-stage Dockerfile documented here:
++# https://backstage.io/docs/deployment/docker#multi-stage-build
+ 
+-FROM node:20-bookworm-slim
++FROM node:24-trixie-slim
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index e60bdb7..16d1e02 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,28 +18,31 @@
+   "dependencies": {
+-    "@backstage/backend-defaults": "^0.8.2-next.0",
+-    "@backstage/config": "^1.3.2",
+-    "@backstage/plugin-app-backend": "^0.4.6-next.0",
+-    "@backstage/plugin-auth-backend": "^0.24.4-next.0",
+-    "@backstage/plugin-auth-backend-module-github-provider": "^0.3.1-next.0",
+-    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.6-next.0",
+-    "@backstage/plugin-auth-node": "^0.6.1-next.0",
+-    "@backstage/plugin-catalog-backend": "^1.31.1-next.0",
+-    "@backstage/plugin-catalog-backend-module-logs": "^0.1.8-next.0",
+-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.6-next.0",
+-    "@backstage/plugin-kubernetes-backend": "^0.19.4-next.0",
+-    "@backstage/plugin-permission-backend": "^0.5.55-next.0",
+-    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.6-next.0",
+-    "@backstage/plugin-permission-common": "^0.8.4",
+-    "@backstage/plugin-permission-node": "^0.8.9-next.0",
+-    "@backstage/plugin-proxy-backend": "^0.5.12-next.0",
+-    "@backstage/plugin-scaffolder-backend": "^1.30.1-next.0",
+-    "@backstage/plugin-scaffolder-backend-module-github": "^0.6.1-next.0",
+-    "@backstage/plugin-search-backend": "^1.8.3-next.0",
+-    "@backstage/plugin-search-backend-module-catalog": "^0.3.2-next.0",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.42-next.0",
+-    "@backstage/plugin-search-backend-module-techdocs": "^0.3.7-next.0",
+-    "@backstage/plugin-search-backend-node": "^1.3.9-next.0",
+-    "@backstage/plugin-techdocs-backend": "^1.11.7-next.0",
++    "@backstage/backend-defaults": "^0.16.1-next.0",
++    "@backstage/config": "^1.3.6",
++    "@backstage/plugin-app-backend": "^0.5.13-next.0",
++    "@backstage/plugin-auth-backend": "^0.28.0-next.0",
++    "@backstage/plugin-auth-backend-module-github-provider": "^0.5.2-next.0",
++    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.18-next.0",
++    "@backstage/plugin-auth-node": "^0.6.15-next.0",
++    "@backstage/plugin-catalog-backend": "^3.5.1-next.0",
++    "@backstage/plugin-catalog-backend-module-logs": "^0.1.21-next.0",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.19-next.0",
++    "@backstage/plugin-kubernetes-backend": "^0.21.3-next.0",
++    "@backstage/plugin-notifications-backend": "^0.6.4-next.0",
++    "@backstage/plugin-permission-backend": "^0.7.11-next.0",
++    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.18-next.0",
++    "@backstage/plugin-permission-common": "^0.9.7",
++    "@backstage/plugin-permission-node": "^0.10.12-next.0",
++    "@backstage/plugin-proxy-backend": "^0.6.12-next.0",
++    "@backstage/plugin-scaffolder-backend": "^3.2.1-next.0",
++    "@backstage/plugin-scaffolder-backend-module-github": "^0.9.8-next.0",
++    "@backstage/plugin-scaffolder-backend-module-notifications": "^0.1.21-next.0",
++    "@backstage/plugin-search-backend": "^2.1.1-next.0",
++    "@backstage/plugin-search-backend-module-catalog": "^0.3.14-next.0",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.54-next.0",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.4.13-next.0",
++    "@backstage/plugin-search-backend-node": "^1.4.3-next.0",
++    "@backstage/plugin-signals-backend": "^0.3.14-next.0",
++    "@backstage/plugin-techdocs-backend": "^2.1.7-next.0",
+     "app": "link:../app",
+-    "better-sqlite3": "^9.0.0",
++    "better-sqlite3": "^12.0.0",
+     "node-gyp": "^10.0.0",
+@@ -48,3 +51,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.30.0"
++    "@backstage/cli": "^0.36.1-next.0"
+   },
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 6d0a6f4..cc2db7c 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -14,4 +14,11 @@ backend.add(import('@backstage/plugin-app-backend'));
+ backend.add(import('@backstage/plugin-proxy-backend'));
++
++// scaffolder plugin
+ backend.add(import('@backstage/plugin-scaffolder-backend'));
+ backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
++backend.add(
++  import('@backstage/plugin-scaffolder-backend-module-notifications'),
++);
++
++// techdocs plugin
+ backend.add(import('@backstage/plugin-techdocs-backend'));
+@@ -51,5 +58,9 @@ backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
+ 
+-// kubernetes
++// kubernetes plugin
+ backend.add(import('@backstage/plugin-kubernetes-backend'));
+ 
++// notifications and signals plugins
++backend.add(import('@backstage/plugin-notifications-backend'));
++backend.add(import('@backstage/plugin-signals-backend'));
++
+ backend.start();
+diff --git a/playwright.config.ts b/playwright.config.ts
+index 733be13..0dc740b 100644
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -34,3 +34,3 @@ export default defineConfig({
+         {
+-          command: 'yarn dev',
++          command: 'yarn start app',
+           port: 3000,
+@@ -39,2 +39,8 @@ export default defineConfig({
+         },
++        {
++          command: 'yarn start backend',
++          port: 7007,
++          reuseExistingServer: true,
++          timeout: 60_000,
++        },
+       ],
+diff --git a/tsconfig.json b/tsconfig.json
+index 2aa745d..eac19c5 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -13,3 +13,4 @@
+     "outDir": "dist-types",
+-    "rootDir": "."
++    "rootDir": ".",
++    "jsx": "react-jsx"
+   }
+diff --git a/yarn.lock b/yarn.lock
+index 46a911d..70c1b60 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -4,25 +4,20 @@
+ 
+-"@google-cloud/storage@^7.0.0":
+-  version "7.14.0"
+-  resolved "https://registry.yarnpkg.com/@google-cloud/storage/-/storage-7.14.0.tgz#eda9715f68507949214af804c906eba6d168a214"
+-  integrity sha512-H41bPL2cMfSi4EEnFzKvg7XSb7T67ocSXrmF7MPjfgFB0L6CKGzfIYJheAZi1iqXjz6XaCT1OBf6HCG5vDBTOQ==
++"@swc/core@^1.3.46":
++  version "1.11.31"
++  resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.11.31.tgz#e5de9ed005551ce9a16aa69e79935fc33065475c"
++  integrity sha512-mAby9aUnKRjMEA7v8cVZS9Ah4duoRBnX7X6r5qrhTxErx+68MoY1TPrVwj/66/SWN3Bl+jijqAqoB8Qx0QE34A==
+ 
+-"@octokit/types@npm:^13.0.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
++fast-xml-builder@*:
++  version "1.0.0"
++  resolved "https://registry.yarnpkg.com/fast-xml-builder/-/fast-xml-builder-1.0.0.tgz#a485d7e8381f1db983cf006f849d1066e2935241"
++  integrity sha512-fpZuDogrAgnyt9oDDz+5DBz0zgPdPZz6D4IR7iESxRXElrlGTRkHJ9eEt+SACRJwT0FNFrt71DFQIUFBJfX/uQ==
+ 
+-"@octokit/types@npm:^13.1.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
++"knex@npm:3":
++  version "3.1.0"
++  resolved "https://registry.yarnpkg.com/knex/-/knex-3.1.0.tgz#b6ddd5b5ad26a6315234a5b09ec38dc4a370bd8c"
++  integrity sha512-GLoII6hR0c4ti243gMs5/1Rb3B+AjwMOfjYm97pu0FOQa7JH56hgBxYf5WK2525ceSbBY1cjeZ9yk99GPMB6Kw==
+ 
+-"@octokit/types@npm:^13.5.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/openapi-types@^22.2.0":
+-  version "22.2.0"
+-  resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-22.2.0.tgz#75aa7dcd440821d99def6a60b5f014207ae4968e"
+-  integrity sha512-QBhVjcUa9W7Wwhm6DBFu6ZZ+1/t/oYxqc2tp81Pi41YNuJinbFRx8B133qVOrAaBbF7D/m0Et6f9/pZt9Rc+tg==
++"knex@npm:^3.0.0":
++  version "3.1.0"
++  resolved "https://registry.yarnpkg.com/knex/-/knex-3.1.0.tgz#b6ddd5b5ad26a6315234a5b09ec38dc4a370bd8c"
++  integrity sha512-GLoII6hR0c4ti243gMs5/1Rb3B+AjwMOfjYm97pu0FOQa7JH56hgBxYf5WK2525ceSbBY1cjeZ9yk99GPMB6Kw==
