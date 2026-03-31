@@ -1,0 +1,49 @@
+diff --git a/.yarnrc.yml b/.yarnrc.yml
+index a207c67..b360a6a 100644
+--- a/.yarnrc.yml
++++ b/.yarnrc.yml
+@@ -5,3 +5,3 @@ plugins:
+     path: .yarn/plugins/@yarnpkg/plugin-backstage.cjs
+-    spec: "https://versions.backstage.io/v1/releases/1.49.1/yarn-plugin"
++    spec: "https://versions.backstage.io/v1/releases/1.50.0-next.1/yarn-plugin"
+ 
+diff --git a/backstage.json b/backstage.json
+index 5691b96..7039215 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.49.1"
++  "version": "1.50.0-next.1"
+ }
+diff --git a/packages/app/e2e-tests/app.test.ts b/packages/app/e2e-tests/app.test.ts
+index 187e124..d8dbc1f 100644
+--- a/packages/app/e2e-tests/app.test.ts
++++ b/packages/app/e2e-tests/app.test.ts
+@@ -26,4 +26,8 @@ test('App should render the welcome page', async ({ page }) => {
+   const nav = page.getByRole('navigation');
+-  await expect(nav.getByRole('link', { name: 'Catalog' })).toBeVisible();
+-  await expect(page.getByRole('link', { name: 'APIs' })).toBeVisible();
++  await expect(
++    nav.getByRole('link', { name: 'Catalog', exact: true }),
++  ).toBeVisible();
++  await expect(
++    page.getByRole('link', { name: 'APIs', exact: true }),
++  ).toBeVisible();
+ });
+diff --git a/yarn.lock b/yarn.lock
+index b0c1105..70c1b60 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -13 +13,11 @@ fast-xml-builder@*:
+   integrity sha512-fpZuDogrAgnyt9oDDz+5DBz0zgPdPZz6D4IR7iESxRXElrlGTRkHJ9eEt+SACRJwT0FNFrt71DFQIUFBJfX/uQ==
++
++"knex@npm:3":
++  version "3.1.0"
++  resolved "https://registry.yarnpkg.com/knex/-/knex-3.1.0.tgz#b6ddd5b5ad26a6315234a5b09ec38dc4a370bd8c"
++  integrity sha512-GLoII6hR0c4ti243gMs5/1Rb3B+AjwMOfjYm97pu0FOQa7JH56hgBxYf5WK2525ceSbBY1cjeZ9yk99GPMB6Kw==
++
++"knex@npm:^3.0.0":
++  version "3.1.0"
++  resolved "https://registry.yarnpkg.com/knex/-/knex-3.1.0.tgz#b6ddd5b5ad26a6315234a5b09ec38dc4a370bd8c"
++  integrity sha512-GLoII6hR0c4ti243gMs5/1Rb3B+AjwMOfjYm97pu0FOQa7JH56hgBxYf5WK2525ceSbBY1cjeZ9yk99GPMB6Kw==
