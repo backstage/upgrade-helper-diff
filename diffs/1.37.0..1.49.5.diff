@@ -1,0 +1,1349 @@
+diff --git a/.gitignore b/.gitignore
+index 77ad56d..2164e72 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -9,3 +9,2 @@ yarn-debug.log*
+ yarn-error.log*
+-lerna-debug.log*
+ 
+@@ -54 +53,4 @@ site
+ e2e-test-report/
++
++# Cache
++.cache/
+diff --git a/.yarn/plugins/@yarnpkg/plugin-backstage.cjs b/.yarn/plugins/@yarnpkg/plugin-backstage.cjs
+index 77fafe5..94e33be 100644
+--- a/.yarn/plugins/@yarnpkg/plugin-backstage.cjs
++++ b/.yarn/plugins/@yarnpkg/plugin-backstage.cjs
+@@ -5,3 +5,3 @@ name: "@yarnpkg/plugin-backstage",
+ factory: function (require) {
+-"use strict";var plugin=(()=>{var V=Object.create;var w=Object.defineProperty;var A=Object.getOwnPropertyDescriptor;var C=Object.getOwnPropertyNames;var M=Object.getPrototypeOf,F=Object.prototype.hasOwnProperty;var c=(e=>typeof require<"u"?require:typeof Proxy<"u"?new Proxy(e,{get:(t,r)=>(typeof require<"u"?require:t)[r]}):e)(function(e){if(typeof require<"u")return require.apply(this,arguments);throw new Error('Dynamic require of "'+e+'" is not supported')});var W=(e,t)=>{for(var r in t)w(e,r,{get:t[r],enumerable:!0})},$=(e,t,r,n)=>{if(t&&typeof t=="object"||typeof t=="function")for(let o of C(t))!F.call(e,o)&&o!==r&&w(e,o,{get:()=>t[o],enumerable:!(n=A(t,o))||n.enumerable});return e};var B=(e,t,r)=>(r=e!=null?V(M(e)):{},$(t||!e||!e.__esModule?w(r,"default",{value:e,enumerable:!0}):r,e)),G=e=>$(w({},"__esModule",{value:!0}),e);var ee={};W(ee,{default:()=>Z});var y=c("@yarnpkg/core");var d=c("@yarnpkg/core");var m=c("@yarnpkg/core");var _="https://versions.backstage.io",I="https://raw.githubusercontent.com/backstage/versions/main";function N(e,t){return new Promise((r,n)=>{let o=setTimeout(()=>{t.aborted||r()},e);t.addEventListener("abort",()=>{clearTimeout(o),n(new Error("Aborted"))})})}async function J(e,t,r){let n=new AbortController,o=new AbortController,a=e(n.signal).then(s=>(o.abort(),s)),i=N(r,o.signal).then(()=>t(o.signal)).then(s=>(n.abort(),s));return Promise.any([a,i]).catch(()=>a)}async function v(e){let t=encodeURIComponent(e.version),r=e.fetch??fetch,n=await J(o=>r(`${_}/v1/releases/${t}/manifest.json`,{signal:o}),o=>r(`${I}/v1/releases/${t}/manifest.json`,{signal:o}),500);if(n.status===404)throw new Error(`No release found for ${e.version} version`);if(n.status!==200)throw new Error(`Unexpected response status ${n.status} when fetching release from ${n.url}.`);return n.json()}var f="backstage:";var S=B(c("assert")),j=c("semver"),k=c("@yarnpkg/fslib");var l=B(c("fs")),p=c("path");function E(e,t){let r=e;for(let n=0;n<1e3;n++){let o=(0,p.resolve)(r,"package.json");if(l.default.existsSync(o)&&t(o))return r;let i=(0,p.dirname)(r);if(i===r)return;r=i}throw new Error(`Iteration limit reached when searching for root package.json at ${e}`)}function H(e){let t=E(e,()=>!0);if(!t)throw new Error(`No package.json found while searching for package root of ${e}`);return t}function z(e){if(!l.default.existsSync((0,p.resolve)(e,"src")))throw new Error("Tried to access monorepo package root dir outside of Backstage repository");return(0,p.resolve)(e,"../..")}function R(e){let t=H(e),r=l.default.realpathSync(process.cwd()).replace(/^[a-z]:/,s=>s.toLocaleUpperCase("en-US")),n="",o=()=>(n||(n=z(t)),n),a="",i=()=>(a||(a=E(r,s=>{try{let g=l.default.readFileSync(s,"utf8"),U=JSON.parse(g);return Boolean(U.workspaces)}catch(g){throw new Error(`Failed to parse package.json file while searching for root, ${g}`)}})??r),a);return{ownDir:t,get ownRoot(){return o()},targetDir:r,get targetRoot(){return i()},resolveOwn:(...s)=>(0,p.resolve)(t,...s),resolveOwnRoot:(...s)=>(0,p.resolve)(o(),...s),resolveTarget:(...s)=>(0,p.resolve)(r,...s),resolveTargetRoot:(...s)=>(0,p.resolve)(i(),...s)}}var P="backstage.json";var T=e=>{let t=!1,r;return()=>(t||(r=e(),t=!0),r)};var u=c("@yarnpkg/fslib");var D=()=>u.npath.toPortablePath(R(u.npath.fromPortablePath(u.ppath.cwd())).targetRoot);var L=T(()=>{let e=k.ppath.join(D(),P),t=null;try{t=(0,j.valid)(k.xfs.readJsonSync(e).version),(0,S.default)(t!==null)}catch{throw new Error("Valid version string not found in backstage.json")}return t});var h=async(e,t)=>{let r=m.structUtils.stringifyIdent(e),n=m.structUtils.parseRange(e.range);if(n.protocol!==f)throw new Error(`Unsupported version protocol in version range "${e.range}" for package ${r}`);if(n.selector!=="^")throw new Error(`Unexpected version selector "${n.selector}" for package ${r}`);let o=L(),i=(await v({version:o,fetch:async s=>{let g=await m.httpUtils.get(s,{configuration:t,jsonResponse:!0});return{status:200,url:s,json:()=>g}}})).packages.find(s=>s.name===r);if(!i)throw new Error(`Package ${r} not found in manifest for Backstage v${o}. This means the specified package is not included in this Backstage release. This may imply the package has been replaced with an alternative - please review the documentation for the package. If you need to continue using this package, it will be necessary to switch to manually managing its version.`);return i.version};var K=e=>d.structUtils.parseRange(e).protocol===f,Y=(e,t,r)=>e!=="dependencies"?e:r.manifest.ensureDependencyMeta(d.structUtils.makeDescriptor(t,"unknown")).optional?"optionalDependencies":e,x=async(e,t)=>{for(let r of["dependencies","devDependencies"]){let n=Array.from(e.manifest.getForScope(r).values()).filter(o=>o.range.startsWith(f));for(let o of n){let a=d.structUtils.stringifyIdent(o);if(d.structUtils.parseRange(o.range).selector!=="^")throw new Error(`Unexpected version range "${o.range}" for dependency on "${a}"`);let s=Y(r,o,e);t[s][a]=`^${await h(o,e.project.configuration)}`}}if(["dependencies","devDependencies","optionalDependencies"].some(r=>Object.values(t[r]??{}).some(K)))throw new Error(`Failed to replace all "backstage:" ranges in manifest for ${t.name}`)};var b=c("@yarnpkg/core");var O=async(e,t)=>b.structUtils.parseRange(e.range).protocol===f?b.structUtils.makeDescriptor(e,`npm:^${await h(e,t.configuration)}`):e;var q="\x1B[31;1m",Q="\x1B[0m";y.semverUtils.satisfiesWithPrereleases(y.YarnVersion,"^4.1.1")||(console.error(),console.error(`${q}Unsupported yarn version${Q}: The Backstage yarn plugin only works with yarn ^4.1.1. Please upgrade yarn, or remove this plugin with "yarn plugin remove @yarnpkg/plugin-backstage".`),console.error());var X={hooks:{reduceDependency:O,beforeWorkspacePacking:x}},Z=X;return G(ee);})();
++"use strict";var plugin=(()=>{var ur=Object.create;var $=Object.defineProperty;var fr=Object.getOwnPropertyDescriptor;var pr=Object.getOwnPropertyNames;var lr=Object.getPrototypeOf,gr=Object.prototype.hasOwnProperty;var c=(e=>typeof require<"u"?require:typeof Proxy<"u"?new Proxy(e,{get:(r,t)=>(typeof require<"u"?require:r)[t]}):e)(function(e){if(typeof require<"u")return require.apply(this,arguments);throw Error('Dynamic require of "'+e+'" is not supported')});var l=(e,r)=>()=>(r||e((r={exports:{}}).exports,r),r.exports),mr=(e,r)=>{for(var t in r)$(e,t,{get:r[t],enumerable:!0})},ce=(e,r,t,n)=>{if(r&&typeof r=="object"||typeof r=="function")for(let o of pr(r))!gr.call(e,o)&&o!==t&&$(e,o,{get:()=>r[o],enumerable:!(n=fr(r,o))||n.enumerable});return e};var A=(e,r,t)=>(t=e!=null?ur(lr(e)):{},ce(r||!e||!e.__esModule?$(t,"default",{value:e,enumerable:!0}):t,e)),dr=e=>ce($({},"__esModule",{value:!0}),e);var ge=l((ft,le)=>{le.exports=pe;pe.sync=wr;var ue=c("fs");function yr(e,r){var t=r.pathExt!==void 0?r.pathExt:process.env.PATHEXT;if(!t||(t=t.split(";"),t.indexOf("")!==-1))return!0;for(var n=0;n<t.length;n++){var o=t[n].toLowerCase();if(o&&e.substr(-o.length).toLowerCase()===o)return!0}return!1}function fe(e,r,t){return!e.isSymbolicLink()&&!e.isFile()?!1:yr(r,t)}function pe(e,r,t){ue.stat(e,function(n,o){t(n,n?!1:fe(o,e,r))})}function wr(e,r){return fe(ue.statSync(e),e,r)}});var we=l((pt,ye)=>{ye.exports=de;de.sync=Er;var me=c("fs");function de(e,r,t){me.stat(e,function(n,o){t(n,n?!1:he(o,r))})}function Er(e,r){return he(me.statSync(e),r)}function he(e,r){return e.isFile()&&xr(e,r)}function xr(e,r){var t=e.mode,n=e.uid,o=e.gid,s=r.uid!==void 0?r.uid:process.getuid&&process.getuid(),i=r.gid!==void 0?r.gid:process.getgid&&process.getgid(),a=parseInt("100",8),u=parseInt("010",8),f=parseInt("001",8),d=a|u,g=t&f||t&u&&o===i||t&a&&n===s||t&d&&s===0;return g}});var xe=l((gt,Ee)=>{var lt=c("fs"),B;process.platform==="win32"||global.TESTING_WINDOWS?B=ge():B=we();Ee.exports=_;_.sync=vr;function _(e,r,t){if(typeof r=="function"&&(t=r,r={}),!t){if(typeof Promise!="function")throw new TypeError("callback not provided");return new Promise(function(n,o){_(e,r||{},function(s,i){s?o(s):n(i)})})}B(e,r||{},function(n,o){n&&(n.code==="EACCES"||r&&r.ignoreErrors)&&(n=null,o=!1),t(n,o)})}function vr(e,r){try{return B.sync(e,r||{})}catch(t){if(r&&r.ignoreErrors||t.code==="EACCES")return!1;throw t}}});var Oe=l((mt,Se)=>{var v=process.platform==="win32"||process.env.OSTYPE==="cygwin"||process.env.OSTYPE==="msys",ve=c("path"),kr=v?";":":",ke=xe(),Pe=e=>Object.assign(new Error(`not found: ${e}`),{code:"ENOENT"}),be=(e,r)=>{let t=r.colon||kr,n=e.match(/\//)||v&&e.match(/\\/)?[""]:[...v?[process.cwd()]:[],...(r.path||process.env.PATH||"").split(t)],o=v?r.pathExt||process.env.PATHEXT||".EXE;.CMD;.BAT;.COM":"",s=v?o.split(t):[""];return v&&e.indexOf(".")!==-1&&s[0]!==""&&s.unshift(""),{pathEnv:n,pathExt:s,pathExtExe:o}},Re=(e,r,t)=>{typeof r=="function"&&(t=r,r={}),r||(r={});let{pathEnv:n,pathExt:o,pathExtExe:s}=be(e,r),i=[],a=f=>new Promise((d,g)=>{if(f===n.length)return r.all&&i.length?d(i):g(Pe(e));let m=n[f],b=/^".*"$/.test(m)?m.slice(1,-1):m,E=ve.join(b,e),U=!b&&/^\.[\\\/]/.test(e)?e.slice(0,2)+E:E;d(u(U,f,0))}),u=(f,d,g)=>new Promise((m,b)=>{if(g===o.length)return m(a(d+1));let E=o[g];ke(f+E,{pathExt:s},(U,cr)=>{if(!U&&cr)if(r.all)i.push(f+E);else return m(f+E);return m(u(f,d,g+1))})});return t?a(0).then(f=>t(null,f),t):a(0)},Pr=(e,r)=>{r=r||{};let{pathEnv:t,pathExt:n,pathExtExe:o}=be(e,r),s=[];for(let i=0;i<t.length;i++){let a=t[i],u=/^".*"$/.test(a)?a.slice(1,-1):a,f=ve.join(u,e),d=!u&&/^\.[\\\/]/.test(e)?e.slice(0,2)+f:f;for(let g=0;g<n.length;g++){let m=d+n[g];try{if(ke.sync(m,{pathExt:o}))if(r.all)s.push(m);else return m}catch{}}}if(r.all&&s.length)return s;if(r.nothrow)return null;throw Pe(e)};Se.exports=Re;Re.sync=Pr});var Ce=l((dt,M)=>{"use strict";var Te=(e={})=>{let r=e.env||process.env;return(e.platform||process.platform)!=="win32"?"PATH":Object.keys(r).reverse().find(n=>n.toUpperCase()==="PATH")||"Path"};M.exports=Te;M.exports.default=Te});var Be=l((ht,Ne)=>{"use strict";var $e=c("path"),br=Oe(),Rr=Ce();function Ae(e,r){let t=e.options.env||process.env,n=process.cwd(),o=e.options.cwd!=null,s=o&&process.chdir!==void 0&&!process.chdir.disabled;if(s)try{process.chdir(e.options.cwd)}catch{}let i;try{i=br.sync(e.command,{path:t[Rr({env:t})],pathExt:r?$e.delimiter:void 0})}catch{}finally{s&&process.chdir(n)}return i&&(i=$e.resolve(o?e.options.cwd:"",i)),i}function Sr(e){return Ae(e)||Ae(e,!0)}Ne.exports=Sr});var De=l((yt,H)=>{"use strict";var W=/([()\][%!^"`<>&|;, *?])/g;function Or(e){return e=e.replace(W,"^$1"),e}function Tr(e,r){return e=`${e}`,e=e.replace(/(?=(\\+?)?)\1"/g,'$1$1\\"'),e=e.replace(/(?=(\\+?)?)\1$/,"$1$1"),e=`"${e}"`,e=e.replace(W,"^$1"),r&&(e=e.replace(W,"^$1")),e}H.exports.command=Or;H.exports.argument=Tr});var Le=l((wt,je)=>{"use strict";je.exports=/^#!(.*)/});var Ie=l((Et,Ue)=>{"use strict";var Cr=Le();Ue.exports=(e="")=>{let r=e.match(Cr);if(!r)return null;let[t,n]=r[0].replace(/#! ?/,"").split(" "),o=t.split("/").pop();return o==="env"?n:n?`${o} ${n}`:o}});var Ve=l((xt,Fe)=>{"use strict";var q=c("fs"),$r=Ie();function Ar(e){let t=Buffer.alloc(150),n;try{n=q.openSync(e,"r"),q.readSync(n,t,0,150,0),q.closeSync(n)}catch{}return $r(t.toString())}Fe.exports=Ar});var He=l((vt,We)=>{"use strict";var Nr=c("path"),_e=Be(),Me=De(),Br=Ve(),Dr=process.platform==="win32",jr=/\.(?:com|exe)$/i,Lr=/node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;function Ur(e){e.file=_e(e);let r=e.file&&Br(e.file);return r?(e.args.unshift(e.file),e.command=r,_e(e)):e.file}function Ir(e){if(!Dr)return e;let r=Ur(e),t=!jr.test(r);if(e.options.forceShell||t){let n=Lr.test(r);e.command=Nr.normalize(e.command),e.command=Me.command(e.command),e.args=e.args.map(s=>Me.argument(s,n));let o=[e.command].concat(e.args).join(" ");e.args=["/d","/s","/c",`"${o}"`],e.command=process.env.comspec||"cmd.exe",e.options.windowsVerbatimArguments=!0}return e}function Fr(e,r,t){r&&!Array.isArray(r)&&(t=r,r=null),r=r?r.slice(0):[],t=Object.assign({},t);let n={command:e,args:r,options:t,file:void 0,original:{command:e,args:r}};return t.shell?n:Ir(n)}We.exports=Fr});var ze=l((kt,Ge)=>{"use strict";var G=process.platform==="win32";function z(e,r){return Object.assign(new Error(`${r} ${e.command} ENOENT`),{code:"ENOENT",errno:"ENOENT",syscall:`${r} ${e.command}`,path:e.command,spawnargs:e.args})}function Vr(e,r){if(!G)return;let t=e.emit;e.emit=function(n,o){if(n==="exit"){let s=qe(o,r);if(s)return t.call(e,"error",s)}return t.apply(e,arguments)}}function qe(e,r){return G&&e===1&&!r.file?z(r.original,"spawn"):null}function _r(e,r){return G&&e===1&&!r.file?z(r.original,"spawnSync"):null}Ge.exports={hookChildProcess:Vr,verifyENOENT:qe,verifyENOENTSync:_r,notFoundError:z}});var Ke=l((Pt,k)=>{"use strict";var Je=c("child_process"),J=He(),Y=ze();function Ye(e,r,t){let n=J(e,r,t),o=Je.spawn(n.command,n.args,n.options);return Y.hookChildProcess(o,n),o}function Mr(e,r,t){let n=J(e,r,t),o=Je.spawnSync(n.command,n.args,n.options);return o.error=o.error||Y.verifyENOENTSync(o.status,n),o}k.exports=Ye;k.exports.spawn=Ye;k.exports.sync=Mr;k.exports._parse=J;k.exports._enoent=Y});var Qe=l((Rt,Xe)=>{"use strict";var K=class e extends Error{constructor(r){super(e._prepareSuperMessage(r)),Object.defineProperty(this,"name",{value:"NonError",configurable:!0,writable:!0}),Error.captureStackTrace&&Error.captureStackTrace(this,e)}static _prepareSuperMessage(r){try{return JSON.stringify(r)}catch{return String(r)}}},Wr=[{property:"name",enumerable:!1},{property:"message",enumerable:!1},{property:"stack",enumerable:!1},{property:"code",enumerable:!0}],X=Symbol(".toJSON called"),Hr=e=>{e[X]=!0;let r=e.toJSON();return delete e[X],r},Q=({from:e,seen:r,to_:t,forceEnumerable:n,maxDepth:o,depth:s})=>{let i=t||(Array.isArray(e)?[]:{});if(r.push(e),s>=o)return i;if(typeof e.toJSON=="function"&&e[X]!==!0)return Hr(e);for(let[a,u]of Object.entries(e)){if(typeof Buffer=="function"&&Buffer.isBuffer(u)){i[a]="[object Buffer]";continue}if(typeof u!="function"){if(!u||typeof u!="object"){i[a]=u;continue}if(!r.includes(e[a])){s++,i[a]=Q({from:e[a],seen:r.slice(),forceEnumerable:n,maxDepth:o,depth:s});continue}i[a]="[Circular]"}}for(let{property:a,enumerable:u}of Wr)typeof e[a]=="string"&&Object.defineProperty(i,a,{value:e[a],enumerable:n?!0:u,configurable:!0,writable:!0});return i},qr=(e,r={})=>{let{maxDepth:t=Number.POSITIVE_INFINITY}=r;return typeof e=="object"&&e!==null?Q({from:e,seen:[],forceEnumerable:!0,maxDepth:t,depth:0}):typeof e=="function"?`[Function: ${e.name||"anonymous"}]`:e},Gr=(e,r={})=>{let{maxDepth:t=Number.POSITIVE_INFINITY}=r;if(e instanceof Error)return e;if(typeof e=="object"&&e!==null&&!Array.isArray(e)){let n=new Error;return Q({from:e,seen:[],to_:n,maxDepth:t,depth:0}),n}return new K(e)};Xe.exports={serializeError:qr,deserializeError:Gr}});var st={};mr(st,{default:()=>ot});var L=c("@yarnpkg/core");var T=c("@yarnpkg/core");var Z=A(c("assert")),or=c("semver"),j=c("@yarnpkg/fslib");var N=A(c("fs")),x=c("path");function hr(e,r){let t=e;for(let n=0;n<1e3;n++){let o=(0,x.resolve)(t,"package.json");if(N.default.existsSync(o)&&r(o))return t;let i=(0,x.dirname)(t);if(i===t)return;t=i}throw new Error(`Iteration limit reached when searching for root package.json at ${e}`)}var h;var I=class{#t;#r;#e;get dir(){if(h)return h.dir;let r=process.cwd();return this.#r!==void 0&&this.#t===r?this.#r:(this.#t=r,this.#e=void 0,this.#r=N.default.realpathSync(r).replace(/^[a-z]:/,t=>t.toLocaleUpperCase("en-US")),this.#r)}get rootDir(){if(h)return h.rootDir;let r=this.dir;return this.#e!==void 0?this.#e:(this.#e=hr(r,t=>{try{let n=N.default.readFileSync(t,"utf8");return!!JSON.parse(n).workspaces}catch(n){throw new Error(`Failed to parse package.json file while searching for root, ${n}`)}})??r,this.#e)}resolve=(...r)=>h?h.resolve(...r):(0,x.resolve)(this.dir,...r);resolveRoot=(...r)=>h?h.resolveRoot(...r):(0,x.resolve)(this.rootDir,...r)},F=new I;var V="backstage.json";var Jr=A(Ke());function P(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return!(typeof r.name!="string"||r.name===""||typeof r.message!="string")}var Ze=A(Qe());function er(e){if(P(e)){let r=String(e);return r!=="[object Object]"?r:`${e.name}: ${e.message}`}return`unknown error '${e}'`}var D=class extends Error{cause;constructor(r,t){let n=r;if(t!==void 0){let o=er(t);n?n+=`; caused by ${o}`:n=`caused by ${o}`}super(n),Error.captureStackTrace?.(this,this.constructor),(!this.name||this.name==="Error")&&this.constructor.name!=="Error"&&(this.name=this.constructor.name),this.cause=P(t)?t:void 0}};var R=class extends D{constructor(r,t){super(r,t),this.name=P(t)?t.name:"Error"}};var rr=e=>{let r=!1,t;return()=>(r||(t=e(),r=!0),t)};var tr=c("@yarnpkg/fslib");var nr=()=>tr.npath.toPortablePath(F.rootDir);var S=rr(()=>{let e=j.ppath.join(nr(),V),r=null;try{let t=j.xfs.readJsonSync(e).version;(0,Z.default)(t!==void 0,"Version field is missing"),r=(0,or.valid)(t),(0,Z.default)(r!==null,"Version exists but is not valid semver")}catch(t){throw new R("Valid version string not found in backstage.json",t)}return r});var O=c("@yarnpkg/core"),sr=c("@yarnpkg/fslib");var Yr="https://versions.backstage.io",Kr="https://raw.githubusercontent.com/backstage/versions/main";function Xr(e,r){return new Promise((t,n)=>{let o=setTimeout(()=>{r.aborted||t()},e);r.addEventListener("abort",()=>{clearTimeout(o),n(new Error("Aborted"))})})}async function Qr(e,r,t){let n=new AbortController,o=new AbortController,s=e(n.signal).then(a=>(o.abort(),a)),i=Xr(t,o.signal).then(()=>r(o.signal)).then(a=>(n.abort(),a));return Promise.any([s,i]).catch(()=>s)}async function ee(e){let r=encodeURIComponent(e.version),t=e.fetch??fetch,n=e.versionsBaseUrl??Yr,o=e.gitHubRawBaseUrl??Kr,s=await Qr(i=>t(`${n}/v1/releases/${r}/manifest.json`,{signal:i}),i=>t(`${o}/v1/releases/${r}/manifest.json`,{signal:i}),500);if(s.status===404)throw new Error(`No release found for ${e.version} version`);if(s.status!==200)throw new Error(`Unexpected response status ${s.status} when fetching release from ${s.url}.`);return s.json()}var p="backstage:";var re=c("process"),w=async(e,r)=>{let t=O.structUtils.stringifyIdent(e),n=O.structUtils.parseRange(e.range);if(n.protocol!==p)throw new Error(`Unsupported version protocol in version range "${e.range}" for package ${t}`);if(n.selector!=="^")throw new Error(`Unexpected version selector "${n.selector}" for package ${t}`);let o=S(),s=re.env.BACKSTAGE_MANIFEST_FILE,a=(s?await sr.xfs.readJsonSync(s):await ee({version:o,versionsBaseUrl:re.env.BACKSTAGE_VERSIONS_BASE_URL,fetch:async u=>{let f=await O.httpUtils.get(u,{configuration:r,jsonResponse:!0});return{status:200,url:u,json:()=>f}}})).packages.find(u=>u.name===t);if(!a)throw new Error(`Package ${t} not found in manifest for Backstage v${o}. This means the specified package is not included in this Backstage release. This may imply the package has been replaced with an alternative - please review the documentation for the package. If you need to continue using this package, it will be necessary to switch to manually managing its version.`);return a.version};var Zr=e=>T.structUtils.parseRange(e).protocol===p,et=(e,r,t)=>e!=="dependencies"?e:t.manifest.ensureDependencyMeta(T.structUtils.makeDescriptor(r,"unknown")).optional?"optionalDependencies":e,te=async(e,r)=>{for(let t of["dependencies","devDependencies"]){let n=Array.from(e.manifest.getForScope(t).values()).filter(o=>o.range.startsWith(p));for(let o of n){let s=T.structUtils.stringifyIdent(o);if(T.structUtils.parseRange(o.range).selector!=="^")throw new Error(`Unexpected version range "${o.range}" for dependency on "${s}"`);let a=et(t,o,e);r[a][s]=`^${await w(o,e.project.configuration)}`}}if(["dependencies","devDependencies","optionalDependencies"].some(t=>Object.values(r[t]??{}).some(Zr)))throw new Error(`Failed to replace all "backstage:" ranges in manifest for ${r.name}`)};var ne=c("@yarnpkg/core");var oe=async(e,r)=>{let t=ne.structUtils.parseRange(e.range);if(t.protocol!==p)return e;if(t.selector!=="^")throw new Error(`Invalid backstage: version range found: ${e.range}`);return ne.structUtils.bindDescriptor(e,{backstage:S(),npm:await w(e,r.configuration)})};var ir=c("@yarnpkg/core");var se=async(e,r,t,n)=>{let o=ir.structUtils.parseRange(t.range);if(t.scope==="backstage"&&o.protocol!==p){let s=t.range;try{t.range=`${p}^`,await w(t,e.project.configuration),console.info(`Setting ${t.scope}/${t.name} to ${p}^`)}catch{t.range=s}}};var ar=c("@yarnpkg/core");var ie=async(e,r,t,n)=>{let o=ar.structUtils.parseRange(n.range);n.scope==="backstage"&&o.protocol!==p&&console.warn(`${n.name} should be set to "${p}^" instead of "${n.range}". Make sure this change is intentional and not a mistake.`)};var y=c("@yarnpkg/core"),ae=c("@yarnpkg/plugin-npm");var C=class e{static protocol=p;supportsDescriptor=r=>r.range.startsWith(e.protocol);async getCandidates(r,t,n){let o=y.structUtils.parseRange(r.range).params?.npm;if(!o||Array.isArray(o))throw new Error(`Missing npm parameter on backstage: range "${r.range}"`);return new ae.NpmSemverResolver().getCandidates(y.structUtils.makeDescriptor(r,`npm:^${o}`),t,n)}getResolutionDependencies(r){let t=y.structUtils.parseRange(r.range).params?.npm;if(!t)throw new Error(`Missing npm parameter on backstage: range "${r.range}".`);return{[y.structUtils.stringifyIdent(r)]:y.structUtils.makeDescriptor(r,`npm:^${t}`)}}async getSatisfying(r,t,n,o){let s=r,i=y.structUtils.parseRange(s.range);if(i.protocol===p){let a=i.params?.npm;s=y.structUtils.makeDescriptor(r,`npm:^${a}`)}return new ae.NpmSemverResolver().getSatisfying(s,t,n,o)}bindDescriptor=r=>r;supportsLocator=()=>!1;shouldPersistResolution=()=>{throw new Error("Unreachable: BackstageNpmResolver should never persist resolution as it uses npm: protocol")};resolve=async()=>{throw new Error("Unreachable: BackstageNpmResolver should never resolve as it uses npm: protocol")}};var rt="\x1B[31;1m",tt="\x1B[0m";L.semverUtils.satisfiesWithPrereleases(L.YarnVersion,"^4.1.1")||(console.error(),console.error(`${rt}Unsupported yarn version${tt}: The Backstage yarn plugin only works with yarn ^4.1.1. Please upgrade yarn, or remove this plugin with "yarn plugin remove @yarnpkg/plugin-backstage".`),console.error());var nt={hooks:{afterWorkspaceDependencyAddition:se,afterWorkspaceDependencyReplacement:ie,reduceDependency:oe,beforeWorkspacePacking:te},resolvers:[C]},ot=nt;return dr(st);})();
+ return plugin;
+diff --git a/.yarnrc.yml b/.yarnrc.yml
+index b6eea48..6f29f6c 100644
+--- a/.yarnrc.yml
++++ b/.yarnrc.yml
+@@ -3,5 +3,5 @@ nodeLinker: node-modules
+ plugins:
+-  - checksum: 254c816a15098e2a0b414345caf9144409fbf6a63da7ec8ec8d3454aa1d2edfbbc32cd264d8c464b7ec4aca7809c690848a7c1191b5f8167dec81dbdf6107b01
++  - checksum: 05b51f75814596aa3e15b296af3287240351c8b7f1df1e05c2ceedf7f3820627759605825fd932f1f7c3c3287b61b16f9e8195b0927a0f80345493f81376947a
+     path: .yarn/plugins/@yarnpkg/plugin-backstage.cjs
+-    spec: "https://versions.backstage.io/v1/releases/1.37.0/yarn-plugin"
++    spec: "https://versions.backstage.io/v1/releases/1.49.5/yarn-plugin"
+ 
+diff --git a/README.md b/README.md
+index 8c7c437..041c4fb 100644
+--- a/README.md
++++ b/README.md
+@@ -8,3 +8,3 @@ To start the app, run:
+ yarn install
+-yarn dev
++yarn start
+ ```
+diff --git a/app-config.yaml b/app-config.yaml
+index fc6918a..b26d412 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -4,2 +4,11 @@ app:
+ 
++  # Enable all packages by default, this will discover packages from packages/app/package.json
++  packages: all
++
++  extensions:
++    # Configure the catalog index page to be the root page, this is normally mounted on /catalog
++    - page:catalog:
++        config:
++          path: /
++
+ organization:
+@@ -105,5 +114,2 @@ catalog:
+     #     - allow: [User, Group]
+-  # Experimental: Always use the search method in UrlReaderProcessor.
+-  # New adopters are encouraged to enable it as this behavior will be the default in a future release.
+-  useUrlReadersSearch: true
+ 
+diff --git a/backstage.json b/backstage.json
+index c044717..17c7dca 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.37.0"
++  "version": "1.49.5"
+ }
+diff --git a/examples/entities.yaml b/examples/entities.yaml
+index 447e8b1..cc57de8 100644
+--- a/examples/entities.yaml
++++ b/examples/entities.yaml
+@@ -14,2 +14,4 @@ metadata:
+   name: example-website
++  annotations:
++    backstage.io/techdocs-ref: dir:./example-docs
+ spec:
+diff --git a/examples/example-docs/docs/index.md b/examples/example-docs/docs/index.md
+new file mode 100644
+index 0000000..ecd4dbd
+--- /dev/null
++++ b/examples/example-docs/docs/index.md
+@@ -0,0 +1,5 @@
++# Example TechDocs page
++
++This is an example TechDocs page!
++
++The source of this documentation for the `example-website` component is found in the `examples/example-docs` directory, which is referenced from `examples/entities.yaml`. Typically the `docs` directory would live alongside the `catalog-info.yaml` file of a component instead, but in this case it is separated out to avoid cluttering the examples directory.
+diff --git a/examples/example-docs/mkdocs.yml b/examples/example-docs/mkdocs.yml
+new file mode 100644
+index 0000000..b482f45
+--- /dev/null
++++ b/examples/example-docs/mkdocs.yml
+@@ -0,0 +1,4 @@
++site_name: example-website
++docs_dir: docs
++plugins:
++  - techdocs-core
+diff --git a/examples/template/template.yaml b/examples/template/template.yaml
+index 33f262b..efb33be 100644
+--- a/examples/template/template.yaml
++++ b/examples/template/template.yaml
+@@ -50,2 +50,4 @@ spec:
+     # This step publishes the contents of the working directory to GitHub.
++    # If you or your organization prefer another default branch name over 'main'
++    # you can change that here.
+     - id: publish
+@@ -54,5 +56,5 @@ spec:
+       input:
+-        allowedHosts: ['github.com']
+         description: This is ${{ parameters.name }}
+         repoUrl: ${{ parameters.repoUrl }}
++        defaultBranch: 'main'
+ 
+@@ -66,2 +68,14 @@ spec:
+ 
++    # Let's notify the user that the template has completed using the Notification action
++    - id: notify
++      name: Notify
++      action: notification:send
++      input:
++        recipients: entity
++        entityRefs:
++          - user:default/guest
++        title: 'Template executed'
++        info: 'Your template has been executed'
++        severity: 'normal'
++
+   # Outputs are displayed to the user after a successful execution of the template.
+diff --git a/package.json b/package.json
+index f9a751c..944cddd 100644
+--- a/package.json
++++ b/package.json
+@@ -5,8 +5,6 @@
+   "engines": {
+-    "node": "20 || 22"
++    "node": "22 || 24"
+   },
+   "scripts": {
+-    "dev": "yarn workspaces foreach -A --include backend --include app --parallel --jobs unlimited -v -i run start",
+-    "start": "yarn workspace app start",
+-    "start-backend": "yarn workspace backend start",
++    "start": "backstage-cli repo start",
+     "build:backend": "yarn workspace backend build",
+@@ -26,12 +24,24 @@
+   },
+-  "workspaces": {
+-    "packages": [
+-      "packages/*",
+-      "plugins/*"
+-    ]
++  "backstage": {
++    "cli": {
++      "new": {
++        "globals": {
++          "license": "UNLICENSED"
++        }
++      }
++    }
+   },
++  "workspaces": [
++    "packages/*",
++    "plugins/*"
++  ],
+   "devDependencies": {
+     "@backstage/cli": "backstage:^",
++    "@backstage/cli-defaults": "backstage:^",
+     "@backstage/e2e-test-utils": "backstage:^",
++    "@jest/environment-jsdom-abstract": "^30.0.0",
+     "@playwright/test": "^1.32.3",
++    "@types/jest": "^30.0.0",
++    "jest": "^30.2.0",
++    "jsdom": "^27.1.0",
+     "node-gyp": "^10.0.0",
+diff --git a/packages/app/e2e-tests/app.test.ts b/packages/app/e2e-tests/app.test.ts
+index 839ff88..187e124 100644
+--- a/packages/app/e2e-tests/app.test.ts
++++ b/packages/app/e2e-tests/app.test.ts
+@@ -25,3 +25,5 @@ test('App should render the welcome page', async ({ page }) => {
+ 
+-  await expect(page.getByText('My Company Catalog')).toBeVisible();
++  const nav = page.getByRole('navigation');
++  await expect(nav.getByRole('link', { name: 'Catalog' })).toBeVisible();
++  await expect(page.getByRole('link', { name: 'APIs' })).toBeVisible();
+ });
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 1cbe9da..77dee77 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -16,27 +16,24 @@
+   "dependencies": {
+-    "@backstage/app-defaults": "backstage:^",
+-    "@backstage/canon": "backstage:^",
+-    "@backstage/catalog-model": "backstage:^",
+     "@backstage/cli": "backstage:^",
+-    "@backstage/core-app-api": "backstage:^",
+     "@backstage/core-components": "backstage:^",
+     "@backstage/core-plugin-api": "backstage:^",
++    "@backstage/frontend-defaults": "backstage:^",
++    "@backstage/frontend-plugin-api": "backstage:^",
+     "@backstage/integration-react": "backstage:^",
+     "@backstage/plugin-api-docs": "backstage:^",
++    "@backstage/plugin-app-react": "backstage:^",
++    "@backstage/plugin-app-visualizer": "backstage:^",
+     "@backstage/plugin-catalog": "backstage:^",
+-    "@backstage/plugin-catalog-common": "backstage:^",
+     "@backstage/plugin-catalog-graph": "backstage:^",
+     "@backstage/plugin-catalog-import": "backstage:^",
+-    "@backstage/plugin-catalog-react": "backstage:^",
+     "@backstage/plugin-kubernetes": "backstage:^",
++    "@backstage/plugin-notifications": "backstage:^",
+     "@backstage/plugin-org": "backstage:^",
+-    "@backstage/plugin-permission-react": "backstage:^",
+     "@backstage/plugin-scaffolder": "backstage:^",
+     "@backstage/plugin-search": "backstage:^",
+-    "@backstage/plugin-search-react": "backstage:^",
++    "@backstage/plugin-signals": "backstage:^",
+     "@backstage/plugin-techdocs": "backstage:^",
+     "@backstage/plugin-techdocs-module-addons-contrib": "backstage:^",
+-    "@backstage/plugin-techdocs-react": "backstage:^",
+     "@backstage/plugin-user-settings": "backstage:^",
+-    "@backstage/theme": "backstage:^",
++    "@backstage/ui": "backstage:^",
+     "@material-ui/core": "^4.12.2",
+@@ -45,7 +42,7 @@
+     "react-dom": "^18.0.2",
+-    "react-router": "^6.3.0",
+-    "react-router-dom": "^6.3.0"
++    "react-router": "^6.30.2",
++    "react-router-dom": "^6.30.2"
+   },
+   "devDependencies": {
+-    "@backstage/test-utils": "backstage:^",
++    "@backstage/frontend-test-utils": "backstage:^",
+     "@playwright/test": "^1.32.3",
+diff --git a/packages/app/src/App.test.tsx b/packages/app/src/App.test.tsx
+index ec8ba1d..98e7a64 100644
+--- a/packages/app/src/App.test.tsx
++++ b/packages/app/src/App.test.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { render, waitFor } from '@testing-library/react';
+@@ -22,3 +21,3 @@ describe('App', () => {
+ 
+-    const rendered = render(<App />);
++    const rendered = render(App.createRoot());
+ 
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index e24c468..c0206fe 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -1,109 +1,7 @@
+-import React from 'react';
+-import { Navigate, Route } from 'react-router-dom';
+-import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
+-import {
+-  CatalogEntityPage,
+-  CatalogIndexPage,
+-  catalogPlugin,
+-} from '@backstage/plugin-catalog';
+-import {
+-  CatalogImportPage,
+-  catalogImportPlugin,
+-} from '@backstage/plugin-catalog-import';
+-import { ScaffolderPage, scaffolderPlugin } from '@backstage/plugin-scaffolder';
+-import { orgPlugin } from '@backstage/plugin-org';
+-import { SearchPage } from '@backstage/plugin-search';
+-import {
+-  TechDocsIndexPage,
+-  techdocsPlugin,
+-  TechDocsReaderPage,
+-} from '@backstage/plugin-techdocs';
+-import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
+-import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
+-import { UserSettingsPage } from '@backstage/plugin-user-settings';
+-import { apis } from './apis';
+-import { entityPage } from './components/catalog/EntityPage';
+-import { searchPage } from './components/search/SearchPage';
+-import { Root } from './components/Root';
++import { createApp } from '@backstage/frontend-defaults';
++import catalogPlugin from '@backstage/plugin-catalog/alpha';
++import { navModule } from './modules/nav';
+ 
+-import {
+-  AlertDisplay,
+-  OAuthRequestDialog,
+-  SignInPage,
+-} from '@backstage/core-components';
+-import { createApp } from '@backstage/app-defaults';
+-import { AppRouter, FlatRoutes } from '@backstage/core-app-api';
+-import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
+-import { RequirePermission } from '@backstage/plugin-permission-react';
+-import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
+-
+-const app = createApp({
+-  apis,
+-  bindRoutes({ bind }) {
+-    bind(catalogPlugin.externalRoutes, {
+-      createComponent: scaffolderPlugin.routes.root,
+-      viewTechDoc: techdocsPlugin.routes.docRoot,
+-      createFromTemplate: scaffolderPlugin.routes.selectedTemplate,
+-    });
+-    bind(apiDocsPlugin.externalRoutes, {
+-      registerApi: catalogImportPlugin.routes.importPage,
+-    });
+-    bind(scaffolderPlugin.externalRoutes, {
+-      registerComponent: catalogImportPlugin.routes.importPage,
+-      viewTechDoc: techdocsPlugin.routes.docRoot,
+-    });
+-    bind(orgPlugin.externalRoutes, {
+-      catalogIndex: catalogPlugin.routes.catalogIndex,
+-    });
+-  },
+-  components: {
+-    SignInPage: props => <SignInPage {...props} auto providers={['guest']} />,
+-  },
++export default createApp({
++  features: [catalogPlugin, navModule],
+ });
+-
+-const routes = (
+-  <FlatRoutes>
+-    <Route path="/" element={<Navigate to="catalog" />} />
+-    <Route path="/catalog" element={<CatalogIndexPage />} />
+-    <Route
+-      path="/catalog/:namespace/:kind/:name"
+-      element={<CatalogEntityPage />}
+-    >
+-      {entityPage}
+-    </Route>
+-    <Route path="/docs" element={<TechDocsIndexPage />} />
+-    <Route
+-      path="/docs/:namespace/:kind/:name/*"
+-      element={<TechDocsReaderPage />}
+-    >
+-      <TechDocsAddons>
+-        <ReportIssue />
+-      </TechDocsAddons>
+-    </Route>
+-    <Route path="/create" element={<ScaffolderPage />} />
+-    <Route path="/api-docs" element={<ApiExplorerPage />} />
+-    <Route
+-      path="/catalog-import"
+-      element={
+-        <RequirePermission permission={catalogEntityCreatePermission}>
+-          <CatalogImportPage />
+-        </RequirePermission>
+-      }
+-    />
+-    <Route path="/search" element={<SearchPage />}>
+-      {searchPage}
+-    </Route>
+-    <Route path="/settings" element={<UserSettingsPage />} />
+-    <Route path="/catalog-graph" element={<CatalogGraphPage />} />
+-  </FlatRoutes>
+-);
+-
+-export default app.createRoot(
+-  <>
+-    <AlertDisplay />
+-    <OAuthRequestDialog />
+-    <AppRouter>
+-      <Root>{routes}</Root>
+-    </AppRouter>
+-  </>,
+-);
+diff --git a/packages/app/src/apis.ts b/packages/app/src/apis.ts
+deleted file mode 100644
+index c89753a..0000000
+--- a/packages/app/src/apis.ts
++++ /dev/null
+@@ -1,19 +0,0 @@
+-import {
+-  ScmIntegrationsApi,
+-  scmIntegrationsApiRef,
+-  ScmAuth,
+-} from '@backstage/integration-react';
+-import {
+-  AnyApiFactory,
+-  configApiRef,
+-  createApiFactory,
+-} from '@backstage/core-plugin-api';
+-
+-export const apis: AnyApiFactory[] = [
+-  createApiFactory({
+-    api: scmIntegrationsApiRef,
+-    deps: { configApi: configApiRef },
+-    factory: ({ configApi }) => ScmIntegrationsApi.fromConfig(configApi),
+-  }),
+-  ScmAuth.createDefaultApiFactory(),
+-];
+diff --git a/packages/app/src/components/Root/Root.tsx b/packages/app/src/components/Root/Root.tsx
+deleted file mode 100644
+index 853d175..0000000
+--- a/packages/app/src/components/Root/Root.tsx
++++ /dev/null
+@@ -1,96 +0,0 @@
+-import React, { PropsWithChildren } from 'react';
+-import { makeStyles } from '@material-ui/core';
+-import HomeIcon from '@material-ui/icons/Home';
+-import ExtensionIcon from '@material-ui/icons/Extension';
+-import LibraryBooks from '@material-ui/icons/LibraryBooks';
+-import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
+-import LogoFull from './LogoFull';
+-import LogoIcon from './LogoIcon';
+-import {
+-  Settings as SidebarSettings,
+-  UserSettingsSignInAvatar,
+-} from '@backstage/plugin-user-settings';
+-import { SidebarSearchModal } from '@backstage/plugin-search';
+-import {
+-  Sidebar,
+-  sidebarConfig,
+-  SidebarDivider,
+-  SidebarGroup,
+-  SidebarItem,
+-  SidebarPage,
+-  SidebarScrollWrapper,
+-  SidebarSpace,
+-  useSidebarOpenState,
+-  Link,
+-} from '@backstage/core-components';
+-import MenuIcon from '@material-ui/icons/Menu';
+-import SearchIcon from '@material-ui/icons/Search';
+-import { MyGroupsSidebarItem } from '@backstage/plugin-org';
+-import GroupIcon from '@material-ui/icons/People';
+-
+-const useSidebarLogoStyles = makeStyles({
+-  root: {
+-    width: sidebarConfig.drawerWidthClosed,
+-    height: 3 * sidebarConfig.logoHeight,
+-    display: 'flex',
+-    flexFlow: 'row nowrap',
+-    alignItems: 'center',
+-    marginBottom: -14,
+-  },
+-  link: {
+-    width: sidebarConfig.drawerWidthClosed,
+-    marginLeft: 24,
+-  },
+-});
+-
+-const SidebarLogo = () => {
+-  const classes = useSidebarLogoStyles();
+-  const { isOpen } = useSidebarOpenState();
+-
+-  return (
+-    <div className={classes.root}>
+-      <Link to="/" underline="none" className={classes.link} aria-label="Home">
+-        {isOpen ? <LogoFull /> : <LogoIcon />}
+-      </Link>
+-    </div>
+-  );
+-};
+-
+-export const Root = ({ children }: PropsWithChildren<{}>) => (
+-  <SidebarPage>
+-    <Sidebar>
+-      <SidebarLogo />
+-      <SidebarGroup label="Search" icon={<SearchIcon />} to="/search">
+-        <SidebarSearchModal />
+-      </SidebarGroup>
+-      <SidebarDivider />
+-      <SidebarGroup label="Menu" icon={<MenuIcon />}>
+-        {/* Global nav, not org-specific */}
+-        <SidebarItem icon={HomeIcon} to="catalog" text="Home" />
+-        <MyGroupsSidebarItem
+-          singularTitle="My Group"
+-          pluralTitle="My Groups"
+-          icon={GroupIcon}
+-        />
+-        <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
+-        <SidebarItem icon={LibraryBooks} to="docs" text="Docs" />
+-        <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
+-        {/* End global nav */}
+-        <SidebarDivider />
+-        <SidebarScrollWrapper>
+-          {/* Items in this group will be scrollable if they run out of space */}
+-        </SidebarScrollWrapper>
+-      </SidebarGroup>
+-      <SidebarSpace />
+-      <SidebarDivider />
+-      <SidebarGroup
+-        label="Settings"
+-        icon={<UserSettingsSignInAvatar />}
+-        to="/settings"
+-      >
+-        <SidebarSettings />
+-      </SidebarGroup>
+-    </Sidebar>
+-    {children}
+-  </SidebarPage>
+-);
+diff --git a/packages/app/src/components/Root/index.ts b/packages/app/src/components/Root/index.ts
+deleted file mode 100644
+index 3528881..0000000
+--- a/packages/app/src/components/Root/index.ts
++++ /dev/null
+@@ -1 +0,0 @@
+-export { Root } from './Root';
+diff --git a/packages/app/src/components/catalog/EntityPage.tsx b/packages/app/src/components/catalog/EntityPage.tsx
+deleted file mode 100644
+index 6164c76..0000000
+--- a/packages/app/src/components/catalog/EntityPage.tsx
++++ /dev/null
+@@ -1,412 +0,0 @@
+-import React from 'react';
+-import { Button, Grid } from '@material-ui/core';
+-import {
+-  EntityApiDefinitionCard,
+-  EntityConsumedApisCard,
+-  EntityConsumingComponentsCard,
+-  EntityHasApisCard,
+-  EntityProvidedApisCard,
+-  EntityProvidingComponentsCard,
+-} from '@backstage/plugin-api-docs';
+-import {
+-  EntityAboutCard,
+-  EntityDependsOnComponentsCard,
+-  EntityDependsOnResourcesCard,
+-  EntityHasComponentsCard,
+-  EntityHasResourcesCard,
+-  EntityHasSubcomponentsCard,
+-  EntityHasSystemsCard,
+-  EntityLayout,
+-  EntityLinksCard,
+-  EntitySwitch,
+-  EntityOrphanWarning,
+-  EntityProcessingErrorsPanel,
+-  isComponentType,
+-  isKind,
+-  hasCatalogProcessingErrors,
+-  isOrphan,
+-  hasRelationWarnings,
+-  EntityRelationWarning,
+-} from '@backstage/plugin-catalog';
+-import {
+-  EntityUserProfileCard,
+-  EntityGroupProfileCard,
+-  EntityMembersListCard,
+-  EntityOwnershipCard,
+-} from '@backstage/plugin-org';
+-import { EntityTechdocsContent } from '@backstage/plugin-techdocs';
+-import { EmptyState } from '@backstage/core-components';
+-import {
+-  Direction,
+-  EntityCatalogGraphCard,
+-} from '@backstage/plugin-catalog-graph';
+-import {
+-  RELATION_API_CONSUMED_BY,
+-  RELATION_API_PROVIDED_BY,
+-  RELATION_CONSUMES_API,
+-  RELATION_DEPENDENCY_OF,
+-  RELATION_DEPENDS_ON,
+-  RELATION_HAS_PART,
+-  RELATION_PART_OF,
+-  RELATION_PROVIDES_API,
+-} from '@backstage/catalog-model';
+-
+-import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
+-import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
+-
+-import {
+-  EntityKubernetesContent,
+-  isKubernetesAvailable,
+-} from '@backstage/plugin-kubernetes';
+-
+-const techdocsContent = (
+-  <EntityTechdocsContent>
+-    <TechDocsAddons>
+-      <ReportIssue />
+-    </TechDocsAddons>
+-  </EntityTechdocsContent>
+-);
+-
+-const cicdContent = (
+-  // This is an example of how you can implement your company's logic in entity page.
+-  // You can for example enforce that all components of type 'service' should use GitHubActions
+-  <EntitySwitch>
+-    {/*
+-      Here you can add support for different CI/CD services, for example
+-      using @backstage-community/plugin-github-actions as follows:
+-      <EntitySwitch.Case if={isGithubActionsAvailable}>
+-        <EntityGithubActionsContent />
+-      </EntitySwitch.Case>
+-     */}
+-
+-    <EntitySwitch.Case>
+-      <EmptyState
+-        title="No CI/CD available for this entity"
+-        missing="info"
+-        description="You need to add an annotation to your component if you want to enable CI/CD for it. You can read more about annotations in Backstage by clicking the button below."
+-        action={
+-          <Button
+-            variant="contained"
+-            color="primary"
+-            href="https://backstage.io/docs/features/software-catalog/well-known-annotations"
+-          >
+-            Read more
+-          </Button>
+-        }
+-      />
+-    </EntitySwitch.Case>
+-  </EntitySwitch>
+-);
+-
+-const entityWarningContent = (
+-  <>
+-    <EntitySwitch>
+-      <EntitySwitch.Case if={isOrphan}>
+-        <Grid item xs={12}>
+-          <EntityOrphanWarning />
+-        </Grid>
+-      </EntitySwitch.Case>
+-    </EntitySwitch>
+-
+-    <EntitySwitch>
+-      <EntitySwitch.Case if={hasRelationWarnings}>
+-        <Grid item xs={12}>
+-          <EntityRelationWarning />
+-        </Grid>
+-      </EntitySwitch.Case>
+-    </EntitySwitch>
+-
+-    <EntitySwitch>
+-      <EntitySwitch.Case if={hasCatalogProcessingErrors}>
+-        <Grid item xs={12}>
+-          <EntityProcessingErrorsPanel />
+-        </Grid>
+-      </EntitySwitch.Case>
+-    </EntitySwitch>
+-  </>
+-);
+-
+-const overviewContent = (
+-  <Grid container spacing={3} alignItems="stretch">
+-    {entityWarningContent}
+-    <Grid item md={6}>
+-      <EntityAboutCard variant="gridItem" />
+-    </Grid>
+-    <Grid item md={6} xs={12}>
+-      <EntityCatalogGraphCard variant="gridItem" height={400} />
+-    </Grid>
+-
+-    <Grid item md={4} xs={12}>
+-      <EntityLinksCard />
+-    </Grid>
+-    <Grid item md={8} xs={12}>
+-      <EntityHasSubcomponentsCard variant="gridItem" />
+-    </Grid>
+-  </Grid>
+-);
+-
+-const serviceEntityPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      {overviewContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/ci-cd" title="CI/CD">
+-      {cicdContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route
+-      path="/kubernetes"
+-      title="Kubernetes"
+-      if={isKubernetesAvailable}
+-    >
+-      <EntityKubernetesContent />
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/api" title="API">
+-      <Grid container spacing={3} alignItems="stretch">
+-        <Grid item md={6}>
+-          <EntityProvidedApisCard />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityConsumedApisCard />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/dependencies" title="Dependencies">
+-      <Grid container spacing={3} alignItems="stretch">
+-        <Grid item md={6}>
+-          <EntityDependsOnComponentsCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityDependsOnResourcesCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/docs" title="Docs">
+-      {techdocsContent}
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const websiteEntityPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      {overviewContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/ci-cd" title="CI/CD">
+-      {cicdContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route
+-      path="/kubernetes"
+-      title="Kubernetes"
+-      if={isKubernetesAvailable}
+-    >
+-      <EntityKubernetesContent />
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/dependencies" title="Dependencies">
+-      <Grid container spacing={3} alignItems="stretch">
+-        <Grid item md={6}>
+-          <EntityDependsOnComponentsCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityDependsOnResourcesCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/docs" title="Docs">
+-      {techdocsContent}
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-/**
+- * NOTE: This page is designed to work on small screens such as mobile devices.
+- * This is based on Material UI Grid. If breakpoints are used, each grid item must set the `xs` prop to a column size or to `true`,
+- * since this does not default. If no breakpoints are used, the items will equitably share the available space.
+- * https://material-ui.com/components/grid/#basic-grid.
+- */
+-
+-const defaultEntityPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      {overviewContent}
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/docs" title="Docs">
+-      {techdocsContent}
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const componentPage = (
+-  <EntitySwitch>
+-    <EntitySwitch.Case if={isComponentType('service')}>
+-      {serviceEntityPage}
+-    </EntitySwitch.Case>
+-
+-    <EntitySwitch.Case if={isComponentType('website')}>
+-      {websiteEntityPage}
+-    </EntitySwitch.Case>
+-
+-    <EntitySwitch.Case>{defaultEntityPage}</EntitySwitch.Case>
+-  </EntitySwitch>
+-);
+-
+-const apiPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3}>
+-        {entityWarningContent}
+-        <Grid item md={6}>
+-          <EntityAboutCard />
+-        </Grid>
+-        <Grid item md={6} xs={12}>
+-          <EntityCatalogGraphCard variant="gridItem" height={400} />
+-        </Grid>
+-        <Grid item md={4} xs={12}>
+-          <EntityLinksCard />
+-        </Grid>
+-        <Grid container item md={12}>
+-          <Grid item md={6}>
+-            <EntityProvidingComponentsCard />
+-          </Grid>
+-          <Grid item md={6}>
+-            <EntityConsumingComponentsCard />
+-          </Grid>
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-
+-    <EntityLayout.Route path="/definition" title="Definition">
+-      <Grid container spacing={3}>
+-        <Grid item xs={12}>
+-          <EntityApiDefinitionCard />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const userPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3}>
+-        {entityWarningContent}
+-        <Grid item xs={12} md={6}>
+-          <EntityUserProfileCard variant="gridItem" />
+-        </Grid>
+-        <Grid item xs={12} md={6}>
+-          <EntityOwnershipCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const groupPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3}>
+-        {entityWarningContent}
+-        <Grid item xs={12} md={6}>
+-          <EntityGroupProfileCard variant="gridItem" />
+-        </Grid>
+-        <Grid item xs={12} md={6}>
+-          <EntityOwnershipCard variant="gridItem" />
+-        </Grid>
+-        <Grid item xs={12} md={6}>
+-          <EntityMembersListCard />
+-        </Grid>
+-        <Grid item xs={12} md={6}>
+-          <EntityLinksCard />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const systemPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3} alignItems="stretch">
+-        {entityWarningContent}
+-        <Grid item md={6}>
+-          <EntityAboutCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6} xs={12}>
+-          <EntityCatalogGraphCard variant="gridItem" height={400} />
+-        </Grid>
+-        <Grid item md={4} xs={12}>
+-          <EntityLinksCard />
+-        </Grid>
+-        <Grid item md={8}>
+-          <EntityHasComponentsCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityHasApisCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityHasResourcesCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-    <EntityLayout.Route path="/diagram" title="Diagram">
+-      <EntityCatalogGraphCard
+-        variant="gridItem"
+-        direction={Direction.TOP_BOTTOM}
+-        title="System Diagram"
+-        height={700}
+-        relations={[
+-          RELATION_PART_OF,
+-          RELATION_HAS_PART,
+-          RELATION_API_CONSUMED_BY,
+-          RELATION_API_PROVIDED_BY,
+-          RELATION_CONSUMES_API,
+-          RELATION_PROVIDES_API,
+-          RELATION_DEPENDENCY_OF,
+-          RELATION_DEPENDS_ON,
+-        ]}
+-        unidirectional={false}
+-      />
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-const domainPage = (
+-  <EntityLayout>
+-    <EntityLayout.Route path="/" title="Overview">
+-      <Grid container spacing={3} alignItems="stretch">
+-        {entityWarningContent}
+-        <Grid item md={6}>
+-          <EntityAboutCard variant="gridItem" />
+-        </Grid>
+-        <Grid item md={6} xs={12}>
+-          <EntityCatalogGraphCard variant="gridItem" height={400} />
+-        </Grid>
+-        <Grid item md={6}>
+-          <EntityHasSystemsCard variant="gridItem" />
+-        </Grid>
+-      </Grid>
+-    </EntityLayout.Route>
+-  </EntityLayout>
+-);
+-
+-export const entityPage = (
+-  <EntitySwitch>
+-    <EntitySwitch.Case if={isKind('component')} children={componentPage} />
+-    <EntitySwitch.Case if={isKind('api')} children={apiPage} />
+-    <EntitySwitch.Case if={isKind('group')} children={groupPage} />
+-    <EntitySwitch.Case if={isKind('user')} children={userPage} />
+-    <EntitySwitch.Case if={isKind('system')} children={systemPage} />
+-    <EntitySwitch.Case if={isKind('domain')} children={domainPage} />
+-
+-    <EntitySwitch.Case>{defaultEntityPage}</EntitySwitch.Case>
+-  </EntitySwitch>
+-);
+diff --git a/packages/app/src/components/search/SearchPage.tsx b/packages/app/src/components/search/SearchPage.tsx
+deleted file mode 100644
+index 1788dde..0000000
+--- a/packages/app/src/components/search/SearchPage.tsx
++++ /dev/null
+@@ -1,124 +0,0 @@
+-import React from 'react';
+-import { makeStyles, Theme, Grid, Paper } from '@material-ui/core';
+-
+-import { CatalogSearchResultListItem } from '@backstage/plugin-catalog';
+-import {
+-  catalogApiRef,
+-  CATALOG_FILTER_EXISTS,
+-} from '@backstage/plugin-catalog-react';
+-import { TechDocsSearchResultListItem } from '@backstage/plugin-techdocs';
+-
+-import { SearchType } from '@backstage/plugin-search';
+-import {
+-  SearchBar,
+-  SearchFilter,
+-  SearchResult,
+-  SearchPagination,
+-  useSearch,
+-} from '@backstage/plugin-search-react';
+-import {
+-  CatalogIcon,
+-  Content,
+-  DocsIcon,
+-  Header,
+-  Page,
+-} from '@backstage/core-components';
+-import { useApi } from '@backstage/core-plugin-api';
+-
+-const useStyles = makeStyles((theme: Theme) => ({
+-  bar: {
+-    padding: theme.spacing(1, 0),
+-  },
+-  filters: {
+-    padding: theme.spacing(2),
+-    marginTop: theme.spacing(2),
+-  },
+-  filter: {
+-    '& + &': {
+-      marginTop: theme.spacing(2.5),
+-    },
+-  },
+-}));
+-
+-const SearchPage = () => {
+-  const classes = useStyles();
+-  const { types } = useSearch();
+-  const catalogApi = useApi(catalogApiRef);
+-
+-  return (
+-    <Page themeId="home">
+-      <Header title="Search" />
+-      <Content>
+-        <Grid container direction="row">
+-          <Grid item xs={12}>
+-            <Paper className={classes.bar}>
+-              <SearchBar />
+-            </Paper>
+-          </Grid>
+-          <Grid item xs={3}>
+-            <SearchType.Accordion
+-              name="Result Type"
+-              defaultValue="software-catalog"
+-              types={[
+-                {
+-                  value: 'software-catalog',
+-                  name: 'Software Catalog',
+-                  icon: <CatalogIcon />,
+-                },
+-                {
+-                  value: 'techdocs',
+-                  name: 'Documentation',
+-                  icon: <DocsIcon />,
+-                },
+-              ]}
+-            />
+-            <Paper className={classes.filters}>
+-              {types.includes('techdocs') && (
+-                <SearchFilter.Select
+-                  className={classes.filter}
+-                  label="Entity"
+-                  name="name"
+-                  values={async () => {
+-                    // Return a list of entities which are documented.
+-                    const { items } = await catalogApi.getEntities({
+-                      fields: ['metadata.name'],
+-                      filter: {
+-                        'metadata.annotations.backstage.io/techdocs-ref':
+-                          CATALOG_FILTER_EXISTS,
+-                      },
+-                    });
+-
+-                    const names = items.map(entity => entity.metadata.name);
+-                    names.sort();
+-                    return names;
+-                  }}
+-                />
+-              )}
+-              <SearchFilter.Select
+-                className={classes.filter}
+-                label="Kind"
+-                name="kind"
+-                values={['Component', 'Template']}
+-              />
+-              <SearchFilter.Checkbox
+-                className={classes.filter}
+-                label="Lifecycle"
+-                name="lifecycle"
+-                values={['experimental', 'production']}
+-              />
+-            </Paper>
+-          </Grid>
+-          <Grid item xs={9}>
+-            <SearchPagination />
+-            <SearchResult>
+-              <CatalogSearchResultListItem icon={<CatalogIcon />} />
+-              <TechDocsSearchResultListItem icon={<DocsIcon />} />
+-            </SearchResult>
+-          </Grid>
+-        </Grid>
+-      </Content>
+-    </Page>
+-  );
+-};
+-
+-export const searchPage = <SearchPage />;
+diff --git a/packages/app/src/index.tsx b/packages/app/src/index.tsx
+index 604afbe..ac9e52b 100644
+--- a/packages/app/src/index.tsx
++++ b/packages/app/src/index.tsx
+@@ -1,7 +1,6 @@
+ import '@backstage/cli/asset-types';
+-import React from 'react';
+ import ReactDOM from 'react-dom/client';
+ import App from './App';
+-import '@backstage/canon/css/styles.css';
++import '@backstage/ui/css/styles.css';
+ 
+-ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
++ReactDOM.createRoot(document.getElementById('root')!).render(App.createRoot());
+diff --git a/packages/app/src/components/Root/LogoFull.tsx b/packages/app/src/modules/nav/LogoFull.tsx
+similarity index 99%
+rename from packages/app/src/components/Root/LogoFull.tsx
+rename to packages/app/src/modules/nav/LogoFull.tsx
+index 47e3b73..95f69ae 100644
+--- a/packages/app/src/components/Root/LogoFull.tsx
++++ b/packages/app/src/modules/nav/LogoFull.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { makeStyles } from '@material-ui/core';
+@@ -12,3 +11,4 @@ const useStyles = makeStyles({
+ });
+-const LogoFull = () => {
++
++export const LogoFull = () => {
+   const classes = useStyles();
+@@ -28,3 +28 @@ const LogoFull = () => {
+ };
+-
+-export default LogoFull;
+diff --git a/packages/app/src/components/Root/LogoIcon.tsx b/packages/app/src/modules/nav/LogoIcon.tsx
+similarity index 97%
+rename from packages/app/src/components/Root/LogoIcon.tsx
+rename to packages/app/src/modules/nav/LogoIcon.tsx
+index 7eae8c7..38544dd 100644
+--- a/packages/app/src/components/Root/LogoIcon.tsx
++++ b/packages/app/src/modules/nav/LogoIcon.tsx
+@@ -1,2 +1 @@
+-import React from 'react';
+ import { makeStyles } from '@material-ui/core';
+@@ -13,3 +12,3 @@ const useStyles = makeStyles({
+ 
+-const LogoIcon = () => {
++export const LogoIcon = () => {
+   const classes = useStyles();
+@@ -29,3 +28 @@ const LogoIcon = () => {
+ };
+-
+-export default LogoIcon;
+diff --git a/packages/app/src/modules/nav/Sidebar.tsx b/packages/app/src/modules/nav/Sidebar.tsx
+new file mode 100644
+index 0000000..e0bb425
+--- /dev/null
++++ b/packages/app/src/modules/nav/Sidebar.tsx
+@@ -0,0 +1,58 @@
++import {
++  Sidebar,
++  SidebarDivider,
++  SidebarGroup,
++  SidebarItem,
++  SidebarScrollWrapper,
++  SidebarSpace,
++} from '@backstage/core-components';
++import { NavContentBlueprint } from '@backstage/plugin-app-react';
++import { SidebarLogo } from './SidebarLogo';
++import MenuIcon from '@material-ui/icons/Menu';
++import SearchIcon from '@material-ui/icons/Search';
++import { SidebarSearchModal } from '@backstage/plugin-search';
++import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
++import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
++
++export const SidebarContent = NavContentBlueprint.make({
++  params: {
++    component: ({ navItems }) => {
++      const nav = navItems.withComponent(item => (
++        <SidebarItem icon={() => item.icon} to={item.href} text={item.title} />
++      ));
++
++      // Skipped items
++      nav.take('page:search'); // Using search modal instead
++
++      return (
++        <Sidebar>
++          <SidebarLogo />
++          <SidebarGroup label="Search" icon={<SearchIcon />} to="/search">
++            <SidebarSearchModal />
++          </SidebarGroup>
++          <SidebarDivider />
++          <SidebarGroup label="Menu" icon={<MenuIcon />}>
++            {nav.take('page:catalog')}
++            {nav.take('page:scaffolder')}
++            <SidebarDivider />
++            <SidebarScrollWrapper>
++              {nav.rest({ sortBy: 'title' })}
++            </SidebarScrollWrapper>
++          </SidebarGroup>
++          <SidebarSpace />
++          <SidebarDivider />
++          <NotificationsSidebarItem />
++          <SidebarDivider />
++          <SidebarGroup
++            label="Settings"
++            icon={<UserSettingsSignInAvatar />}
++            to="/settings"
++          >
++            {nav.take('page:app-visualizer')}
++            {nav.take('page:user-settings')}
++          </SidebarGroup>
++        </Sidebar>
++      );
++    },
++  },
++});
+diff --git a/packages/app/src/modules/nav/SidebarLogo.tsx b/packages/app/src/modules/nav/SidebarLogo.tsx
+new file mode 100644
+index 0000000..80df964
+--- /dev/null
++++ b/packages/app/src/modules/nav/SidebarLogo.tsx
+@@ -0,0 +1,36 @@
++import {
++  Link,
++  sidebarConfig,
++  useSidebarOpenState,
++} from '@backstage/core-components';
++import { makeStyles } from '@material-ui/core';
++import { LogoFull } from './LogoFull';
++import { LogoIcon } from './LogoIcon';
++
++const useSidebarLogoStyles = makeStyles({
++  root: {
++    width: sidebarConfig.drawerWidthClosed,
++    height: 3 * sidebarConfig.logoHeight,
++    display: 'flex',
++    flexFlow: 'row nowrap',
++    alignItems: 'center',
++    marginBottom: -14,
++  },
++  link: {
++    width: sidebarConfig.drawerWidthClosed,
++    marginLeft: 24,
++  },
++});
++
++export const SidebarLogo = () => {
++  const classes = useSidebarLogoStyles();
++  const { isOpen } = useSidebarOpenState();
++
++  return (
++    <div className={classes.root}>
++      <Link to="/" underline="none" className={classes.link} aria-label="Home">
++        {isOpen ? <LogoFull /> : <LogoIcon />}
++      </Link>
++    </div>
++  );
++};
+diff --git a/packages/app/src/modules/nav/index.ts b/packages/app/src/modules/nav/index.ts
+new file mode 100644
+index 0000000..abb61fc
+--- /dev/null
++++ b/packages/app/src/modules/nav/index.ts
+@@ -0,0 +1,7 @@
++import { createFrontendModule } from '@backstage/frontend-plugin-api';
++import { SidebarContent } from './Sidebar';
++
++export const navModule = createFrontendModule({
++  pluginId: 'app',
++  extensions: [SidebarContent],
++});
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index 68d6c2f..a70705f 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -14,3 +14,3 @@
+ 
+-FROM node:20-bookworm-slim
++FROM node:24-trixie-slim
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index a460b55..2c06805 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -29,2 +29,3 @@
+     "@backstage/plugin-kubernetes-backend": "backstage:^",
++    "@backstage/plugin-notifications-backend": "backstage:^",
+     "@backstage/plugin-permission-backend": "backstage:^",
+@@ -36,2 +37,3 @@
+     "@backstage/plugin-scaffolder-backend-module-github": "backstage:^",
++    "@backstage/plugin-scaffolder-backend-module-notifications": "backstage:^",
+     "@backstage/plugin-search-backend": "backstage:^",
+@@ -41,5 +43,6 @@
+     "@backstage/plugin-search-backend-node": "backstage:^",
++    "@backstage/plugin-signals-backend": "backstage:^",
+     "@backstage/plugin-techdocs-backend": "backstage:^",
+     "app": "link:../app",
+-    "better-sqlite3": "^9.0.0",
++    "better-sqlite3": "^12.0.0",
+     "node-gyp": "^10.0.0",
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 6d0a6f4..cc2db7c 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -14,4 +14,11 @@ backend.add(import('@backstage/plugin-app-backend'));
+ backend.add(import('@backstage/plugin-proxy-backend'));
++
++// scaffolder plugin
+ backend.add(import('@backstage/plugin-scaffolder-backend'));
+ backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
++backend.add(
++  import('@backstage/plugin-scaffolder-backend-module-notifications'),
++);
++
++// techdocs plugin
+ backend.add(import('@backstage/plugin-techdocs-backend'));
+@@ -51,5 +58,9 @@ backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
+ 
+-// kubernetes
++// kubernetes plugin
+ backend.add(import('@backstage/plugin-kubernetes-backend'));
+ 
++// notifications and signals plugins
++backend.add(import('@backstage/plugin-notifications-backend'));
++backend.add(import('@backstage/plugin-signals-backend'));
++
+ backend.start();
+diff --git a/playwright.config.ts b/playwright.config.ts
+index 733be13..0dc740b 100644
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -34,3 +34,3 @@ export default defineConfig({
+         {
+-          command: 'yarn dev',
++          command: 'yarn start app',
+           port: 3000,
+@@ -39,2 +39,8 @@ export default defineConfig({
+         },
++        {
++          command: 'yarn start backend',
++          port: 7007,
++          reuseExistingServer: true,
++          timeout: 60_000,
++        },
+       ],
+diff --git a/tsconfig.json b/tsconfig.json
+index 2aa745d..eac19c5 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -13,3 +13,4 @@
+     "outDir": "dist-types",
+-    "rootDir": "."
++    "rootDir": ".",
++    "jsx": "react-jsx"
+   }
+diff --git a/yarn.lock b/yarn.lock
+index 46a911d..b0c1105 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -4,25 +4,10 @@
+ 
+-"@google-cloud/storage@^7.0.0":
+-  version "7.14.0"
+-  resolved "https://registry.yarnpkg.com/@google-cloud/storage/-/storage-7.14.0.tgz#eda9715f68507949214af804c906eba6d168a214"
+-  integrity sha512-H41bPL2cMfSi4EEnFzKvg7XSb7T67ocSXrmF7MPjfgFB0L6CKGzfIYJheAZi1iqXjz6XaCT1OBf6HCG5vDBTOQ==
+-
+-"@octokit/types@npm:^13.0.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/types@npm:^13.1.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/types@npm:^13.5.0":
+-  version "13.6.2"
+-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.6.2.tgz#e10fc4d2bdd65d836d1ced223b03ad4cfdb525bd"
+-  integrity sha512-WpbZfZUcZU77DrSW4wbsSgTPfKcp286q3ItaIgvSbBpZJlu6mnYXAkjZz6LVZPXkEvLIM8McanyZejKTYUHipA==
+-
+-"@octokit/openapi-types@^22.2.0":
+-  version "22.2.0"
+-  resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-22.2.0.tgz#75aa7dcd440821d99def6a60b5f014207ae4968e"
+-  integrity sha512-QBhVjcUa9W7Wwhm6DBFu6ZZ+1/t/oYxqc2tp81Pi41YNuJinbFRx8B133qVOrAaBbF7D/m0Et6f9/pZt9Rc+tg==
++"@swc/core@^1.3.46":
++  version "1.11.31"
++  resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.11.31.tgz#e5de9ed005551ce9a16aa69e79935fc33065475c"
++  integrity sha512-mAby9aUnKRjMEA7v8cVZS9Ah4duoRBnX7X6r5qrhTxErx+68MoY1TPrVwj/66/SWN3Bl+jijqAqoB8Qx0QE34A==
++
++fast-xml-builder@*:
++  version "1.0.0"
++  resolved "https://registry.yarnpkg.com/fast-xml-builder/-/fast-xml-builder-1.0.0.tgz#a485d7e8381f1db983cf006f849d1066e2935241"
++  integrity sha512-fpZuDogrAgnyt9oDDz+5DBz0zgPdPZz6D4IR7iESxRXElrlGTRkHJ9eEt+SACRJwT0FNFrt71DFQIUFBJfX/uQ==
