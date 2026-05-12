@@ -1,0 +1,72 @@
+diff --git a/backstage.json b/backstage.json
+index d676dd3..2beafbb 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.51.0-next.2"
++  "version": "1.51.0-next.3"
+ }
+diff --git a/package.json b/package.json
+index eb4bae6..8677c85 100644
+--- a/package.json
++++ b/package.json
+@@ -41,6 +41,6 @@
+     "@backstage/e2e-test-utils": "^0.1.2",
+-    "@jest/environment-jsdom-abstract": "^30.0.0",
++    "@jest/environment-jsdom-abstract": "~30.2.0",
+     "@playwright/test": "^1.32.3",
+     "@types/jest": "^30.0.0",
+-    "jest": "^30.2.0",
++    "jest": "~30.2.0",
+     "jsdom": "^27.1.0",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index a37881e..d718769 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -25,4 +25,4 @@
+     "@backstage/plugin-app-visualizer": "^0.2.4-next.1",
+-    "@backstage/plugin-auth": "^0.1.8-next.1",
+-    "@backstage/plugin-catalog": "^2.0.5-next.0",
++    "@backstage/plugin-auth": "^0.1.8-next.2",
++    "@backstage/plugin-catalog": "^2.0.5-next.1",
+     "@backstage/plugin-catalog-graph": "^0.6.4-next.1",
+@@ -32,3 +32,3 @@
+     "@backstage/plugin-org": "^0.7.4-next.1",
+-    "@backstage/plugin-scaffolder": "^1.36.3-next.1",
++    "@backstage/plugin-scaffolder": "^1.37.0-next.2",
+     "@backstage/plugin-search": "^1.7.4-next.0",
+@@ -38,3 +38,3 @@
+     "@backstage/plugin-user-settings": "^0.9.3-next.0",
+-    "@backstage/ui": "^0.15.0-next.2",
++    "@backstage/ui": "^0.15.0-next.3",
+     "@material-ui/core": "^4.12.2",
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index b423544..be7eb57 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,6 +18,6 @@
+   "dependencies": {
+-    "@backstage/backend-defaults": "^0.17.1-next.1",
++    "@backstage/backend-defaults": "^0.17.1-next.2",
+     "@backstage/config": "^1.3.8-next.0",
+     "@backstage/plugin-app-backend": "^0.5.14-next.0",
+-    "@backstage/plugin-auth-backend": "^0.28.1-next.1",
++    "@backstage/plugin-auth-backend": "^0.28.1-next.2",
+     "@backstage/plugin-auth-backend-module-github-provider": "^0.5.3-next.0",
+@@ -25,6 +25,6 @@
+     "@backstage/plugin-auth-node": "^0.7.1-next.1",
+-    "@backstage/plugin-catalog-backend": "^3.6.2-next.1",
+-    "@backstage/plugin-catalog-backend-module-logs": "^0.1.22-next.0",
+-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.20-next.0",
+-    "@backstage/plugin-kubernetes-backend": "^0.21.4-next.0",
++    "@backstage/plugin-catalog-backend": "^3.7.0-next.2",
++    "@backstage/plugin-catalog-backend-module-logs": "^0.1.22-next.1",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.20-next.1",
++    "@backstage/plugin-kubernetes-backend": "^0.21.4-next.1",
+     "@backstage/plugin-mcp-actions-backend": "^0.1.13-next.0",
+@@ -36,3 +36,3 @@
+     "@backstage/plugin-proxy-backend": "^0.6.13-next.0",
+-    "@backstage/plugin-scaffolder-backend": "^3.5.0-next.1",
++    "@backstage/plugin-scaffolder-backend": "^4.0.0-next.2",
+     "@backstage/plugin-scaffolder-backend-module-github": "^0.9.9-next.0",
