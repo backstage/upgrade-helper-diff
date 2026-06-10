@@ -1,0 +1,32 @@
+diff --git a/backstage.json b/backstage.json
+index 9afb039..648173d 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.52.0-next.1"
++  "version": "1.52.0-next.2"
+ }
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 159cd61..808bd95 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -17,3 +17,3 @@
+     "@backstage/cli": "^0.36.3-next.1",
+-    "@backstage/core-components": "^0.18.11-next.1",
++    "@backstage/core-components": "^0.18.11-next.2",
+     "@backstage/core-plugin-api": "^1.12.7-next.0",
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 226b097..a5d659e 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,3 +18,3 @@
+   "dependencies": {
+-    "@backstage/backend-defaults": "^0.17.3-next.1",
++    "@backstage/backend-defaults": "^0.17.3-next.2",
+     "@backstage/config": "^1.3.8",
+@@ -25,3 +25,3 @@
+     "@backstage/plugin-auth-node": "^0.7.2-next.0",
+-    "@backstage/plugin-catalog-backend": "^3.8.0-next.0",
++    "@backstage/plugin-catalog-backend": "^3.8.0-next.1",
+     "@backstage/plugin-catalog-backend-module-logs": "^0.1.23-next.0",
