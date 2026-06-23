@@ -1,0 +1,18 @@
+diff --git a/.yarnrc.yml b/.yarnrc.yml
+index 63b9535..b90284c 100644
+--- a/.yarnrc.yml
++++ b/.yarnrc.yml
+@@ -10,3 +10,3 @@ plugins:
+     path: .yarn/plugins/@yarnpkg/plugin-backstage.cjs
+-    spec: "https://versions.backstage.io/v1/releases/1.52.0/yarn-plugin"
++    spec: "https://versions.backstage.io/v1/releases/1.53.0-next.0/yarn-plugin"
+ 
+diff --git a/backstage.json b/backstage.json
+index f310a6b..1ceca88 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.52.0"
++  "version": "1.53.0-next.0"
+ }
