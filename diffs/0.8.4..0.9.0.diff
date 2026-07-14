@@ -1,0 +1,193 @@
+diff --git a/app-config.yaml b/app-config.yaml
+index fbcc181..b7e04b8 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -86,3 +86,3 @@ auth:
+   # to learn more about client id metadata documents
+-  experimentalClientIdMetadataDocuments:
++  clientIdMetadataDocuments:
+     enabled: false
+diff --git a/backstage.json b/backstage.json
+index f310a6b..01e1ecb 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.52.0"
++  "version": "1.53.0"
+ }
+diff --git a/package.json b/package.json
+index a105dd3..8289d48 100644
+--- a/package.json
++++ b/package.json
+@@ -38,4 +38,4 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.36.3",
+-    "@backstage/cli-defaults": "^0.1.3",
++    "@backstage/cli": "^0.36.4",
++    "@backstage/cli-defaults": "^0.1.4",
+     "@backstage/e2e-test-utils": "^0.1.2",
+diff --git a/packages/app/e2e-tests/app.test.ts b/packages/app/e2e-tests/app.test.ts
+index d8dbc1f..9ef68bb 100644
+--- a/packages/app/e2e-tests/app.test.ts
++++ b/packages/app/e2e-tests/app.test.ts
+@@ -25,3 +25,3 @@ test('App should render the welcome page', async ({ page }) => {
+ 
+-  const nav = page.getByRole('navigation');
++  const nav = page.getByRole('navigation', { name: 'sidebar nav' });
+   await expect(
+diff --git a/packages/app/package.json b/packages/app/package.json
+index fd1b60e..070ce42 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -16,25 +16,26 @@
+   "dependencies": {
+-    "@backstage/cli": "^0.36.3",
+-    "@backstage/core-components": "^0.18.11",
+-    "@backstage/core-plugin-api": "^1.12.7",
+-    "@backstage/frontend-defaults": "^0.5.3",
+-    "@backstage/frontend-plugin-api": "^0.17.2",
+-    "@backstage/integration-react": "^1.2.19",
+-    "@backstage/plugin-api-docs": "^0.14.2",
+-    "@backstage/plugin-app-react": "^0.2.4",
+-    "@backstage/plugin-app-visualizer": "^0.2.5",
+-    "@backstage/plugin-auth": "^0.1.9",
+-    "@backstage/plugin-catalog": "^2.0.6",
+-    "@backstage/plugin-catalog-graph": "^0.6.5",
+-    "@backstage/plugin-catalog-import": "^0.13.14",
+-    "@backstage/plugin-kubernetes": "^0.12.20",
+-    "@backstage/plugin-notifications": "^0.5.18",
+-    "@backstage/plugin-org": "^0.7.5",
+-    "@backstage/plugin-scaffolder": "^1.38.0",
+-    "@backstage/plugin-search": "^1.7.5",
+-    "@backstage/plugin-signals": "^0.0.32",
+-    "@backstage/plugin-techdocs": "^1.17.7",
+-    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.37",
+-    "@backstage/plugin-user-settings": "^0.9.4",
+-    "@backstage/ui": "^0.16.0",
++    "@backstage/cli": "^0.36.4",
++    "@backstage/core-components": "^0.18.12",
++    "@backstage/core-plugin-api": "^1.12.8",
++    "@backstage/frontend-defaults": "^0.5.4",
++    "@backstage/frontend-plugin-api": "^0.17.3",
++    "@backstage/integration-react": "^1.2.20",
++    "@backstage/plugin-api-docs": "^0.14.3",
++    "@backstage/plugin-app-react": "^0.2.5",
++    "@backstage/plugin-app-visualizer": "^0.2.6",
++    "@backstage/plugin-auth": "^0.1.10",
++    "@backstage/plugin-catalog": "^2.0.7",
++    "@backstage/plugin-catalog-graph": "^0.6.6",
++    "@backstage/plugin-catalog-import": "^0.13.15",
++    "@backstage/plugin-kubernetes": "^0.12.21",
++    "@backstage/plugin-notifications": "^0.5.19",
++    "@backstage/plugin-org": "^0.7.6",
++    "@backstage/plugin-scaffolder": "^1.38.1",
++    "@backstage/plugin-search": "^1.7.6",
++    "@backstage/plugin-app-module-user-settings": "^0.1.0",
++    "@backstage/plugin-signals": "^0.0.33",
++    "@backstage/plugin-techdocs": "^1.17.8",
++    "@backstage/plugin-techdocs-module-addons-contrib": "^1.1.38",
++    "@backstage/plugin-user-settings": "^0.9.5",
++    "@backstage/ui": "^0.17.0",
+     "@material-ui/core": "^4.12.2",
+@@ -47,3 +48,3 @@
+   "devDependencies": {
+-    "@backstage/frontend-test-utils": "^0.6.1",
++    "@backstage/frontend-test-utils": "^0.6.2",
+     "@playwright/test": "^1.32.3",
+diff --git a/packages/app/src/modules/nav/Sidebar.tsx b/packages/app/src/modules/nav/Sidebar.tsx
+index e0bb425..e148cb5 100644
+--- a/packages/app/src/modules/nav/Sidebar.tsx
++++ b/packages/app/src/modules/nav/Sidebar.tsx
+@@ -25,2 +25,3 @@ export const SidebarContent = NavContentBlueprint.make({
+       nav.take('page:search'); // Using search modal instead
++      nav.take('page:notifications'); // Using NotificationsSidebarItem manually instead
+ 
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 65ab495..f5eb3ab 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,30 +18,31 @@
+   "dependencies": {
+-    "@backstage/backend-defaults": "^0.17.3",
++    "@backstage/backend-defaults": "^0.17.5",
+     "@backstage/config": "^1.3.8",
+-    "@backstage/plugin-app-backend": "^0.5.15",
+-    "@backstage/plugin-auth-backend": "^0.29.1",
+-    "@backstage/plugin-auth-backend-module-github-provider": "^0.5.4",
+-    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.20",
+-    "@backstage/plugin-auth-node": "^0.7.2",
+-    "@backstage/plugin-catalog-backend": "^3.8.0",
+-    "@backstage/plugin-catalog-backend-module-logs": "^0.1.23",
+-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.21",
+-    "@backstage/plugin-kubernetes-backend": "^0.21.5",
+-    "@backstage/plugin-mcp-actions-backend": "^0.1.14",
+-    "@backstage/plugin-notifications-backend": "^0.6.6",
+-    "@backstage/plugin-permission-backend": "^0.7.13",
+-    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.20",
++    "@backstage/plugin-app-backend": "^0.5.16",
++    "@backstage/plugin-auth-backend": "^0.29.2",
++    "@backstage/plugin-auth-backend-module-github-provider": "^0.5.5",
++    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.21",
++    "@backstage/plugin-auth-node": "^0.7.3",
++    "@backstage/plugin-catalog-backend": "^3.8.1",
++    "@backstage/plugin-catalog-backend-module-logs": "^0.1.24",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.22",
++    "@backstage/plugin-kubernetes-backend": "^0.21.6",
++    "@backstage/plugin-mcp-actions-backend": "^0.2.0",
++    "@backstage/plugin-notifications-backend": "^0.6.7",
++    "@backstage/plugin-permission-backend": "^0.7.14",
++    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.21",
+     "@backstage/plugin-permission-common": "^0.9.9",
+-    "@backstage/plugin-permission-node": "^0.11.1",
+-    "@backstage/plugin-proxy-backend": "^0.6.14",
+-    "@backstage/plugin-scaffolder-backend": "^4.0.1",
+-    "@backstage/plugin-scaffolder-backend-module-github": "^0.9.10",
+-    "@backstage/plugin-scaffolder-backend-module-notifications": "^0.1.23",
+-    "@backstage/plugin-search-backend": "^2.1.3",
+-    "@backstage/plugin-search-backend-module-catalog": "^0.3.16",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.56",
+-    "@backstage/plugin-search-backend-module-techdocs": "^0.4.15",
+-    "@backstage/plugin-search-backend-node": "^1.4.5",
+-    "@backstage/plugin-signals-backend": "^0.3.16",
+-    "@backstage/plugin-techdocs-backend": "^2.2.1",
++    "@backstage/plugin-permission-node": "^0.11.2",
++    "@backstage/plugin-proxy-backend": "^0.6.15",
++    "@backstage/plugin-scaffolder-backend": "^4.0.2",
++    "@backstage/plugin-scaffolder-backend-module-github": "^0.9.11",
++    "@backstage/plugin-scaffolder-backend-module-notifications": "^0.1.24",
++    "@backstage/plugin-search-backend": "^2.1.4",
++    "@backstage/plugin-search-backend-module-catalog": "^0.3.17",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.57",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.4.16",
++    "@backstage/plugin-search-backend-node": "^1.4.6",
++    "@backstage/plugin-signals-backend": "^0.3.17",
++    "@backstage/plugin-techdocs-backend": "^2.2.2",
++    "@backstage/plugin-user-settings-backend": "^0.4.5",
+     "app": "link:../app",
+@@ -52,3 +53,3 @@
+   "devDependencies": {
+-    "@backstage/cli": "^0.36.3"
++    "@backstage/cli": "^0.36.4"
+   },
+diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
+index 7e9be64..9e0467c 100644
+--- a/packages/backend/src/index.ts
++++ b/packages/backend/src/index.ts
+@@ -61,2 +61,5 @@ backend.add(import('@backstage/plugin-kubernetes-backend'));
+ 
++// user settings plugin
++backend.add(import('@backstage/plugin-user-settings-backend'));
++
+ // notifications and signals plugins
+diff --git a/yarn.lock b/yarn.lock
+index b299301..483625e 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -58 +58,6 @@ fast-xml-builder@*:
+   integrity sha512-3wY1AxV+VBNW8Yypfd1yQY9pXnqTAN+KwQxL8iYm3/BjKYMNg4i0owhEe26PWDOMaIrzeeF98Lqd5NGz4omiIg==
++
++"@types/node@*":
++  version "22.20.0"
++  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.20.0.tgz#431f5007396bc1a1a47b9c7df60f3e5e0b5b7304"
++  integrity sha512-QWlFW2wf3nTjC13/DqRnBpR4ZO36VJH/JVBkA/vcnmbTBNQIlnObqyqZE1tUR7+Ni23Lda8R1BxMfbXRpCUx5g==
