@@ -1,0 +1,249 @@
+diff --git a/.yarnrc.yml b/.yarnrc.yml
+index 52d90fc..29df045 100644
+--- a/.yarnrc.yml
++++ b/.yarnrc.yml
+@@ -10,3 +10,3 @@ plugins:
+     path: .yarn/plugins/@yarnpkg/plugin-backstage.cjs
+-    spec: "https://versions.backstage.io/v1/releases/1.53.0/yarn-plugin"
++    spec: "https://versions.backstage.io/v1/releases/1.54.0-next.3/yarn-plugin"
+ 
+diff --git a/app-config.yaml b/app-config.yaml
+index b7e04b8..d0d4a6f 100644
+--- a/app-config.yaml
++++ b/app-config.yaml
+@@ -8,3 +8,6 @@ app:
+   extensions:
+-    # Configure the catalog index page to be the root page, this is normally mounted on /catalog
++    # Default landing page configuration.
++    # The catalog is mounted at /catalog by default but is overridden here to
++    # serve as the root page. To switch to the Home page, comment out the
++    # catalog path override and uncomment the home path override.
+     - page:catalog:
+@@ -12,2 +15,84 @@ app:
+           path: /
++    # - page:home:
++    #     config:
++    #       path: /
++
++    # Visit tracking records which pages users navigate to and is disabled by default.
++    # Enable it to populate the Most Visited and Recently Visited widgets on the Home page.
++    # Visit data is stored via UserSettings storage if available, otherwise browser localStorage.
++    # - api:home/visits: true
++    # - app-root-element:home/visit-listener: true
++    - home-page-widget:home/toolkit:
++        config:
++          tools:
++            - url: https://backstage.io/docs
++              label: Docs
++              icon: docs
++            - url: https://github.com/backstage/backstage
++              label: GitHub
++              icon: github
++            - url: https://github.com/backstage/backstage/blob/master/CONTRIBUTING.md
++              label: Contributing
++              icon: docs
++            - url: https://backstage.io/plugins
++              label: Plugins Directory
++              icon: kind:component
++            - url: https://github.com/backstage/backstage/issues/new/choose
++              label: Submit New Issue
++              icon: github
++    - home-page-widget:home/world-clock:
++        config:
++          clockConfigs:
++            - label: NYC
++              timeZone: America/New_York
++            - label: UTC
++              timeZone: UTC
++            - label: STO
++              timeZone: Europe/Stockholm
++            - label: TYO
++              timeZone: Asia/Tokyo
++    - page:home:
++        config:
++          defaultConfig:
++            - component: HomePageSearchBar
++              column: 0
++              row: 0
++              width: 12
++              height: 2
++              deletable: false
++            - component: GettingStarted
++              column: 0
++              row: 1
++              width: 4
++              height: 11
++            - component: HomePageStarredEntities
++              column: 4
++              row: 2
++              width: 4
++              height: 4
++            - component: HomePageRandomJoke
++              column: 8
++              row: 2
++              width: 4
++              height: 4
++            - component: HomePageToolkit
++              column: 4
++              row: 6
++              width: 4
++              height: 3
++            - component: HomePageWorldClock
++              column: 8
++              row: 6
++              width: 4
++              height: 3
++            - component: HomePageTopVisited
++              column: 4
++              row: 9
++              width: 4
++              height: 4
++            - component: HomePageRecentlyVisited
++              column: 8
++              row: 9
++              width: 4
++              height: 4
+ 
+diff --git a/backstage.json b/backstage.json
+index 01e1ecb..c1d0e69 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.53.0"
++  "version": "1.54.0-next.3"
+ }
+diff --git a/examples/template/template.yaml b/examples/template/template.yaml
+index efb33be..bcb1bf1 100644
+--- a/examples/template/template.yaml
++++ b/examples/template/template.yaml
+@@ -22,5 +22,4 @@ spec:
+           description: Unique name of the component
++          ui:field: EntityNamePicker
+           ui:autofocus: true
+-          ui:options:
+-            rows: 5
+     - title: Choose a location
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 275061d..512da1a 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -30,2 +30,4 @@
+     "@backstage/plugin-catalog-import": "backstage:^",
++    "@backstage/plugin-home": "backstage:^",
++    "@backstage/plugin-home-react": "backstage:^",
+     "@backstage/plugin-kubernetes": "backstage:^",
+diff --git a/packages/app/src/App.tsx b/packages/app/src/App.tsx
+index c0206fe..31e91ed 100644
+--- a/packages/app/src/App.tsx
++++ b/packages/app/src/App.tsx
+@@ -3,5 +3,6 @@ import catalogPlugin from '@backstage/plugin-catalog/alpha';
+ import { navModule } from './modules/nav';
++import { homeModule } from './modules/home';
+ 
+ export default createApp({
+-  features: [catalogPlugin, navModule],
++  features: [catalogPlugin, navModule, homeModule],
+ });
+diff --git a/packages/app/src/modules/home/homeModule.tsx b/packages/app/src/modules/home/homeModule.tsx
+new file mode 100644
+index 0000000..9e24b74
+--- /dev/null
++++ b/packages/app/src/modules/home/homeModule.tsx
+@@ -0,0 +1,52 @@
++import { createFrontendModule } from '@backstage/frontend-plugin-api';
++import { HomePageWidgetBlueprint } from '@backstage/plugin-home-react/alpha';
++import { MarkdownContent } from '@backstage/core-components';
++
++const content = `
++## Welcome to Backstage! 👋
++
++Backstage is your developer portal — a single place to manage all your
++software, services, and documentation.
++
++### Quick Start
++
++- **Explore the catalog** — Browse all your organization's software in
++  the [Software Catalog](/catalog)
++- **Create something new** — Use a [Software Template](/create) to
++  scaffold a new project in minutes
++- **Read the docs** — Find technical documentation for any service
++  right from its catalog page
++
++### Helpful Links
++
++- [Backstage Documentation](https://backstage.io/docs)
++- [Customizing Your Homepage](https://backstage.io/docs/getting-started/homepage)
++- [Adding Plugins](https://backstage.io/docs/plugins)
++- [Contributing](https://github.com/backstage/backstage/blob/master/CONTRIBUTING.md)
++
++### How to Edit This Card
++
++This widget is defined in \`packages/app/src/modules/home/homeModule.tsx\`.
++You can update the markdown content there to welcome your team with
++your own links and getting started tips.
++
++To remove this card entirely, delete the getting started widget and
++remove it from the home module's extensions array in this file.
++`;
++
++const gettingStartedWidget = HomePageWidgetBlueprint.make({
++  name: 'getting-started',
++  params: {
++    name: 'GettingStarted',
++    title: 'Getting Started',
++    description: 'Tips and links to help you get started with Backstage',
++    components: async () => ({
++      Content: () => <MarkdownContent content={content} />,
++    }),
++  },
++});
++
++export const homeModule = createFrontendModule({
++  pluginId: 'home',
++  extensions: [gettingStartedWidget],
++});
+diff --git a/packages/app/src/modules/home/index.ts b/packages/app/src/modules/home/index.ts
+new file mode 100644
+index 0000000..b965e1e
+--- /dev/null
++++ b/packages/app/src/modules/home/index.ts
+@@ -0,0 +1 @@
++export { homeModule } from './homeModule';
+diff --git a/packages/app/src/modules/nav/Sidebar.tsx b/packages/app/src/modules/nav/Sidebar.tsx
+index e148cb5..54752ba 100644
+--- a/packages/app/src/modules/nav/Sidebar.tsx
++++ b/packages/app/src/modules/nav/Sidebar.tsx
+@@ -35,2 +35,3 @@ export const SidebarContent = NavContentBlueprint.make({
+           <SidebarGroup label="Menu" icon={<MenuIcon />}>
++            {nav.take('page:home')}
+             {nav.take('page:catalog')}
+diff --git a/packages/backend/Dockerfile b/packages/backend/Dockerfile
+index a70705f..3c9b4b6 100644
+--- a/packages/backend/Dockerfile
++++ b/packages/backend/Dockerfile
+@@ -9,2 +9,5 @@
+ #
++# Host build steps (yarn install, yarn build:backend) must use the same
++# Node version as the FROM image below. Mismatched versions break native modules.
++#
+ # Once the commands have been run, you can build the image using `yarn build-image`
+@@ -16,12 +19,2 @@ FROM node:24-trixie-slim
+ 
+-# Set Python interpreter for `node-gyp` to use
+-ENV PYTHON=/usr/bin/python3
+-
+-# Install isolate-vm dependencies, these are needed by the @backstage/plugin-scaffolder-backend.
+-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+-    apt-get update && \
+-    apt-get install -y --no-install-recommends python3 g++ build-essential && \
+-    rm -rf /var/lib/apt/lists/*
+-
+ # Install sqlite3 dependencies. You can skip this if you don't use sqlite3 in the image,
+@@ -50,5 +43,2 @@ ENV NODE_ENV=production
+ 
+-# This disables node snapshot for Node 20 to work with the Scaffolder
+-ENV NODE_OPTIONS="--no-node-snapshot"
+-
+ # Copy repo skeleton first, to avoid unnecessary docker cache invalidation.
