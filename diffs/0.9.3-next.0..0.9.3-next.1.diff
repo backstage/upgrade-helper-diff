@@ -1,0 +1,163 @@
+diff --git a/backstage.json b/backstage.json
+index 12c234b..818ddba 100644
+--- a/backstage.json
++++ b/backstage.json
+@@ -1,3 +1,3 @@
+ {
+-  "version": "1.56.0-next.0"
++  "version": "1.56.0-next.1"
+ }
+diff --git a/package.json b/package.json
+index 7def30a..6a6e931 100644
+--- a/package.json
++++ b/package.json
+@@ -51,2 +51,3 @@
+   "resolutions": {
++    "@yarnpkg/core": "4.9.1",
+     "@types/react": "^18",
+diff --git a/packages/app/package.json b/packages/app/package.json
+index 3b126fa..3713143 100644
+--- a/packages/app/package.json
++++ b/packages/app/package.json
+@@ -17,3 +17,3 @@
+     "@backstage/cli": "^0.36.7-next.0",
+-    "@backstage/core-components": "^0.18.15-next.0",
++    "@backstage/core-components": "^0.18.15-next.1",
+     "@backstage/core-plugin-api": "^1.12.11-next.0",
+@@ -24,5 +24,5 @@
+     "@backstage/plugin-app-react": "^0.2.8-next.0",
+-    "@backstage/plugin-app-visualizer": "^0.2.9-next.0",
++    "@backstage/plugin-app-visualizer": "^0.2.9-next.1",
+     "@backstage/plugin-auth": "^0.1.13-next.0",
+-    "@backstage/plugin-catalog": "^2.0.10-next.0",
++    "@backstage/plugin-catalog": "^2.0.10-next.1",
+     "@backstage/plugin-catalog-graph": "^0.6.9-next.0",
+diff --git a/packages/backend/package.json b/packages/backend/package.json
+index 88d0826..9393fd3 100644
+--- a/packages/backend/package.json
++++ b/packages/backend/package.json
+@@ -18,31 +18,31 @@
+   "dependencies": {
+-    "@backstage/backend-defaults": "^0.18.1-next.0",
++    "@backstage/backend-defaults": "^0.18.1-next.1",
+     "@backstage/config": "^1.3.10-next.0",
+-    "@backstage/plugin-app-backend": "^0.5.19-next.0",
+-    "@backstage/plugin-auth-backend": "^0.30.2-next.0",
+-    "@backstage/plugin-auth-backend-module-github-provider": "^0.5.8-next.0",
+-    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.24-next.0",
+-    "@backstage/plugin-auth-node": "^0.7.7-next.0",
+-    "@backstage/plugin-catalog-backend": "^4.0.1-next.0",
+-    "@backstage/plugin-catalog-backend-module-logs": "^0.1.27-next.0",
+-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.25-next.0",
+-    "@backstage/plugin-kubernetes-backend": "^0.21.12-next.0",
+-    "@backstage/plugin-mcp-actions-backend": "^0.2.3-next.0",
+-    "@backstage/plugin-notifications-backend": "^0.6.10-next.0",
+-    "@backstage/plugin-permission-backend": "^0.7.17-next.0",
+-    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.24-next.0",
++    "@backstage/plugin-app-backend": "^0.5.19-next.1",
++    "@backstage/plugin-auth-backend": "^0.30.2-next.1",
++    "@backstage/plugin-auth-backend-module-github-provider": "^0.5.8-next.1",
++    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.24-next.1",
++    "@backstage/plugin-auth-node": "^0.7.7-next.1",
++    "@backstage/plugin-catalog-backend": "^4.0.1-next.1",
++    "@backstage/plugin-catalog-backend-module-logs": "^0.1.27-next.1",
++    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.25-next.1",
++    "@backstage/plugin-kubernetes-backend": "^0.21.12-next.1",
++    "@backstage/plugin-mcp-actions-backend": "^0.2.3-next.1",
++    "@backstage/plugin-notifications-backend": "^0.6.10-next.1",
++    "@backstage/plugin-permission-backend": "^0.7.17-next.1",
++    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.24-next.1",
+     "@backstage/plugin-permission-common": "^0.9.12-next.0",
+-    "@backstage/plugin-permission-node": "^0.11.5-next.0",
+-    "@backstage/plugin-proxy-backend": "^0.6.19-next.0",
+-    "@backstage/plugin-scaffolder-backend": "^4.2.1-next.0",
+-    "@backstage/plugin-scaffolder-backend-module-github": "^0.10.1-next.0",
+-    "@backstage/plugin-scaffolder-backend-module-notifications": "^0.1.27-next.0",
+-    "@backstage/plugin-search-backend": "^2.1.8-next.0",
+-    "@backstage/plugin-search-backend-module-catalog": "^0.3.20-next.0",
+-    "@backstage/plugin-search-backend-module-pg": "^0.5.60-next.0",
+-    "@backstage/plugin-search-backend-module-techdocs": "^0.4.19-next.0",
+-    "@backstage/plugin-search-backend-node": "^1.4.9-next.0",
+-    "@backstage/plugin-signals-backend": "^0.3.20-next.0",
+-    "@backstage/plugin-techdocs-backend": "^2.3.1-next.0",
+-    "@backstage/plugin-user-settings-backend": "^0.4.8-next.0",
++    "@backstage/plugin-permission-node": "^0.11.5-next.1",
++    "@backstage/plugin-proxy-backend": "^0.6.19-next.1",
++    "@backstage/plugin-scaffolder-backend": "^4.2.1-next.1",
++    "@backstage/plugin-scaffolder-backend-module-github": "^0.10.1-next.1",
++    "@backstage/plugin-scaffolder-backend-module-notifications": "^0.1.27-next.1",
++    "@backstage/plugin-search-backend": "^2.1.8-next.1",
++    "@backstage/plugin-search-backend-module-catalog": "^0.3.20-next.1",
++    "@backstage/plugin-search-backend-module-pg": "^0.5.60-next.1",
++    "@backstage/plugin-search-backend-module-techdocs": "^0.4.19-next.1",
++    "@backstage/plugin-search-backend-node": "^1.4.9-next.1",
++    "@backstage/plugin-signals-backend": "^0.3.20-next.1",
++    "@backstage/plugin-techdocs-backend": "^2.3.1-next.1",
++    "@backstage/plugin-user-settings-backend": "^0.4.8-next.1",
+     "app": "link:../app",
+diff --git a/yarn.lock b/yarn.lock
+index 483625e..c37fc61 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -3,61 +3 @@
+ 
+-
+-"@swc/core@^1.3.46":
+-  version "1.11.31"
+-  resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.11.31.tgz#e5de9ed005551ce9a16aa69e79935fc33065475c"
+-  integrity sha512-mAby9aUnKRjMEA7v8cVZS9Ah4duoRBnX7X6r5qrhTxErx+68MoY1TPrVwj/66/SWN3Bl+jijqAqoB8Qx0QE34A==
+-
+-fast-xml-builder@*:
+-  version "1.0.0"
+-  resolved "https://registry.yarnpkg.com/fast-xml-builder/-/fast-xml-builder-1.0.0.tgz#a485d7e8381f1db983cf006f849d1066e2935241"
+-  integrity sha512-fpZuDogrAgnyt9oDDz+5DBz0zgPdPZz6D4IR7iESxRXElrlGTRkHJ9eEt+SACRJwT0FNFrt71DFQIUFBJfX/uQ==
+-
+-"knex@npm:3":
+-  version "3.1.0"
+-  resolved "https://registry.yarnpkg.com/knex/-/knex-3.1.0.tgz#b6ddd5b5ad26a6315234a5b09ec38dc4a370bd8c"
+-  integrity sha512-GLoII6hR0c4ti243gMs5/1Rb3B+AjwMOfjYm97pu0FOQa7JH56hgBxYf5WK2525ceSbBY1cjeZ9yk99GPMB6Kw==
+-
+-"knex@npm:^3.0.0":
+-  version "3.1.0"
+-  resolved "https://registry.yarnpkg.com/knex/-/knex-3.1.0.tgz#b6ddd5b5ad26a6315234a5b09ec38dc4a370bd8c"
+-  integrity sha512-GLoII6hR0c4ti243gMs5/1Rb3B+AjwMOfjYm97pu0FOQa7JH56hgBxYf5WK2525ceSbBY1cjeZ9yk99GPMB6Kw==
+-
+-"@protobufjs/inquire@^1.1.0":
+-  version "1.1.0"
+-  resolved "https://registry.yarnpkg.com/@protobufjs/inquire/-/inquire-1.1.0.tgz#ff200e3e7cf2429e2dcafc1140828e8cc638f089"
+-  integrity sha512-kdSefcPdruJiFMVSbn801t4vFK7KB/5gd2fYvrxhuJYg8ILrmn9SKSX2tZdV6V+ksulWqS7aXjBcRXl3wHoD9Q==
+-
+-"protobufjs@^7.0.0":
+-  version "7.5.5"
+-  resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.5.5.tgz#b7089ca4410374c75150baf277353ef76db69f96"
+-  integrity sha512-3wY1AxV+VBNW8Yypfd1yQY9pXnqTAN+KwQxL8iYm3/BjKYMNg4i0owhEe26PWDOMaIrzeeF98Lqd5NGz4omiIg==
+-
+-"protobufjs@^7.2.5":
+-  version "7.5.5"
+-  resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.5.5.tgz#b7089ca4410374c75150baf277353ef76db69f96"
+-  integrity sha512-3wY1AxV+VBNW8Yypfd1yQY9pXnqTAN+KwQxL8iYm3/BjKYMNg4i0owhEe26PWDOMaIrzeeF98Lqd5NGz4omiIg==
+-
+-"protobufjs@^7.2.6":
+-  version "7.5.5"
+-  resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.5.5.tgz#b7089ca4410374c75150baf277353ef76db69f96"
+-  integrity sha512-3wY1AxV+VBNW8Yypfd1yQY9pXnqTAN+KwQxL8iYm3/BjKYMNg4i0owhEe26PWDOMaIrzeeF98Lqd5NGz4omiIg==
+-
+-"protobufjs@^7.3.2":
+-  version "7.5.5"
+-  resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.5.5.tgz#b7089ca4410374c75150baf277353ef76db69f96"
+-  integrity sha512-3wY1AxV+VBNW8Yypfd1yQY9pXnqTAN+KwQxL8iYm3/BjKYMNg4i0owhEe26PWDOMaIrzeeF98Lqd5NGz4omiIg==
+-
+-"protobufjs@^7.4.0":
+-  version "7.5.5"
+-  resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.5.5.tgz#b7089ca4410374c75150baf277353ef76db69f96"
+-  integrity sha512-3wY1AxV+VBNW8Yypfd1yQY9pXnqTAN+KwQxL8iYm3/BjKYMNg4i0owhEe26PWDOMaIrzeeF98Lqd5NGz4omiIg==
+-
+-"protobufjs@^7.5.3":
+-  version "7.5.5"
+-  resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.5.5.tgz#b7089ca4410374c75150baf277353ef76db69f96"
+-  integrity sha512-3wY1AxV+VBNW8Yypfd1yQY9pXnqTAN+KwQxL8iYm3/BjKYMNg4i0owhEe26PWDOMaIrzeeF98Lqd5NGz4omiIg==
+-
+-"@types/node@*":
+-  version "22.20.0"
+-  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.20.0.tgz#431f5007396bc1a1a47b9c7df60f3e5e0b5b7304"
+-  integrity sha512-QWlFW2wf3nTjC13/DqRnBpR4ZO36VJH/JVBkA/vcnmbTBNQIlnObqyqZE1tUR7+Ni23Lda8R1BxMfbXRpCUx5g==
